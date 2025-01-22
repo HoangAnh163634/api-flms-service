@@ -1,0 +1,6 @@
+@api_flms_service_HostAddress = http://localhost:5198
+
+GET {{api_flms_service_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
