@@ -1,5 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using System;
 
 namespace api_flms_service.Model
 {
@@ -17,16 +19,36 @@ namespace api_flms_service.Model
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Configure all tables and columns to use lowercase names
+            // Apply DateTime conversion to UTC for all DateTime properties
+            var dateTimeConverter = new ValueConverter<DateTime, DateTime>(
+                v => v.ToUniversalTime(), // Convert to UTC when saving to the database
+                v => DateTime.SpecifyKind(v, DateTimeKind.Utc) // Read as UTC from the database
+            );
+
+            var nullableDateTimeConverter = new ValueConverter<DateTime?, DateTime?>(
+                v => v.HasValue ? v.Value.ToUniversalTime() : v, // Convert to UTC when saving to the database
+                v => v.HasValue ? DateTime.SpecifyKind(v.Value, DateTimeKind.Utc) : v // Read as UTC from the database
+            );
+
             foreach (var entity in modelBuilder.Model.GetEntityTypes())
             {
                 // Set table name to lowercase
                 entity.SetTableName(entity.GetTableName()!.ToLower());
 
-                // Set column names to lowercase
+                // Apply DateTime conversion for all DateTime properties
                 foreach (var property in entity.GetProperties())
                 {
+                    // Set column names to lowercase
                     property.SetColumnName(property.GetColumnName(StoreObjectIdentifier.Table(entity.GetTableName()!.ToLower(), null))!.ToLower());
+
+                    if (property.ClrType == typeof(DateTime))
+                    {
+                        property.SetValueConverter(dateTimeConverter);
+                    }
+                    else if (property.ClrType == typeof(DateTime?))
+                    {
+                        property.SetValueConverter(nullableDateTimeConverter);
+                    }
                 }
 
                 // Set key names to lowercase (optional)
@@ -36,7 +58,5 @@ namespace api_flms_service.Model
                 }
             }
         }
-
     }
-
 }

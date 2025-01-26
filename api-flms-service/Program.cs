@@ -1,4 +1,8 @@
 using api_flms_service.Model;
+using api_flms_service.Service;
+using api_flms_service.ServiceInterface;
+using api_flms_service.ServiceInterface.api_flms_service.Services;
+using api_flms_service.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -7,16 +11,24 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IBookService, BookService>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IAuthorService, AuthorService>();
+builder.Services.AddScoped<IIssuedBookService, IssuedBookService>();
 
-
+// Add controllers and Razor Pages
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddRazorPages();
+
+// Configure Swagger
+builder.Services.AddHttpClient();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-    
+
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -26,11 +38,15 @@ if (app.Environment.IsDevelopment())
     {
         return await db.Admins.ToListAsync();
     });
-
 }
+
+// Add static file serving (for Razor Pages)
+app.UseStaticFiles();
 
 app.UseAuthorization();
 
+// Map Controllers and Razor Pages
 app.MapControllers();
+app.MapRazorPages();
 
 app.Run();

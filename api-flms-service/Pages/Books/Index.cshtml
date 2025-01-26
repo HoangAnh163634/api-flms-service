@@ -1,0 +1,75 @@
+﻿@page
+@model api_flms_service.Pages.Books.IndexModel
+@{
+    ViewData["Title"] = "Books";
+    Layout = "~/Pages/Shared/_Layout.cshtml";
+}
+
+<div class="container">
+    <h4 class="text-center">Books</h4>
+    <div class="text-right mb-3">
+        <a href="/Books/Manage" class="btn btn-success">Add New Book</a>
+    </div>
+    <table class="table table-bordered table-hover text-center" id="booksTable">
+        <thead>
+            <tr>
+                <th>Book Name</th>
+                <th>Author</th>
+                <th>Category</th>
+                <th>Number</th>
+                <th>Price</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Books will be dynamically loaded here -->
+        </tbody>
+    </table>
+</div>
+
+<script>
+    async function fetchBooks() {
+        try {
+            const response = await fetch('/api/v0/books');
+            const books = await response.json();
+            const tableBody = document.querySelector('#booksTable tbody');
+            tableBody.innerHTML = '';
+
+            books.forEach(book => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${book.bookName}</td>
+                    <td>${book.authorName}</td>
+                    <td>${book.categoryName}</td>
+                    <td>${book.bookNo}</td>
+                    <td>${book.bookPrice}</td>
+                    <td>
+                        <a href="/Books/Manage?id=${book.bookId}" class="btn btn-primary">Edit</a>
+                        <button class="btn btn-danger" onclick="deleteBook(${book.bookId})">Delete</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        } catch (err) {
+            console.error("Failed to fetch books:", err);
+        }
+    }
+
+    async function deleteBook(id) {
+        if (confirm("Are you sure you want to delete this book?")) {
+            try {
+                const response = await fetch(`/api/v0/books/${id}`, { method: 'DELETE' });
+                if (response.ok) {
+                    fetchBooks();
+                } else {
+                    console.error("Failed to delete book:", await response.json());
+                }
+            } catch (err) {
+                console.error("Error during book deletion:", err);
+            }
+        }
+    }
+
+    // Fetch books on page load
+    fetchBooks();
+</script>

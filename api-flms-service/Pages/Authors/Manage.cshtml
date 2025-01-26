@@ -1,0 +1,80 @@
+﻿@page
+@model api_flms_service.Pages.Author.ManageModel
+@{
+    ViewData["Title"] = "Manage Author";
+    Layout = "~/Pages/Shared/_Layout.cshtml"; // Path to your layout file
+}
+
+<div class="container">
+    <h4 class="text-center" id="pageTitle">Add or Edit an Author</h4>
+    <br>
+    <form id="manageAuthorForm">
+        <div class="form-group">
+            <label for="authorName">Author Name:</label>
+            <input type="text" id="authorName" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-primary" id="submitButton">Add Author</button>
+    </form>
+    <div id="message" class="mt-3"></div>
+</div>
+
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const authorId = urlParams.get('id'); // Get author ID from query string
+
+    // Fetch author if editing
+    async function fetchAuthor() {
+        if (authorId) {
+            document.getElementById('pageTitle').innerText = "Edit Author";
+            document.getElementById('submitButton').innerText = "Update Author";
+
+            try {
+                const response = await fetch(`/api/v0/authors/${authorId}`);
+                if (response.ok) {
+                    const author = await response.json();
+                    document.getElementById('authorName').value = author.authorName;
+                } else {
+                    document.getElementById('message').innerHTML = `<div class="alert alert-danger">Author not found.</div>`;
+                }
+            } catch (err) {
+                document.getElementById('message').innerHTML = `<div class="alert alert-danger">An error occurred while fetching the author.</div>`;
+            }
+        }
+    }
+
+    fetchAuthor();
+
+    // Handle form submission
+    document.getElementById('manageAuthorForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const authorName = document.getElementById('authorName').value;
+
+        try {
+            const method = authorId ? 'PUT' : 'POST';
+            const url = authorId ? `/api/v0/authors` : `/api/v0/authors`;
+            const body = authorId
+                ? JSON.stringify({ authorId: parseInt(authorId), authorName: authorName })
+                : JSON.stringify({ authorName: authorName });
+
+            const response = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: body
+            });
+
+            if (response.ok) {
+                const successMessage = authorId
+                    ? "Author updated successfully!"
+                    : "Author added successfully!";
+                document.getElementById('message').innerHTML = `<div class="alert alert-success">${successMessage}</div>`;
+                document.getElementById('manageAuthorForm').reset();
+                    window.location.href = "/authors"; // Redirect to author list after add
+            } else {
+                const error = await response.json();
+                document.getElementById('message').innerHTML = `<div class="alert alert-danger">${error.message}</div>`;
+            }
+        } catch (err) {
+            document.getElementById('message').innerHTML = `<div class="alert alert-danger">An error occurred while saving the author.</div>`;
+        }
+    });
+</script>

@@ -1,0 +1,106 @@
+﻿@page
+@model api_flms_service.Pages.IssuedBooks.ManageModel
+@{
+    ViewData["Title"] = "Manage Issued Book";
+    Layout = "~/Pages/Shared/_Layout.cshtml";
+}
+
+<div class="container">
+    <h4 class="text-center" id="pageTitle">Issue or Edit a Book</h4>
+    <br>
+    <form id="manageIssuedBookForm">
+        <div class="form-group">
+            <label for="bookNo">Book No:</label>
+            <input type="number" id="bookNo" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label for="bookName">Book Name:</label>
+            <input type="text" id="bookName" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label for="bookAuthor">Author:</label>
+            <input type="text" id="bookAuthor" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label for="studentId">Student ID:</label>
+            <input type="number" id="studentId" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label for="status">Status:</label>
+            <select id="status" class="form-control" required>
+                <option value="1">Issued</option>
+                <option value="0">Returned</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary" id="submitButton">Issue Book</button>
+    </form>
+    <div id="message" class="mt-3"></div>
+</div>
+
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const issuedBookId = urlParams.get('id');
+
+    // Fetch issued book if editing
+    async function fetchIssuedBook() {
+        if (issuedBookId) {
+            document.getElementById('pageTitle').innerText = "Edit Issued Book";
+            document.getElementById('submitButton').innerText = "Update Book";
+
+            try {
+                const response = await fetch(`/api/v0/issued-books/${issuedBookId}`);
+                if (response.ok) {
+                    const book = await response.json();
+                    document.getElementById('bookNo').value = book.bookNo;
+                    document.getElementById('bookName').value = book.bookName;
+                    document.getElementById('bookAuthor').value = book.bookAuthor;
+                    document.getElementById('studentId').value = book.studentId;
+                    document.getElementById('status').value = book.status;
+                } else {
+                    document.getElementById('message').innerHTML = `<div class="alert alert-danger">Issued book not found.</div>`;
+                }
+            } catch (err) {
+                document.getElementById('message').innerHTML = `<div class="alert alert-danger">Error loading issued book data.</div>`;
+            }
+        }
+    }
+
+    document.getElementById('manageIssuedBookForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const issuedBookData = {
+            bookNo: parseInt(document.getElementById('bookNo').value),
+            bookName: document.getElementById('bookName').value,
+            bookAuthor: document.getElementById('bookAuthor').value,
+            studentId: parseInt(document.getElementById('studentId').value),
+            status: parseInt(document.getElementById('status').value),
+        };
+
+        if (issuedBookId) {
+            issuedBookData.sNo = parseInt(issuedBookId);
+        }
+
+        try {
+            const method = issuedBookId ? 'PUT' : 'POST';
+            const url = '/api/v0/issued-books';
+
+            const response = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(issuedBookData),
+            });
+
+            if (response.ok) {
+                document.getElementById('message').innerHTML = `<div class="alert alert-success">${issuedBookId ? "Book updated" : "Book issued"} successfully!</div>`;
+                if (!issuedBookId) document.getElementById('manageIssuedBookForm').reset();
+                window.location.href = "/IssuedBooks";
+            } else {
+                const error = await response.json();
+                document.getElementById('message').innerHTML = `<div class="alert alert-danger">${error.message}</div>`;
+            }
+        } catch (err) {
+            document.getElementById('message').innerHTML = `<div class="alert alert-danger">Error saving issued book.</div>`;
+        }
+    });
+
+    fetchIssuedBook();
+</script>

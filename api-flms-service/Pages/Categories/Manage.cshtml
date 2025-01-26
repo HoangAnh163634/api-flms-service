@@ -1,0 +1,80 @@
+﻿@page
+@model api_flms_service.Pages.Categories.ManageModel
+@{
+    ViewData["Title"] = "Manage Category";
+    Layout = "~/Pages/Shared/_Layout.cshtml"; // Path to your layout file
+}
+
+<div class="container">
+    <h4 class="text-center" id="pageTitle">Add or Edit a Category</h4>
+    <br>
+    <form id="manageCategoryForm">
+        <div class="form-group">
+            <label for="categoryName">Category Name:</label>
+            <input type="text" id="categoryName" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-primary" id="submitButton">Add Category</button>
+    </form>
+    <div id="message" class="mt-3"></div>
+</div>
+
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const categoryId = urlParams.get('id'); // Get category ID from query string
+
+    // Fetch category if editing
+    async function fetchCategory() {
+        if (categoryId) {
+            document.getElementById('pageTitle').innerText = "Edit Category";
+            document.getElementById('submitButton').innerText = "Update Category";
+
+            try {
+                const response = await fetch(`/api/v0/category/${categoryId}`);
+                if (response.ok) {
+                    const category = await response.json();
+                    document.getElementById('categoryName').value = category.catName;
+                } else {
+                    document.getElementById('message').innerHTML = `<div class="alert alert-danger">Category not found.</div>`;
+                }
+            } catch (err) {
+                document.getElementById('message').innerHTML = `<div class="alert alert-danger">An error occurred while fetching the category.</div>`;
+            }
+        }
+    }
+
+    fetchCategory();
+
+    // Handle form submission
+    document.getElementById('manageCategoryForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const categoryName = document.getElementById('categoryName').value;
+
+        try {
+            const method = categoryId ? 'PUT' : 'POST';
+            const url = categoryId ? `/api/v0/category/${categoryId}` : `/api/v0/category`;
+            const body = categoryId
+                ? JSON.stringify({ catId: parseInt(categoryId), catName: categoryName })
+                : JSON.stringify({ catName: categoryName });
+
+            const response = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: body
+            });
+
+            if (response.ok) {
+                const successMessage = categoryId
+                    ? "Category updated successfully!"
+                    : "Category added successfully!";
+                document.getElementById('message').innerHTML = `<div class="alert alert-success">${successMessage}</div>`;
+                document.getElementById('manageCategoryForm').reset();
+                window.location.href = "/categories"; // Redirect to category list after add
+            } else {
+                const error = await response.json();
+                document.getElementById('message').innerHTML = `<div class="alert alert-danger">${error.message}</div>`;
+            }
+        } catch (err) {
+            document.getElementById('message').innerHTML = `<div class="alert alert-danger">An error occurred while saving the category.</div>`;
+        }
+    });
+</script>

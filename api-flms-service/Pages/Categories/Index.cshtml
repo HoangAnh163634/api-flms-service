@@ -1,0 +1,54 @@
+﻿@page
+@model api_flms_service.Pages.CategoryModel
+@{
+    ViewData["Title"] = "Book's Category";
+    Layout = "~/Pages/Shared/_Layout.cshtml"; // Path to your layout file
+}
+<div class="container">
+    <h4 class="text-center">Book's Categories</h4>
+    <div class="text-right mb-3">
+        <a href="/Categories/Manage" class="btn btn-success">Add New Category</a>
+    </div>
+    <table class="table table-bordered table-hover text-center" id="categoriesTable">
+        <thead>
+            <tr>
+                <th>Category Name</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Categories will be dynamically loaded here -->
+        </tbody>
+    </table>
+</div>
+
+<script>
+    async function fetchCategories() {
+        const response = await fetch('/api/v0/category');
+        const categories = await response.json();
+        const tableBody = document.querySelector('#categoriesTable tbody');
+        tableBody.innerHTML = '';
+
+        categories.forEach(category => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${category.catName}</td>
+                <td>
+                    <a href="/Categories/Manage?id=${category.catId}" class="btn btn-primary">Edit</a>
+                    <button class="btn btn-danger" onclick="deleteCategory(${category.catId})">Delete</button>
+                </td>
+            `;
+            tableBody.appendChild(row);
+        });
+    }
+
+    async function deleteCategory(id) {
+        if (confirm("Are you sure you want to delete this category?")) {
+            await fetch(`/api/v0/category/${id}`, { method: 'DELETE' });
+            fetchCategories();
+        }
+    }
+
+    // Fetch categories on page load
+    fetchCategories();
+</script>
