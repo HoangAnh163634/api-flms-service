@@ -1,7 +1,7 @@
 # Base runtime image
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-preview AS base
 WORKDIR /app
-EXPOSE 80
+EXPOSE 5000  # Expose port 5000 instead of 80
 
 # Build image
 FROM mcr.microsoft.com/dotnet/sdk:8.0-preview AS build
@@ -23,4 +23,9 @@ RUN dotnet publish "api-flms-service.csproj" -c Release -o /app/publish /p:UseAp
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+
+# Set the environment variable for the ASP.NET Core application to listen on port 5000
+ENV ASPNETCORE_URLS=http://+:5000
+
+# Entry point
 ENTRYPOINT ["dotnet", "api-flms-service.dll"]
