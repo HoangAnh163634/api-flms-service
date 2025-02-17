@@ -22,5 +22,8 @@ steps:
       - '--allow-unauthenticated'
       - '--port'
       - '--5198'
+
+logsBucket: "gs://flms-service-log"
+   
 images:
   - 'gcr.io/project-prn231-gr3/api-flms-service'
