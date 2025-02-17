@@ -11,11 +11,11 @@ steps:
   - name: 'gcr.io/cloud-builders/gcloud'
     args: [
       'run', 'deploy', 'api-flms-service',
-      '--image', 'gcr.io/project-prn231-gr3/api-flms-service',
-      '--region', 'asia-east1',
-      '--platform', 'managed',
+      '--image=gcr.io/project-prn231-gr3/api-flms-service',
+      '--region=asia-east1',
+      '--platform=managed',
       '--allow-unauthenticated',
-      '--port', '5198'
+      '--port=5198'
     ]
 
 # Define a Google Cloud Storage bucket for build logs
