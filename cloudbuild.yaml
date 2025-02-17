@@ -9,15 +9,14 @@ steps:
     
   # Deploy lên Cloud Run
   - name: 'gcr.io/cloud-builders/gcloud'
-    args:[
+    args: [
       'run', 'deploy', 'api-flms-service',
-      '--image', 'gcr.io/project-prn231-gr3/api-flms-service',
-      '--region', 'asia-east1',
-      '--platform', 'managed',
+      '--image=gcr.io/project-prn231-gr3/api-flms-service',
+      '--region=asia-east1',
+      '--platform=managed',
       '--allow-unauthenticated',
-      '--port', '5198'
+      '--port=5198'
     ]
-
 
 images:
   - 'gcr.io/project-prn231-gr3/api-flms-service'
