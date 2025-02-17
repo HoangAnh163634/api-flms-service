@@ -1,12 +1,12 @@
 steps:
   # Build Docker Image
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/$PROJECT_ID/api-flms-service', '.']
+    args: ['build', '-t', 'gcr.io/project-prn231-gr3/api-flms-service', '.']
 
   # Push Docker Image lên Google Container Registry (GCR)
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/$PROJECT_ID/api-flms-service']
-
+    args: ['push', 'gcr.io/project-prn231-gr3/api-flms-service']
+    
   # Deploy lên Cloud Run
   - name: 'gcr.io/cloud-builders/gcloud'
     args:
@@ -14,12 +14,13 @@ steps:
       - 'deploy'
       - 'api-flms-service'
       - '--image'
-      - 'gcr.io/$PROJECT_ID/api-flms-service'
+      - 'gcr.io/project-prn231-gr3/api-flms-service'
       - '--region'
       - 'asia-east1'
       - '--platform'
       - 'managed'
       - '--allow-unauthenticated'
-
+      - '--port'
+      - '--5198'
 images:
-  - 'gcr.io/$PROJECT_ID/api-flms-service'
+  - 'gcr.io/project-prn231-gr3/api-flms-service'
