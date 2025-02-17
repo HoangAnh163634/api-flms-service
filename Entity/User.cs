@@ -11,6 +11,8 @@ namespace api_flms_service.Model
         public string Password { get; set; } = null!;
         public long Mobile { get; set; }
         public string Address { get; set; } = null!;
+
+        public int? GoogleId { get; set; } 
     }
 
 }
