@@ -1,5 +1,6 @@
 ﻿using api_flms_service.Model;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 namespace api_flms_service.ServiceInterface
 {
 
@@ -54,6 +55,13 @@ namespace api_flms_service.ServiceInterface
                 _dbContext.Users.Remove(user);
                 await _dbContext.SaveChangesAsync();
                 return true;
+            }
+
+            public int GetCurrentUserId(ClaimsPrincipal user)
+            {
+                //var userIdClaim = user?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                //return userIdClaim != null ? int.Parse(userIdClaim) : 0;
+                return 1;
             }
         }
     }

@@ -9,12 +9,13 @@ namespace api_flms_service.Controllers
     public class BookController : ControllerBase
     {
         private readonly IBookService _bookService;
+        private readonly IUserService _userService;
 
-        public BookController(IBookService bookService)
+        public BookController(IBookService bookService, IUserService userService)
         {
             _bookService = bookService;
+            _userService = userService;
         }
-
         /// <summary>
         /// Get all books
         /// </summary>
@@ -199,6 +200,39 @@ namespace api_flms_service.Controllers
             {
                 return StatusCode(500, new { message = "An error occurred while deleting the book.", details = ex.Message });
             }
+        }
+
+        // API để lấy danh sách sách mượn của người dùng
+        [HttpGet("borrowed")]
+        public async Task<IActionResult> GetBorrowedBooks()
+        {
+            var userId = _userService.GetCurrentUserId(User); // Lấy UserId từ JWT hoặc Session
+            if (userId <= 0)
+            {
+                return Unauthorized("User is not logged in");
+            }
+
+            var books = await _bookService.GetBorrowedBooksAsync(1);
+            return Ok(books);
+        }
+
+        // API gia hạn sách
+        [HttpPost("renew")]
+        public async Task<IActionResult> RenewBook([FromBody] RenewRequest request)
+        {
+            var userId = _userService.GetCurrentUserId(User); // Lấy UserId từ JWT hoặc Session
+            if (userId <= 0)
+            {
+                return Unauthorized("User is not logged in");
+            }
+
+            if (request.BookId <= 0)
+            {
+                return BadRequest("Invalid ID");
+            }
+
+            var result = await _bookService.RenewBookAsync(1, request.BookId);
+            return result;
         }
     }
 }
