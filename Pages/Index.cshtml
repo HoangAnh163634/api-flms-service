@@ -1,12 +1,39 @@
 ﻿@page
 @model api_flms_service.Pages.IndexModel
+@{
+    Layout = "_Layout";
+}
 
 <!DOCTYPE html>
 <html>
 <head>
     <title>Welcome</title>
+
+    <script>
+            function redirect() {
+            // Capture the returnUrl (this could be current page or dashboard)
+            const returnUrl = encodeURIComponent(window.location.origin + "/Dashboard");
+
+            // Redirect to localhost:4040 with returnUrl parameter
+            window.location.href = `@Model.LoginUrl`;
+        }
+    </script>
+
+
 </head>
 <body>
     <h1>Hello from Razor Pages!</h1>
+    @if (Model.CurrentUser != null)
+    {
+        <p>Welcome, @Model.CurrentUser.Name</p>
+        <p>Email: @Model.CurrentUser.Email</p>
+    }
+    else
+    {
+        <p>You are not logged in.</p>
+    }
+    <button onclick="redirect()">Login time</button>
 </body>
+
 </html>
+    
