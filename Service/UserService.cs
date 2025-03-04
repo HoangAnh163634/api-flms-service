@@ -1,4 +1,5 @@
-﻿using api_flms_service.Model;
+﻿using api_auth_service.Service;
+using api_flms_service.Model;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 namespace api_flms_service.ServiceInterface
@@ -57,11 +58,11 @@ namespace api_flms_service.ServiceInterface
                 return true;
             }
 
-            public int GetCurrentUserId(ClaimsPrincipal user)
+            public async Task<User> GetUserByEmail(string email)
             {
-                //var userIdClaim = user?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                //return userIdClaim != null ? int.Parse(userIdClaim) : 0;
-                return 1;
+               var user = await _dbContext.Users.FirstOrDefaultAsync(x => x.Email == email);
+
+                return user;
             }
         }
     }

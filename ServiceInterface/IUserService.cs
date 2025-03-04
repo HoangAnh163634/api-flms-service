@@ -10,6 +10,6 @@ namespace api_flms_service.ServiceInterface
         Task<User> AddUserAsync(User user);
         Task<User?> UpdateUserAsync(User user);
         Task<bool> DeleteUserAsync(int id);
-        int GetCurrentUserId(ClaimsPrincipal user); // Lấy UserId từ JWT hoặc Session
+        Task<User> GetUserByEmail(String email); // Lấy UserId từ JWT hoặc Session
     }
 }

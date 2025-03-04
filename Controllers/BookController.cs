@@ -1,4 +1,5 @@
-﻿using api_flms_service.Model;
+﻿using api_auth_service.Service;
+using api_flms_service.Model;
 using api_flms_service.ServiceInterface;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,12 +11,16 @@ namespace api_flms_service.Controllers
     {
         private readonly IBookService _bookService;
         private readonly IUserService _userService;
+        private readonly AuthService _authService;
 
-        public BookController(IBookService bookService, IUserService userService)
+        public BookController(IBookService bookService, IUserService userService, AuthService authService)
         {
             _bookService = bookService;
             _userService = userService;
+            _authService = authService;
         }
+
+
         /// <summary>
         /// Get all books
         /// </summary>
@@ -206,13 +211,15 @@ namespace api_flms_service.Controllers
         [HttpGet("borrowed")]
         public async Task<IActionResult> GetBorrowedBooks()
         {
-            var userId = _userService.GetCurrentUserId(User); // Lấy UserId từ JWT hoặc Session
-            if (userId <= 0)
+            var userOfGG = await _authService.GetCurrentUserAsync();
+
+            var user = await _userService.GetUserByEmail(userOfGG.Email); // Lấy UserId từ JWT hoặc Session
+            if (user.Id <= 0)
             {
                 return Unauthorized("User is not logged in");
             }
 
-            var books = await _bookService.GetBorrowedBooksAsync(1);
+            var books = await _bookService.GetBorrowedBooksAsync(user.Id);
             return Ok(books);
         }
 
@@ -220,8 +227,10 @@ namespace api_flms_service.Controllers
         [HttpPost("renew")]
         public async Task<IActionResult> RenewBook([FromBody] RenewRequest request)
         {
-            var userId = _userService.GetCurrentUserId(User); // Lấy UserId từ JWT hoặc Session
-            if (userId <= 0)
+            var userOfGG = await _authService.GetCurrentUserAsync();
+
+            var user = await _userService.GetUserByEmail(userOfGG.Email); // Lấy UserId từ JWT hoặc Session
+            if (user.Id <= 0)
             {
                 return Unauthorized("User is not logged in");
             }
@@ -231,7 +240,7 @@ namespace api_flms_service.Controllers
                 return BadRequest("Invalid ID");
             }
 
-            var result = await _bookService.RenewBookAsync(1, request.BookId);
+            var result = await _bookService.RenewBookAsync(user.Id, request.BookId);
             return result;
         }
     }
