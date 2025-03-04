@@ -27,11 +27,8 @@ namespace api_flms_service.Pages
             LogoutUrl = await _auth.GetLogoutUrl(Request.GetEncodedUrl());
 
             var token = Request?.Query["token"];
-            
-            if (!string.IsNullOrEmpty(token.ToString()))
-            {
-                _auth.HandleLogin(Request, Response, token);
-            }
+
+            _auth.HandleLogin(Request, Response, token);
         }
 
     }
