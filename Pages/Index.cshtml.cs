@@ -13,6 +13,7 @@ namespace api_flms_service.Pages
         private readonly AuthService _auth;
         public CurrentUser? CurrentUser { get; private set; }
         public string LoginUrl { get; set; }
+        public string LogoutUrl { get; set; }
 
         public IndexModel(AuthService authService)
         {
@@ -23,6 +24,7 @@ namespace api_flms_service.Pages
         {
             CurrentUser = await _auth.GetCurrentUserAsync();
             LoginUrl = await _auth.GetLoginUrl(Request.GetEncodedUrl());
+            LogoutUrl = await _auth.GetLogoutUrl(Request.GetEncodedUrl());
         }
 
     }
