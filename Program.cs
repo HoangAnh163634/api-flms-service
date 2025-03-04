@@ -4,10 +4,15 @@ using api_flms_service.ServiceInterface;
 using api_flms_service.ServiceInterface.api_flms_service.Services;
 using api_flms_service.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.Google;
+using api_auth_service.Service;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container
+// Add services to the 
+builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+builder.Services.AddHttpClient<AuthService>();
+
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -25,6 +30,9 @@ builder.Services.AddRazorPages();
 builder.Services.AddHttpClient();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+
+
 
 var app = builder.Build();
 
