@@ -31,7 +31,7 @@ namespace api_auth_service.Service
             var token = _httpContextAccessor.HttpContext?.Request.Cookies["googleToken"];
             if (string.IsNullOrEmpty(token)) return null;
 
-            var request = new HttpRequestMessage(HttpMethod.Get, $"{_apiBaseUrl}/api/auth/current-user")
+            var request = new HttpRequestMessage(HttpMethod.Get, $"{_apiAuthUrl}/api/auth/current-user")
             {
                 Headers = { Authorization = new AuthenticationHeaderValue("Bearer", token) }
             };

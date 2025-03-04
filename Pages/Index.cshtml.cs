@@ -22,13 +22,13 @@ namespace api_flms_service.Pages
 
         public async Task OnGetAsync()
         {
-            CurrentUser = await _auth.GetCurrentUserAsync();
-            LoginUrl = await _auth.GetLoginUrl(Request.GetEncodedUrl());
-            LogoutUrl = await _auth.GetLogoutUrl(Request.GetEncodedUrl());
-
             var token = Request?.Query["token"];
 
             _auth.HandleLogin(Request, Response, token);
+
+            CurrentUser = await _auth.GetCurrentUserAsync();
+            LoginUrl = await _auth.GetLoginUrl(Request.GetEncodedUrl());
+            LogoutUrl = await _auth.GetLogoutUrl(Request.GetEncodedUrl());
         }
 
     }
