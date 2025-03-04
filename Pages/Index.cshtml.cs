@@ -1,4 +1,4 @@
-using api_auth_service.Service;
+﻿using api_auth_service.Service;
 using api_flms_service.Service;
 using api_flms_service.ServiceInterface;
 using api_flms_service.ServiceInterface.api_flms_service.Services;
@@ -25,6 +25,13 @@ namespace api_flms_service.Pages
             CurrentUser = await _auth.GetCurrentUserAsync();
             LoginUrl = await _auth.GetLoginUrl(Request.GetEncodedUrl());
             LogoutUrl = await _auth.GetLogoutUrl(Request.GetEncodedUrl());
+
+            var token = Request?.Query["token"];
+            
+            if (!string.IsNullOrEmpty(token.ToString()))
+            {
+                _auth.HandleLogin(Request, Response, token);
+            }
         }
 
     }
