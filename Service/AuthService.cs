@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using System.Web;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.Extensions.Configuration;
 
 namespace api_auth_service.Service
@@ -30,7 +31,7 @@ namespace api_auth_service.Service
             var token = _httpContextAccessor.HttpContext?.Request.Cookies["googleToken"];
             if (string.IsNullOrEmpty(token)) return null;
 
-            var request = new HttpRequestMessage(HttpMethod.Get, $"{_apiBaseUrl}/api/auth/current-user")
+            var request = new HttpRequestMessage(HttpMethod.Get, $"{_apiAuthUrl}/api/auth/current-user")
             {
                 Headers = { Authorization = new AuthenticationHeaderValue("Bearer", token) }
             };
@@ -67,6 +68,36 @@ namespace api_auth_service.Service
             uriBuilder.Query = query.ToString();
 
             return uriBuilder.ToString();
+        }
+
+        public void HandleLogin(HttpRequest? Request, HttpResponse Response, string? Token)
+        {
+            if (Request == null) return;
+            if (Token == null || string.IsNullOrEmpty(Token)) return;
+
+            var domain = new Uri(Request.GetEncodedUrl()).Host;
+            var isLocalHost = Request.Host.Host.Contains("localhost") || domain == "127.0.0.1";
+            Response.Cookies.Append("googleToken", Token, new CookieOptions
+            {
+                HttpOnly = true,  // Prevents JavaScript access
+                Secure = !isLocalHost, // Secure=True only in production
+                SameSite = isLocalHost ? SameSiteMode.Lax : SameSiteMode.None, // Allows cross-origin cookie sending
+                Domain = isLocalHost ? null : domain, // ✅ Allows sharing cookies across subdomains only in production
+                Expires = DateTime.UtcNow.AddDays(7)
+            });
+        }
+
+        public void HandleLogout(HttpRequest? Request, HttpResponse Response)
+        {
+            if (Request == null) return;
+
+            var domain = new Uri(Request.GetEncodedUrl()).Host;
+            var isLocalHost = Request.Host.Host.Contains("localhost") || domain == "127.0.0.1";
+
+            if (Request.Cookies.ContainsKey("googleToken"))
+            {
+                Response.Cookies.Delete("googleToken");
+            }
         }
     }
 

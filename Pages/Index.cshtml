@@ -10,12 +10,11 @@
     <title>Welcome</title>
 
     <script>
-            function redirect() {
-            // Capture the returnUrl (this could be current page or dashboard)
-            const returnUrl = encodeURIComponent(window.location.origin + "/Dashboard");
-
-            // Redirect to localhost:4040 with returnUrl parameter
+        function login() {
             window.location.href = `@Model.LoginUrl`;
+        }
+        function logout() {
+            window.location.href = `@Model.LogoutUrl`;
         }
     </script>
 
@@ -32,7 +31,8 @@
     {
         <p>You are not logged in.</p>
     }
-    <button onclick="redirect()">Login time</button>
+    <button onclick="login()">Login</button>
+    <button onclick="logout()">Logout</button>
 </body>
 
 </html>
