@@ -14,13 +14,15 @@ namespace api_flms_service.Pages
         public CurrentUser? CurrentUser { get; private set; }
         public string LoginUrl { get; set; }
         public string LogoutUrl { get; set; }
+        public string _BaseUrl { get; set; }
 
-        public IndexModel(AuthService authService)
+        public IndexModel(AuthService authService, IConfiguration configuration)
         {
             _auth = authService;
+            _BaseUrl = configuration["ApiBaseUrl"];
         }
 
-        public async Task OnGetAsync()
+        public async Task<IActionResult> OnGetAsync()
         {
             var token = Request?.Query["token"];
 
@@ -29,6 +31,12 @@ namespace api_flms_service.Pages
             CurrentUser = await _auth.GetCurrentUserAsync();
             LoginUrl = await _auth.GetLoginUrl(Request.GetEncodedUrl());
             LogoutUrl = await _auth.GetLogoutUrl(Request.GetEncodedUrl());
+            if (!string.IsNullOrEmpty(token))
+            {
+                return Redirect(_BaseUrl);
+            }
+
+            return Page();
         }
 
     }

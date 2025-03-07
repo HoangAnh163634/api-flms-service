@@ -1,20 +1,52 @@
-﻿@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+﻿@using api_auth_service.Service
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+
+@inject AuthService AuthService
+@inject IHttpContextAccessor HttpContextAccessor
+@{
+    var userInfo = await AuthService.GetCurrentUserAsync();
+    var LoginUrl = await AuthService.GetLoginUrl();
+}
 
 <!DOCTYPE html>
 <html>
 <head>
     <meta name="viewport" content="width=device-width" />
     <title>@ViewData["Title"] - Library Management System</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" />
+    <meta charset="utf-8" name="viewport" content="width=device-width,initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.5/dist/jquery.validate.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jquery-validation-unobtrusive@3.2.12/dist/jquery.validate.unobtrusive.min.js"></script>
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
             <a class="navbar-brand" href="/Dashboard">Library Management System (LMS)</a>
+            <ul class="navbar-nav ml-auto">
+                @if (userInfo != null && !string.IsNullOrEmpty(userInfo.Name))
+                {
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="profileDropdown" role="button" data-toggle="dropdown">
+                            <img src="@userInfo.Picture" class="rounded-circle" width="30" height="30" alt="User Image"> @userInfo.Name
+                        </a>
+                        <div class="dropdown-menu">
+                            <a class="dropdown-item" href="/ViewProfile">View Profile</a>
+                            <a class="dropdown-item" href="/EditProfile">Edit Profile</a>
+                        </div>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/Logout">Logout</a>
+                    </li>
+                }
+                else
+                {
+                    <li class="nav-item">
+                        <a class="btn btn-primary" href="@LoginUrl">Login</a>
+                    </li>
+                }
+            </ul>
         </div>
     </nav>
     <div class="container">
@@ -22,3 +54,4 @@
     </div>
 </body>
 </html>
+

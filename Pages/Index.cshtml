@@ -4,11 +4,7 @@
     Layout = "_Layout";
 }
 
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Welcome</title>
-
+<body>
     <script>
         function login() {
             window.location.href = `@Model.LoginUrl`;
@@ -17,10 +13,6 @@
             window.location.href = `@Model.LogoutUrl`;
         }
     </script>
-
-
-</head>
-<body>
     <h1>Hello from Razor Pages!</h1>
     <p>Welcome, @Model.CurrentUser?.Name</p>
     <p>Email: @Model.CurrentUser?.Email</p>

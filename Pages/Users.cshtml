@@ -2,74 +2,38 @@
 @model api_flms_service.Pages.UsersModel
 @{
     ViewData["Title"] = "Registered Users";
+    Layout = "_Layout";
 }
 
-<!DOCTYPE html>
-<html>
-<head>
-    <title>@ViewData["Title"]</title>
-    <meta charset="utf-8" name="viewport" content="width=device-width,initial-scale=1">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
-</head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="/Dashboard">Library Management System (LMS)</a>
-            <ul class="navbar-nav ml-auto">
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="profileDropdown" role="button" data-toggle="dropdown">
-                        My Profile
-                    </a>
-                    <div class="dropdown-menu">
-                        <a class="dropdown-item" href="/ViewProfile">View Profile</a>
-                        <a class="dropdown-item" href="/EditProfile">Edit Profile</a>
-                        <a class="dropdown-item" href="/ChangePassword">Change Password</a>
-                    </div>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/Logout">Logout</a>
-                </li>
-            </ul>
-        </div>
-    </nav>
+
+<div class="container">
+    <h4 class="text-center">Registered Users Detail</h4>
     <br>
-    <span>
-        <marquee>This is library management system. Library opens at 8:00 AM and closes at 8:00 PM</marquee>
-    </span>
-    <br>
-    <br>
-    <div class="container">
-        <h4 class="text-center">Registered Users Detail</h4>
-        <br>
-        <div class="row">
-            <div class="col-md-2"></div>
-            <div class="col-md-8">
-                <table class="table table-bordered text-center">
-                    <thead>
+    <div class="row">
+        <div class="col-md-2"></div>
+        <div class="col-md-8">
+            <table class="table table-bordered text-center">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Mobile</th>
+                        <th>Address</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var user in Model.Users)
+                    {
                         <tr>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Mobile</th>
-                            <th>Address</th>
+                            <td>@user.Name</td>
+                            <td>@user.Email</td>
+                            <td>@user.Mobile</td>
+                            <td>@user.Address</td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var user in Model.Users)
-                        {
-                            <tr>
-                                <td>@user.Name</td>
-                                <td>@user.Email</td>
-                                <td>@user.Mobile</td>
-                                <td>@user.Address</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-            <div class="col-md-2"></div>
+                    }
+                </tbody>
+            </table>
         </div>
+        <div class="col-md-2"></div>
     </div>
-</body>
-</html>
+</div>

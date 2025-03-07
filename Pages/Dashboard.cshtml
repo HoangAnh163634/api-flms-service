@@ -2,39 +2,9 @@
 @model api_flms_service.Pages.DashboardModel
 @{
     ViewData["Title"] = "Library Management System";
+    Layout = "_Layout";
 }
 
-<!DOCTYPE html>
-<html>
-<head>
-    <title>@ViewData["Title"]</title>
-    <meta charset="utf-8" name="viewport" content="width=device-width,initial-scale=1">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
-</head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="/Dashboard">Library Management System (LMS)</a>
-            <ul class="navbar-nav ml-auto">
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="profileDropdown" role="button" data-toggle="dropdown">
-                        My Profile
-                    </a>
-                    <div class="dropdown-menu">
-                        <a class="dropdown-item" href="/ViewProfile">View Profile</a>
-                        <a class="dropdown-item" href="/EditProfile">Edit Profile</a>
-                        <a class="dropdown-item" href="/ChangePassword">Change Password</a>
-                    </div>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/Logout">Logout</a>
-                </li>
-            </ul>
-        </div>
-    </nav>
-    <br>
     <div class="container">
         <h2>Dashboard</h2>
         <div class="row">
@@ -87,7 +57,4 @@
                 </div>
             </div>
         </div>
-    </div>
-</body>
-</html>
-</html>
+</div>
