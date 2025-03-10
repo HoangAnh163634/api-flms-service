@@ -4,11 +4,7 @@
     Layout = "_Layout";
 }
 
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Welcome</title>
-
+<body>
     <script>
         function login() {
             window.location.href = `@Model.LoginUrl`;
@@ -17,20 +13,9 @@
             window.location.href = `@Model.LogoutUrl`;
         }
     </script>
-
-
-</head>
-<body>
     <h1>Hello from Razor Pages!</h1>
-    @if (Model.CurrentUser != null)
-    {
-        <p>Welcome, @Model.CurrentUser.Name</p>
-        <p>Email: @Model.CurrentUser.Email</p>
-    }
-    else
-    {
-        <p>You are not logged in.</p>
-    }
+    <p>Welcome, @Model.CurrentUser?.Name</p>
+    <p>Email: @Model.CurrentUser?.Email</p>
     <button onclick="login()">Login</button>
     <button onclick="logout()">Logout</button>
 </body>

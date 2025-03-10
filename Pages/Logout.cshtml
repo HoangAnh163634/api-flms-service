@@ -1,0 +1,37 @@
+﻿@page
+@model LogoutModel
+@{
+    ViewData["Title"] = "Logging Out...";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logging Out...</title>
+    <script>
+        async function handleLogout() {
+            try {
+                await fetch(window.location.href, {
+                    method: "POST",
+                    credentials: "include"
+                });
+
+                // Redirect after 5 seconds
+                setTimeout(() => {
+                    window.location.href = '@Model.LogoutUrl';
+                }, 5000);
+            } catch (error) {
+                console.error("Logout failed:", error);
+            }
+        }
+
+        window.onload = handleLogout;
+    </script>
+</head>
+<body>
+    <h2>Logging out...</h2>
+    <p>You will be redirected shortly.</p>
+</body>
+</html>

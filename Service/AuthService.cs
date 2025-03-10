@@ -42,29 +42,29 @@ namespace api_auth_service.Service
             return JsonSerializer.Deserialize<ApiResponseDto>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions { PropertyNameCaseInsensitive = true })?.UserInfo;
         }
 
-        public async Task<string> GetLoginUrl(string redirect)
+        public async Task<string> GetLoginUrl(string redirect = null)
         {
-            var baseUri = new Uri(_apiAuthUrl);
-            var loginUri = new Uri(baseUri, "/login");
+            var apiUrl = new Uri(_apiAuthUrl);
+            var loginUri = new Uri(apiUrl, "/login");
 
             // Use UriBuilder to modify the URL
             var uriBuilder = new UriBuilder(loginUri);
             var query = HttpUtility.ParseQueryString(uriBuilder.Query);
-            query["url"] = redirect;
+            query["url"] = redirect == null ? _apiBaseUrl : redirect;
             uriBuilder.Query = query.ToString();
 
             return uriBuilder.ToString();
         }
 
-        public async Task<string> GetLogoutUrl(string redirect)
+        public async Task<string> GetLogoutUrl(string redirect = null)
         {
-            var baseUri = new Uri(_apiAuthUrl);
-            var loginUri = new Uri(baseUri, "/logout");
+            var apiUri = new Uri(_apiAuthUrl);
+            var loginUri = new Uri(apiUri, "/logout");
 
             // Use UriBuilder to modify the URL
             var uriBuilder = new UriBuilder(loginUri);
             var query = HttpUtility.ParseQueryString(uriBuilder.Query);
-            query["url"] = redirect;
+            query["url"] = redirect == null ? _apiBaseUrl : redirect;
             uriBuilder.Query = query.ToString();
 
             return uriBuilder.ToString();
@@ -75,12 +75,13 @@ namespace api_auth_service.Service
             if (Request == null) return;
             if (Token == null || string.IsNullOrEmpty(Token)) return;
 
-            var domain = new Uri(Request.GetEncodedUrl()).Host;
+            var domain = new Uri(Request.GetEncodedUrl()).Host.TrimStart('.');
             var isLocalHost = Request.Host.Host.Contains("localhost") || domain == "127.0.0.1";
             Response.Cookies.Append("googleToken", Token, new CookieOptions
             {
                 HttpOnly = true,  // Prevents JavaScript access
                 Secure = !isLocalHost, // Secure=True only in production
+                Path = "/",
                 SameSite = isLocalHost ? SameSiteMode.Lax : SameSiteMode.None, // Allows cross-origin cookie sending
                 Domain = isLocalHost ? null : domain, // ✅ Allows sharing cookies across subdomains only in production
                 Expires = DateTime.UtcNow.AddDays(7)
