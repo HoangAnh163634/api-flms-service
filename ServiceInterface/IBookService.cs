@@ -13,5 +13,8 @@ namespace api_flms_service.ServiceInterface
 
         Task<List<Book>> GetBorrowedBooksAsync(int userId);
         Task<IActionResult> RenewBookAsync(int userId, int bookId);
+
+        Task<IEnumerable<Book>> SearchBooksAsync(string? bookName, string? authorName, int? categoryId, int? minPrice, int? maxPrice);
+
     }
 }

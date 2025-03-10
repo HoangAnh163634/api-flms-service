@@ -137,7 +137,47 @@ namespace api_flms_service.Service
             // Trả kết quả với thời gian gia hạn
             return new OkObjectResult(new { message = "Book renewed successfully", newDueDate = vietnamTime.ToString("yyyy-MM-dd HH:mm:ss") });
         }
-    
+
+        public async Task<IEnumerable<Book>> SearchBooksAsync(string? bookName, string? authorName, int? categoryId, int? minPrice, int? maxPrice)
+        {
+            // Khởi tạo query cơ bản
+            IQueryable<Book> query = _dbContext.Books
+                .Include(b => b.Author)
+                .Include(b => b.Category);
+
+            // Nếu bookName có giá trị, áp dụng điều kiện tìm kiếm
+            if (!string.IsNullOrEmpty(bookName))
+            {
+                query = query.Where(b => b.BookName.Contains(bookName));
+            }
+
+            // Nếu authorName có giá trị, áp dụng điều kiện tìm kiếm
+            if (!string.IsNullOrEmpty(authorName))
+            {
+                query = query.Where(b => b.Author.AuthorName.Contains(authorName));
+            }
+
+            // Nếu categoryId có giá trị, áp dụng điều kiện tìm kiếm
+            if (categoryId.HasValue)
+            {
+                query = query.Where(b => b.CatId == categoryId.Value);
+            }
+
+            // Nếu minPrice có giá trị, áp dụng điều kiện tìm kiếm
+            if (minPrice.HasValue)
+            {
+                query = query.Where(b => b.BookPrice >= minPrice.Value);
+            }
+
+            // Nếu maxPrice có giá trị, áp dụng điều kiện tìm kiếm
+            if (maxPrice.HasValue)
+            {
+                query = query.Where(b => b.BookPrice <= maxPrice.Value);
+            }
+
+            // Thực thi truy vấn và trả về kết quả
+            return await query.OrderBy(b => b.BookName).ToListAsync();
+        }
 
 
     }
