@@ -32,7 +32,10 @@ builder.Services.AddHttpClient();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-
+builder.Services.AddLogging(logging =>
+{
+    logging.AddConsole();
+});
 
 
 var app = builder.Build();
@@ -56,8 +59,8 @@ app.UseAuthorization();
 
 // Map Controllers and Razor Pages
 app.MapControllers();
-var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
-app.Urls.Add($"http://0.0.0.0:{port}");
+//var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+//app.Urls.Add($"http://0.0.0.0:{port}");
 app.MapRazorPages();
 
 app.Run();
