@@ -12,8 +12,8 @@ using api_flms_service.Model;
 namespace api_flms_service.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250217174644_LowercaseNames")]
-    partial class LowercaseNames
+    [Migration("20250225151946_FirstDB")]
+    partial class FirstDB
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -200,8 +200,8 @@ namespace api_flms_service.Migrations
                         .HasColumnType("text")
                         .HasColumnName("email");
 
-                    b.Property<int?>("GoogleId")
-                        .HasColumnType("integer")
+                    b.Property<string>("GoogleId")
+                        .HasColumnType("text")
                         .HasColumnName("googleid");
 
                     b.Property<long>("Mobile")

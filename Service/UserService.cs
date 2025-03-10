@@ -1,5 +1,7 @@
-﻿using api_flms_service.Model;
+﻿using api_auth_service.Service;
+using api_flms_service.Model;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 namespace api_flms_service.ServiceInterface
 {
 
@@ -54,6 +56,13 @@ namespace api_flms_service.ServiceInterface
                 _dbContext.Users.Remove(user);
                 await _dbContext.SaveChangesAsync();
                 return true;
+            }
+
+            public async Task<User> GetUserByEmail(string email)
+            {
+               var user = await _dbContext.Users.FirstOrDefaultAsync(x => x.Email == email);
+
+                return user;
             }
         }
     }

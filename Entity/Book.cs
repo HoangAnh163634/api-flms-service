@@ -18,5 +18,8 @@ namespace api_flms_service.Model
         // Navigation Properties
         public Author Author { get; set; } = null!;
         public Category Category { get; set; } = null!;
+
+        public DateTime BorrowedUntil { get; set; } // Thêm trường này
+        public int UserId { get; set; } // Thêm UserId để liên kết sách với người dùng
     }
 }

@@ -1,4 +1,5 @@
-﻿using api_flms_service.Model;
+﻿using api_auth_service.Service;
+using api_flms_service.Model;
 using api_flms_service.ServiceInterface;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,11 +10,16 @@ namespace api_flms_service.Controllers
     public class BookController : ControllerBase
     {
         private readonly IBookService _bookService;
+        private readonly IUserService _userService;
+        private readonly AuthService _authService;
 
-        public BookController(IBookService bookService)
+        public BookController(IBookService bookService, IUserService userService, AuthService authService)
         {
             _bookService = bookService;
+            _userService = userService;
+            _authService = authService;
         }
+
 
         /// <summary>
         /// Get all books
@@ -199,6 +205,43 @@ namespace api_flms_service.Controllers
             {
                 return StatusCode(500, new { message = "An error occurred while deleting the book.", details = ex.Message });
             }
+        }
+
+        // API để lấy danh sách sách mượn của người dùng
+        [HttpGet("borrowed")]
+        public async Task<IActionResult> GetBorrowedBooks()
+        {
+            var userOfGG = await _authService.GetCurrentUserAsync();
+
+            var user = await _userService.GetUserByEmail(userOfGG.Email); // Lấy UserId từ JWT hoặc Session
+            if (user.Id <= 0)
+            {
+                return Unauthorized("User is not logged in");
+            }
+
+            var books = await _bookService.GetBorrowedBooksAsync(user.Id);
+            return Ok(books);
+        }
+
+        // API gia hạn sách
+        [HttpPost("renew")]
+        public async Task<IActionResult> RenewBook([FromBody] RenewRequest request)
+        {
+            var userOfGG = await _authService.GetCurrentUserAsync();
+
+            var user = await _userService.GetUserByEmail(userOfGG.Email); // Lấy UserId từ JWT hoặc Session
+            if (user.Id <= 0)
+            {
+                return Unauthorized("User is not logged in");
+            }
+
+            if (request.BookId <= 0)
+            {
+                return BadRequest("Invalid ID");
+            }
+
+            var result = await _bookService.RenewBookAsync(user.Id, request.BookId);
+            return result;
         }
     }
 }

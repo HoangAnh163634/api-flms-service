@@ -75,12 +75,13 @@ namespace api_auth_service.Service
             if (Request == null) return;
             if (Token == null || string.IsNullOrEmpty(Token)) return;
 
-            var domain = new Uri(Request.GetEncodedUrl()).Host;
+            var domain = new Uri(Request.GetEncodedUrl()).Host.TrimStart('.');
             var isLocalHost = Request.Host.Host.Contains("localhost") || domain == "127.0.0.1";
             Response.Cookies.Append("googleToken", Token, new CookieOptions
             {
                 HttpOnly = true,  // Prevents JavaScript access
                 Secure = !isLocalHost, // Secure=True only in production
+                Path = "/",
                 SameSite = isLocalHost ? SameSiteMode.Lax : SameSiteMode.None, // Allows cross-origin cookie sending
                 Domain = isLocalHost ? null : domain, // ✅ Allows sharing cookies across subdomains only in production
                 Expires = DateTime.UtcNow.AddDays(7)

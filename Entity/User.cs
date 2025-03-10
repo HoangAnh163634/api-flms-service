@@ -12,7 +12,7 @@ namespace api_flms_service.Model
         public long Mobile { get; set; }
         public string Address { get; set; } = null!;
 
-        public int? GoogleId { get; set; } 
+        public string? GoogleId { get; set; } 
     }
 
 }

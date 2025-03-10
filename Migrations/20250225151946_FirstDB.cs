@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace api_flms_service.Migrations
 {
     /// <inheritdoc />
-    public partial class LowercaseNames : Migration
+    public partial class FirstDB : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -83,7 +83,7 @@ namespace api_flms_service.Migrations
                     password = table.Column<string>(type: "text", nullable: false),
                     mobile = table.Column<long>(type: "bigint", nullable: false),
                     address = table.Column<string>(type: "text", nullable: false),
-                    googleid = table.Column<int>(type: "integer", nullable: true)
+                    googleid = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
