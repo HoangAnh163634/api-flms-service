@@ -243,5 +243,14 @@ namespace api_flms_service.Controllers
             var result = await _bookService.RenewBookAsync(user.Id, request.BookId);
             return result;
         }
+
+        [HttpGet("search")]
+        public async Task<IActionResult> SearchBooks([FromQuery] string? bookName, [FromQuery] string? authorName,
+                                                  [FromQuery] int? categoryId, [FromQuery] int? minPrice,
+                                                  [FromQuery] int? maxPrice)
+        {
+            var books = await _bookService.SearchBooksAsync(bookName, authorName, categoryId, minPrice, maxPrice);
+            return Ok(books);
+        }
     }
 }
