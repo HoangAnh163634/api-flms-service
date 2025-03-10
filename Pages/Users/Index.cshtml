@@ -1,0 +1,47 @@
+﻿@page
+@model api_flms_service.Pages.Users.IndexModel
+@{
+    ViewData["Title"] = "User List";
+    Layout = "~/Pages/Shared/_Layout.cshtml";
+}
+<div class="container">
+    <h4 class="text-center">User List</h4>
+    <div class="text-right mb-3">
+        <a href="/Users/Add" class="btn btn-success">Add New User</a>
+    </div>
+    <table class="table table-bordered table-hover text-center" id="usersTable">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Mobile</th>
+                <th>Address</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in Model.Users)
+            {
+                <tr>
+                    <td>@user.Name</td>
+                    <td>@user.Email</td>
+                    <td>@user.Mobile</td>
+                    <td>@user.Address</td>
+                    <td>
+                        <a href="/Users/Edit?id=@user.Id" class="btn btn-primary">Edit</a>
+                        <button class="btn btn-danger" onclick="deleteUser(@user.Id)">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<script>
+    async function deleteUser(id) {
+        if (confirm("Are you sure you want to delete this user?")) {
+            await fetch(`/api/v0/users/${id}`, { method: 'DELETE' });
+            location.reload();
+        }
+    }
+</script>
