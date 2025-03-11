@@ -1,4 +1,4 @@
-﻿using api_auth_service.Service;
+﻿using api_auth_service.Services;
 using api_flms_service.Model;
 using api_flms_service.ServiceInterface;
 using Microsoft.AspNetCore.Mvc;

@@ -4,8 +4,7 @@ using api_flms_service.ServiceInterface;
 using api_flms_service.ServiceInterface.api_flms_service.Services;
 using api_flms_service.Services;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authentication.Google;
-using api_auth_service.Service;
+using api_auth_service.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 

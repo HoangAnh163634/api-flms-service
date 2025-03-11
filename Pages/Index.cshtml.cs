@@ -1,7 +1,5 @@
-﻿using api_auth_service.Service;
-using api_flms_service.Service;
-using api_flms_service.ServiceInterface;
-using api_flms_service.ServiceInterface.api_flms_service.Services;
+﻿using api_auth_service.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;

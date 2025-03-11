@@ -1,7 +1,6 @@
-using api_auth_service.Service;
+using api_auth_service.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using System.Threading.Tasks;
 
 [IgnoreAntiforgeryToken] // Disable CSRF protection for API-like request
 public class LogoutModel : PageModel

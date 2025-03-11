@@ -1,7 +1,5 @@
-﻿using api_auth_service.Service;
-using api_flms_service.Model;
+﻿using api_flms_service.Model;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
 namespace api_flms_service.ServiceInterface
 {
 
@@ -10,10 +8,12 @@ namespace api_flms_service.ServiceInterface
         public class UserService : IUserService
         {
             private readonly AppDbContext _dbContext;
+            private readonly IConfiguration _configuration;
 
-            public UserService(AppDbContext dbContext)
+            public UserService(AppDbContext dbContext, IConfiguration configuration)
             {
                 _dbContext = dbContext;
+                _configuration = configuration;
             }
 
             public async Task<IEnumerable<User>> GetAllUsersAsync()
@@ -63,6 +63,32 @@ namespace api_flms_service.ServiceInterface
                var user = await _dbContext.Users.FirstOrDefaultAsync(x => x.Email == email);
 
                 return user;
+            }
+
+            public async Task<bool> IsUserAllowedAsync(string email)
+            {
+                var allowedEmails = _configuration.GetSection("AllowEmail").Get<string[]>();
+
+                if (allowedEmails != null && allowedEmails.Any(format => email.EndsWith(format)))
+                {
+                    return true; // Email matches one of the allowed formats
+                }
+
+                // Check the database for an existing user or admin
+                var user = await _dbContext.Users.AnyAsync(u => u.Email == email);
+                var admin = await _dbContext.Admins.AnyAsync(a => a.Email == email);
+
+                return user || admin; // Allow access if user or admin exists in the database
+            }
+
+            public async Task<bool> IsAuthenticatedUser(string email)
+            {
+                return await _dbContext.Users.AnyAsync(u => u.Email == email);
+            }
+
+            public async Task<bool> IsAuthenticatedAdmin(string email)
+            {
+                return await _dbContext.Admins.AnyAsync(a => a.Email == email);
             }
         }
     }

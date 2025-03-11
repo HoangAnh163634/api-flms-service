@@ -4,17 +4,20 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Web;
+using api_flms_service.ServiceInterface;
+using api_flms_service.ServiceInterface.api_flms_service.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.Extensions.Configuration;
 
-namespace api_auth_service.Service
+namespace api_auth_service.Services
 {
 
     public class AuthService
     {
         private readonly HttpClient _httpClient;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IUserService _user;
         private readonly string _apiBaseUrl;
         private readonly string _apiAuthUrl;
 
@@ -39,7 +42,9 @@ namespace api_auth_service.Service
             var response = await _httpClient.SendAsync(request);
             if (!response.IsSuccessStatusCode) return null;
 
-            return JsonSerializer.Deserialize<ApiResponseDto>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions { PropertyNameCaseInsensitive = true })?.UserInfo;
+            var userInfo = JsonSerializer.Deserialize<ApiResponseDto>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions { PropertyNameCaseInsensitive = true })?.UserInfo;
+
+            return userInfo;
         }
 
         public async Task<string> GetLoginUrl(string redirect = null)
