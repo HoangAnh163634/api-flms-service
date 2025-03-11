@@ -1,4 +1,5 @@
-﻿using api_flms_service.Model;
+﻿using api_flms_service.Entity;
+using api_flms_service.Model;
 
 namespace api_flms_service.ServiceInterface
 {

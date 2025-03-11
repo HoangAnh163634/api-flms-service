@@ -1,14 +1,14 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace api_flms_service.Model
+namespace api_flms_service.Entity
 {
     public class Category
     {
         [Key]
-        public int CatId { get; set; } // Primary Key
-        [Required(ErrorMessage = "Category Name is required")]
-        [StringLength(100, ErrorMessage = "Category Name cannot exceed 100 characters")]
-        public string CatName { get; set; } = null!;
-    }
+        public int CategoryId { get; set; }
+        public string? CategoryName { get; set; }
 
+        public ICollection<BookCategory> BookCategories { get; set; } = new List<BookCategory>();  // Many-to-many relationship with Book
+        public ICollection<Book> Books => BookCategories.Select(bc => bc.Book).ToList();  // Navigation property for easy access
+    }
 }

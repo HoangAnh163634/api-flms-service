@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace api_flms_service.Pages
 {
+    [AuthorizeAdmin]
     public class DashboardModel : PageModel
     {
         private readonly IAuthorService _authorService;
