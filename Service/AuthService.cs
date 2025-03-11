@@ -21,10 +21,11 @@ namespace api_auth_service.Services
         private readonly string _apiBaseUrl;
         private readonly string _apiAuthUrl;
 
-        public AuthService(HttpClient httpClient, IHttpContextAccessor httpContextAccessor, IConfiguration configuration)
+        public AuthService(HttpClient httpClient, IUserService userService, IHttpContextAccessor httpContextAccessor, IConfiguration configuration)
         {
             _httpClient = httpClient;
             _httpContextAccessor = httpContextAccessor;
+            _user = userService;
             _apiBaseUrl = configuration["ApiBaseUrl"]; // Read base URL from appsettings.json
             _apiAuthUrl = configuration["ApiAuthUrl"]; // Read auth URL from appsettings.json
         }
@@ -41,8 +42,19 @@ namespace api_auth_service.Services
 
             var response = await _httpClient.SendAsync(request);
             if (!response.IsSuccessStatusCode) return null;
-
+            
             var userInfo = JsonSerializer.Deserialize<ApiResponseDto>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions { PropertyNameCaseInsensitive = true })?.UserInfo;
+
+            var user = await _user.GetUserByEmail(userInfo.Email);
+            if (user == null)
+            {
+                await _user.AddUserAsync(new api_flms_service.Entity.User
+                {
+                    Email = userInfo.Email,
+                    Name = userInfo.Name,
+                    
+                });
+            }
 
             return userInfo;
         }

@@ -1,4 +1,5 @@
-﻿using api_flms_service.Model;
+﻿using api_flms_service.Entity;
+using api_flms_service.Model;
 using api_flms_service.ServiceInterface;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,11 +16,11 @@ namespace api_flms_service.Services
 
         public async Task<IEnumerable<Book>> GetAllBooksAsync(string authorFilter = null)
         {
-            var books = _dbContext.Books.Include(b => b.Category).Include(b => b.Author).AsQueryable();
+            var books = _dbContext.Books.Include(b => b.Categories).Include(b => b.Author).AsQueryable();
 
             if (!string.IsNullOrEmpty(authorFilter))
             {
-                books = books.Where(b => b.Author.AuthorName.Contains(authorFilter));
+                books = books.Where(b => b.Author.Name.Contains(authorFilter));
             }
 
             return await books.ToListAsync();
@@ -27,7 +28,7 @@ namespace api_flms_service.Services
 
         public async Task<Book?> GetBookByIdAsync(int id)
         {
-            return await _dbContext.Books.Include(b => b.Category).Include(b => b.Author).FirstOrDefaultAsync(b => b.BookId == id);
+            return await _dbContext.Books.Include(b => b.Categories).Include(b => b.Author).FirstOrDefaultAsync(b => b.BookId == id);
         }
 
         public async Task<Book> AddBookAsync(Book book)
@@ -42,11 +43,9 @@ namespace api_flms_service.Services
             var existingBook = await _dbContext.Books.FindAsync(book.BookId);
             if (existingBook == null) return null;
 
-            existingBook.BookName = book.BookName;
+            existingBook.Title = book.Title;
             existingBook.AuthorId = book.AuthorId;
-            existingBook.CatId = book.CatId;
-            existingBook.BookNo = book.BookNo;
-            existingBook.BookPrice = book.BookPrice;
+            existingBook.ISBN = book.ISBN;
             await _dbContext.SaveChangesAsync();
             return existingBook;
         }

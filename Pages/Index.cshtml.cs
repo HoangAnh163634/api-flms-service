@@ -1,4 +1,6 @@
 ﻿using api_auth_service.Services;
+using api_flms_service.Entity;
+using api_flms_service.ServiceInterface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
@@ -8,33 +10,24 @@ namespace api_flms_service.Pages
 {
     public class IndexModel : PageModel
     {
-        private readonly AuthService _auth;
-        public CurrentUser? CurrentUser { get; private set; }
-        public string LoginUrl { get; set; }
-        public string LogoutUrl { get; set; }
-        public string _BaseUrl { get; set; }
+        private readonly IAuthorService _author;
+        private readonly IBookService _book;
 
-        public IndexModel(AuthService authService, IConfiguration configuration)
+        public IndexModel(IAuthorService author, IBookService book)
         {
-            _auth = authService;
-            _BaseUrl = configuration["ApiBaseUrl"];
+            _author = author;
+            _book = book;
         }
 
-        public async Task<IActionResult> OnGetAsync()
+        [BindProperty]
+        public List<Entity.Author> authors { get; set; }
+        [BindProperty]
+        public List<Book> books { get; set; }
+
+        public async Task OnGet()
         {
-            var token = Request?.Query["token"];
-
-            _auth.HandleLogin(Request, Response, token);
-
-            CurrentUser = await _auth.GetCurrentUserAsync();
-            LoginUrl = await _auth.GetLoginUrl(Request.GetEncodedUrl());
-            LogoutUrl = await _auth.GetLogoutUrl(Request.GetEncodedUrl());
-            if (!string.IsNullOrEmpty(token))
-            {
-                return Redirect(_BaseUrl);
-            }
-
-            return Page();
+            authors = await _author.GetAllAuthorsAsync();
+            books = (await _book.GetAllBooksAsync()).ToList();
         }
 
     }

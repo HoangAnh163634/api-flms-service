@@ -25,11 +25,10 @@
                 <tr>
                     <td>@user.Name</td>
                     <td>@user.Email</td>
-                    <td>@user.Mobile</td>
-                    <td>@user.Address</td>
+                    <td>@user.PhoneNumber</td>
                     <td>
-                        <a href="/Users/Edit?id=@user.Id" class="btn btn-primary">Edit</a>
-                        <button class="btn btn-danger" onclick="deleteUser(@user.Id)">Delete</button>
+                        <a href="/Users/Edit?id=@user.UserId" class="btn btn-primary">Edit</a>
+                        <button class="btn btn-danger" onclick="deleteUser(@user.UserId)">Delete</button>
                     </td>
                 </tr>
             }

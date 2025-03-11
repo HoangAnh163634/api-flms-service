@@ -1,4 +1,5 @@
-﻿using api_flms_service.Model;
+﻿using api_flms_service.Entity;
+using api_flms_service.Model;
 using Microsoft.EntityFrameworkCore;
 namespace api_flms_service.ServiceInterface
 {
@@ -35,14 +36,12 @@ namespace api_flms_service.ServiceInterface
 
             public async Task<User?> UpdateUserAsync(User user)
             {
-                var existingUser = await _dbContext.Users.FindAsync(user.Id);
+                var existingUser = await _dbContext.Users.FindAsync(user.UserId);
                 if (existingUser == null) return null;
 
                 existingUser.Name = user.Name;
                 existingUser.Email = user.Email;
-                existingUser.Password = user.Password;
-                existingUser.Mobile = user.Mobile;
-                existingUser.Address = user.Address;
+                existingUser.PhoneNumber = user.PhoneNumber;
 
                 await _dbContext.SaveChangesAsync();
                 return existingUser;
@@ -60,7 +59,11 @@ namespace api_flms_service.ServiceInterface
 
             public async Task<User> GetUserByEmail(string email)
             {
-               var user = await _dbContext.Users.FirstOrDefaultAsync(x => x.Email == email);
+               var user = await _dbContext.Users
+                                .Include(e => e.BookLoans)
+                                .ThenInclude(e => e.Book)
+                                .ThenInclude(b => b.Reviews)
+                                .FirstOrDefaultAsync(x => x.Email == email);
 
                 return user;
             }

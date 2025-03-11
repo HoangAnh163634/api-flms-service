@@ -5,6 +5,7 @@ using api_flms_service.ServiceInterface.api_flms_service.Services;
 using api_flms_service.Services;
 using Microsoft.EntityFrameworkCore;
 using api_auth_service.Services;
+using api_flms_service.Entity;
 
 var builder = WebApplication.CreateBuilder(args);
 

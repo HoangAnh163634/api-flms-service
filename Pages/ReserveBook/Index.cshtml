@@ -24,11 +24,9 @@
             @foreach (var book in Model.Books)
             {
                 <tr>
-                    <td>@book.BookName</td>
-                    <td>@book.Author.AuthorName</td>
-                    <td>@book.Category.CatName</td>
-                    <td>@book.BookNo</td>
-                    <td>@book.BookPrice</td>
+                    <td>@book.Title</td>
+                    <td>@book.Author.Name</td>
+                    <td>@book.ISBN</td>
                     <td>
                         <a href="/Books/Manage?id=@book.BookId" class="btn btn-primary">Edit</a>
                         <button class="btn btn-danger" onclick="deleteBook(@book.BookId)">Delete</button>
