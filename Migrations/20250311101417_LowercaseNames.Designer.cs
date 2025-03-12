@@ -12,7 +12,7 @@ using api_flms_service.Entity;
 namespace api_flms_service.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250311100839_LowercaseNames")]
+    [Migration("20250311101417_LowercaseNames")]
     partial class LowercaseNames
     {
         /// <inheritdoc />
