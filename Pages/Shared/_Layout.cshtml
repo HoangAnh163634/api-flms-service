@@ -1,37 +1,53 @@
-﻿@using api_auth_service.Service
-@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
-
+﻿@using api_auth_service.Services
+@using api_flms_service.ServiceInterface
+@using api_flms_service.ServiceInterface.api_flms_service.Services
+@using api_flms_service.Services
 
 @inject AuthService AuthService
+@inject IUserService UserService
 @inject IHttpContextAccessor HttpContextAccessor
+
 @{
     var userInfo = await AuthService.GetCurrentUserAsync();
     var LoginUrl = await AuthService.GetLoginUrl();
 }
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta name="viewport" content="width=device-width" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>@ViewData["Title"] - Library Management System</title>
-    <meta charset="utf-8" name="viewport" content="width=device-width,initial-scale=1">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" />
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
-            <a class="navbar-brand" href="/Dashboard">Library Management System (LMS)</a>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item active">
+                        <a class="nav-link" href="@Url.Page("Index")" data-toggle="tooltip" data-placement="bottom" title="Home">Library Management System (LMS)</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="@Url.Page("Gallery")" data-toggle="tooltip" data-placement="bottom" title="Gallery">Gallery</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="@Url.Page("Dashboard")" data-toggle="tooltip" data-placement="bottom" title="Librarian">Librarian</a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- User profile and logout -->
             <ul class="navbar-nav ml-auto">
-                @if (userInfo != null && !string.IsNullOrEmpty(userInfo.Name))
+                @if (userInfo != null)
                 {
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="profileDropdown" role="button" data-toggle="dropdown">
                             <img src="@userInfo.Picture" class="rounded-circle" width="30" height="30" alt="User Image"> @userInfo.Name
                         </a>
-                        <div class="dropdown-menu">
+                        <div class="dropdown-menu" aria-labelledby="profileDropdown">
                             <a class="dropdown-item" href="/ViewProfile">View Profile</a>
                             <a class="dropdown-item" href="/EditProfile">Edit Profile</a>
                         </div>
@@ -49,9 +65,18 @@
             </ul>
         </div>
     </nav>
-    <div class="container">
+
+    <!-- Page content -->
+    <div class="container mt-4">
         @RenderBody()
     </div>
+
+    <!-- Tooltip initialization -->
+    <script>
+        $(document).ready(function () {
+            // Initialize all tooltips on the page
+            $('[data-toggle="tooltip"]').tooltip();
+        });
+    </script>
 </body>
 </html>
-

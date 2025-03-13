@@ -4,8 +4,8 @@ using api_flms_service.ServiceInterface;
 using api_flms_service.ServiceInterface.api_flms_service.Services;
 using api_flms_service.Services;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authentication.Google;
-using api_auth_service.Service;
+using api_auth_service.Services;
+using api_flms_service.Entity;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -59,8 +59,13 @@ app.UseAuthorization();
 
 // Map Controllers and Razor Pages
 app.MapControllers();
-//var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
-//app.Urls.Add($"http://0.0.0.0:{port}");
+
+if (!app.Environment.IsDevelopment())
+{
+    var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+    app.Urls.Add($"http://0.0.0.0:{port}");
+}
+
 app.MapRazorPages();
 
 app.Run();

@@ -1,4 +1,5 @@
-﻿using api_auth_service.Service;
+﻿using api_auth_service.Services;
+using api_flms_service.Entity;
 using api_flms_service.Model;
 using api_flms_service.ServiceInterface;
 using Microsoft.AspNetCore.Mvc;
@@ -34,14 +35,13 @@ namespace api_flms_service.Controllers
                 var bookDtos = books.Select(b => new BookDto
                 {
                     BookId = b.BookId,
-                    BookName = b.BookName,
+                    BookName = b.Title,
                     AuthorId = b.AuthorId,
-                    AuthorName = b.Author.AuthorName,
-                    CatId = b.CatId,
-                    CategoryName = b.Category.CatName,
-                    BookNo = b.BookNo,
-                    BookPrice = b.BookPrice
-                });
+                    AuthorName = b.Author.Name,
+                    Category = b.Categories.ToList(),
+                    BookNo = b.ISBN,
+                    BookPrice = b.PublicationYear
+                }).ToList();
 
                 return Ok(bookDtos);
             }
@@ -50,6 +50,7 @@ namespace api_flms_service.Controllers
                 return StatusCode(500, new { message = "An error occurred while retrieving books.", details = ex.Message });
             }
         }
+
 
         /// <summary>
         /// Get book by ID
@@ -70,13 +71,12 @@ namespace api_flms_service.Controllers
                 var bookDto = new BookDto
                 {
                     BookId = book.BookId,
-                    BookName = book.BookName,
+                    BookName = book.Title,
                     AuthorId = book.AuthorId,
-                    AuthorName = book.Author.AuthorName,
-                    CatId = book.CatId,
-                    CategoryName = book.Category.CatName,
-                    BookNo = book.BookNo,
-                    BookPrice = book.BookPrice
+                    AuthorName = book.Author.Name,
+                    Category = book.Categories.ToList(),
+                    BookNo = book.ISBN,
+                    BookPrice = book.PublicationYear
                 };
 
                 return Ok(bookDto);
@@ -104,11 +104,10 @@ namespace api_flms_service.Controllers
             {
                 var book = new Book
                 {
-                    BookName = bookDto.BookName,
+                    Title = bookDto.BookName,
                     AuthorId = bookDto.AuthorId,
-                    CatId = bookDto.CatId,
-                    BookNo = bookDto.BookNo,
-                    BookPrice = bookDto.BookPrice
+                    ISBN = bookDto.BookNo,
+                    AvailableCopies = bookDto.BookPrice
                 };
 
                 var createdBook = await _bookService.CreateBookAsync(book);
@@ -116,13 +115,11 @@ namespace api_flms_service.Controllers
                 var createdBookDto = new BookDto
                 {
                     BookId = createdBook.BookId,
-                    BookName = createdBook.BookName,
+                    BookName = createdBook.Title,
                     AuthorId = createdBook.AuthorId,
-                    AuthorName = createdBook.Author.AuthorName,
-                    CatId = createdBook.CatId,
-                    CategoryName = createdBook.Category.CatName,
-                    BookNo = createdBook.BookNo,
-                    BookPrice = createdBook.BookPrice
+                    AuthorName = createdBook.Author.Name,
+                    BookNo = createdBook.ISBN,
+                    BookPrice = 0
                 };
 
                 return CreatedAtAction(nameof(GetBookById), new { id = createdBook.BookId }, createdBookDto);
@@ -154,24 +151,19 @@ namespace api_flms_service.Controllers
                     return NotFound(new { message = "Book not found" });
                 }
 
-                existingBook.BookName = bookDto.BookName;
+                existingBook.Title = bookDto.BookName;
                 existingBook.AuthorId = bookDto.AuthorId;
-                existingBook.CatId = bookDto.CatId;
-                existingBook.BookNo = bookDto.BookNo;
-                existingBook.BookPrice = bookDto.BookPrice;
+                existingBook.ISBN = bookDto.BookNo;
 
                 var updatedBook = await _bookService.UpdateBookAsync(existingBook);
 
                 var updatedBookDto = new BookDto
                 {
                     BookId = updatedBook.BookId,
-                    BookName = updatedBook.BookName,
+                    BookName = updatedBook.Title,
                     AuthorId = updatedBook.AuthorId,
-                    AuthorName = updatedBook.Author.AuthorName,
-                    CatId = updatedBook.CatId,
-                    CategoryName = updatedBook.Category.CatName,
-                    BookNo = updatedBook.BookNo,
-                    BookPrice = updatedBook.BookPrice
+                    AuthorName = updatedBook.Author.Name,
+                    BookNo = updatedBook.ISBN
                 };
 
                 return Ok(updatedBookDto);
@@ -214,12 +206,12 @@ namespace api_flms_service.Controllers
             var userOfGG = await _authService.GetCurrentUserAsync();
 
             var user = await _userService.GetUserByEmail(userOfGG.Email); // Lấy UserId từ JWT hoặc Session
-            if (user.Id <= 0)
+            if (user.UserId <= 0)
             {
                 return Unauthorized("User is not logged in");
             }
 
-            var books = await _bookService.GetBorrowedBooksAsync(user.Id);
+            var books = await _bookService.GetBorrowedBooksAsync(user.UserId);
             return Ok(books);
         }
 
@@ -230,7 +222,7 @@ namespace api_flms_service.Controllers
             var userOfGG = await _authService.GetCurrentUserAsync();
 
             var user = await _userService.GetUserByEmail(userOfGG.Email); // Lấy UserId từ JWT hoặc Session
-            if (user.Id <= 0)
+            if (user.UserId <= 0)
             {
                 return Unauthorized("User is not logged in");
             }
@@ -240,7 +232,7 @@ namespace api_flms_service.Controllers
                 return BadRequest("Invalid ID");
             }
 
-            var result = await _bookService.RenewBookAsync(user.Id, request.BookId);
+            var result = await _bookService.RenewBookAsync(user.UserId, request.BookId);
             return result;
         }
 

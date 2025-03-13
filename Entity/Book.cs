@@ -1,25 +1,26 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace api_flms_service.Model
+namespace api_flms_service.Entity
 {
     public class Book
     {
         [Key]
-        public int BookId { get; set; } // Primary Key
-        public string BookName { get; set; } = null!;
-        [ForeignKey(nameof(Author))]
-        public int AuthorId { get; set; } // Foreign Key
-        [ForeignKey(nameof(Category))]
-        public int CatId { get; set; } // Foreign Key
-        public int BookNo { get; set; }
-        public int BookPrice { get; set; }
+        public int BookId { get; set; }
+        public int AuthorId { get; set; }
+        public Author Author { get; set; }
+        public int AvailableCopies { get; set; }
+        public string? BookDescription { get; set; }
+        public string CloudinaryImageId { get; set; }
+        public string? ISBN { get; set; }
+        public int PublicationYear { get; set; }
+        public string? Title { get; set; }
 
-        // Navigation Properties
-        public Author Author { get; set; } = null!;
-        public Category Category { get; set; } = null!;
+        public ICollection<BookCategory> BookCategories { get; set; } = new List<BookCategory>();  // Many-to-many relationship with Category
+        public ICollection<Category> Categories => BookCategories.Select(bc => bc.Category).ToList();  // Navigation property for easy access
 
-        public DateTime BorrowedUntil { get; set; } // Thêm trường này
-        public int UserId { get; set; } // Thêm UserId để liên kết sách với người dùng
+        public ICollection<Loan> BookLoans { get; set; }
+        public ICollection<Review> Reviews { get; set; }
     }
+
 }

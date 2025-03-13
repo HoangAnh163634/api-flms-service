@@ -1,4 +1,5 @@
-﻿using api_flms_service.Model;
+﻿using api_flms_service.Entity;
+using api_flms_service.Model;
 using global::api_flms_service.Model;
 using global::api_flms_service.ServiceInterface;
 using Microsoft.EntityFrameworkCore;
@@ -33,10 +34,10 @@ namespace api_flms_service.Services
 
         public async Task<Category?> UpdateCategoryAsync(Category category)
         {
-            var existingCategory = await _dbContext.Categories.FindAsync(category.CatId);
+            var existingCategory = await _dbContext.Categories.FindAsync(category.CategoryId);
             if (existingCategory == null) return null;
 
-            existingCategory.CatName = category.CatName;
+            existingCategory.CategoryName = category.CategoryName;
             await _dbContext.SaveChangesAsync();
             return existingCategory;
         }
