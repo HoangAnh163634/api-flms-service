@@ -21,5 +21,8 @@ namespace api_flms_service.Model
 
         public DateTime BorrowedUntil { get; set; } // Thêm trường này
         public int UserId { get; set; } // Thêm UserId để liên kết sách với người dùng
+
+        // Lưu đường dẫn ảnh dưới dạng chuỗi, các đường dẫn được phân cách bởi dấu cách hoặc dấu phẩy
+        public string ImageUrls { get; set; } = ""; // Lưu chuỗi đường dẫn ảnh, ví dụ "image1.jpg image2.jpg image3.jpg"
     }
 }

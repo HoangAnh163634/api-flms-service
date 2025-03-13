@@ -80,7 +80,7 @@ namespace api_flms_service.Pages.Books
     {
         public void OnGet()
         {
-            // Không cần xử lý gì trong hàm này, chỉ trả về trang cho người dùng
+            
         }
     }
 }

@@ -92,8 +92,48 @@ namespace api_flms_service.Controllers
         /// </summary>
         /// <param name="bookDto">Book DTO</param>
         /// <returns>Created book</returns>
+        //[HttpPost]
+        //public async Task<IActionResult> CreateBook([FromBody] BookDto bookDto)
+        //{
+        //    if (!ModelState.IsValid)
+        //    {
+        //        return BadRequest(ModelState);
+        //    }
+
+        //    try
+        //    {
+        //        var book = new Book
+        //        {
+        //            BookName = bookDto.BookName,
+        //            AuthorId = bookDto.AuthorId,
+        //            CatId = bookDto.CatId,
+        //            BookNo = bookDto.BookNo,
+        //            BookPrice = bookDto.BookPrice
+        //        };
+
+        //        var createdBook = await _bookService.CreateBookAsync(book);
+
+        //        var createdBookDto = new BookDto
+        //        {
+        //            BookId = createdBook.BookId,
+        //            BookName = createdBook.BookName,
+        //            AuthorId = createdBook.AuthorId,
+        //            AuthorName = createdBook.Author.AuthorName,
+        //            CatId = createdBook.CatId,
+        //            CategoryName = createdBook.Category.CatName,
+        //            BookNo = createdBook.BookNo,
+        //            BookPrice = createdBook.BookPrice
+        //        };
+
+        //        return CreatedAtAction(nameof(GetBookById), new { id = createdBook.BookId }, createdBookDto);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return StatusCode(500, new { message = "An error occurred while creating the book.", details = ex.Message });
+        //    }
+        //}
         [HttpPost]
-        public async Task<IActionResult> CreateBook([FromBody] BookDto bookDto)
+        public async Task<IActionResult> CreateBook([FromForm] BookDto bookDto, [FromForm] List<IFormFile> images)
         {
             if (!ModelState.IsValid)
             {
@@ -111,7 +151,7 @@ namespace api_flms_service.Controllers
                     BookPrice = bookDto.BookPrice
                 };
 
-                var createdBook = await _bookService.CreateBookAsync(book);
+                var createdBook = await _bookService.CreateBookAsync(book, images); // Truyền List<IFormFile> images
 
                 var createdBookDto = new BookDto
                 {
@@ -133,13 +173,8 @@ namespace api_flms_service.Controllers
             }
         }
 
-        /// <summary>
-        /// Update an existing book
-        /// </summary>
-        /// <param name="bookDto">Updated book DTO</param>
-        /// <returns>Updated book</returns>
         [HttpPut]
-        public async Task<IActionResult> UpdateBook([FromBody] BookDto bookDto)
+        public async Task<IActionResult> UpdateBook([FromForm] BookDto bookDto, [FromForm] List<IFormFile> images)
         {
             if (!ModelState.IsValid)
             {
@@ -160,7 +195,7 @@ namespace api_flms_service.Controllers
                 existingBook.BookNo = bookDto.BookNo;
                 existingBook.BookPrice = bookDto.BookPrice;
 
-                var updatedBook = await _bookService.UpdateBookAsync(existingBook);
+                var updatedBook = await _bookService.UpdateBookAsync(existingBook, images); // Truyền List<IFormFile> images
 
                 var updatedBookDto = new BookDto
                 {
@@ -181,6 +216,56 @@ namespace api_flms_service.Controllers
                 return StatusCode(500, new { message = "An error occurred while updating the book.", details = ex.Message });
             }
         }
+
+
+        /// <summary>
+        /// Update an existing book
+        /// </summary>
+        /// <param name="bookDto">Updated book DTO</param>
+        /// <returns>Updated book</returns>
+        //[HttpPut]
+        //public async Task<IActionResult> UpdateBook([FromBody] BookDto bookDto)
+        //{
+        //    if (!ModelState.IsValid)
+        //    {
+        //        return BadRequest(ModelState);
+        //    }
+
+        //    try
+        //    {
+        //        var existingBook = await _bookService.GetBookByIdAsync(bookDto.BookId);
+        //        if (existingBook == null)
+        //        {
+        //            return NotFound(new { message = "Book not found" });
+        //        }
+
+        //        existingBook.BookName = bookDto.BookName;
+        //        existingBook.AuthorId = bookDto.AuthorId;
+        //        existingBook.CatId = bookDto.CatId;
+        //        existingBook.BookNo = bookDto.BookNo;
+        //        existingBook.BookPrice = bookDto.BookPrice;
+
+        //        var updatedBook = await _bookService.UpdateBookAsync(existingBook);
+
+        //        var updatedBookDto = new BookDto
+        //        {
+        //            BookId = updatedBook.BookId,
+        //            BookName = updatedBook.BookName,
+        //            AuthorId = updatedBook.AuthorId,
+        //            AuthorName = updatedBook.Author.AuthorName,
+        //            CatId = updatedBook.CatId,
+        //            CategoryName = updatedBook.Category.CatName,
+        //            BookNo = updatedBook.BookNo,
+        //            BookPrice = updatedBook.BookPrice
+        //        };
+
+        //        return Ok(updatedBookDto);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return StatusCode(500, new { message = "An error occurred while updating the book.", details = ex.Message });
+        //    }
+        //}
 
         /// <summary>
         /// Delete a book by ID

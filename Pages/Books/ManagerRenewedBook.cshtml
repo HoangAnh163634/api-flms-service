@@ -8,6 +8,7 @@
         <tr>
             <th>Book Name</th>
             <th>Due Date</th>
+            <th>Image</th> <!-- Cột để hiển thị ảnh -->
             <th>Action</th>
         </tr>
     </thead>
@@ -38,6 +39,10 @@
                 row.innerHTML = `
                     <td>${book.bookName}</td>
                     <td>${new Date(book.borrowedUntil).toLocaleDateString()}</td>
+                    <td>
+                        <!-- Hiển thị ảnh nếu có -->
+                        ${book.imageUrls ? `<img src="${book.imageUrls.split(',')[0]}" alt="Book Image" style="width: 50px; height: 75px; object-fit: cover;" />` : 'No image'}
+                    </td>
                     <td><button onclick="renewBook(${book.bookId})">Renew</button></td>
                 `;
                 tableBody.appendChild(row);
