@@ -232,13 +232,13 @@ namespace api_flms_service.Migrations
                         .HasColumnName("userid");
 
                     b.HasKey("BookLoanId")
-                        .HasName("pk_bookloans");
+                        .HasName("pk_loans");
 
                     b.HasIndex("BookId");
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("bookloans");
+                    b.ToTable("loans");
                 });
 
             modelBuilder.Entity("api_flms_service.Entity.Review", b =>
@@ -275,7 +275,7 @@ namespace api_flms_service.Migrations
                         .HasColumnName("userid1");
 
                     b.HasKey("ReviewId")
-                        .HasName("pk_bookreviews");
+                        .HasName("pk_reviews");
 
                     b.HasIndex("BookId");
 
@@ -283,7 +283,7 @@ namespace api_flms_service.Migrations
 
                     b.HasIndex("UserId1");
 
-                    b.ToTable("bookreviews");
+                    b.ToTable("reviews");
                 });
 
             modelBuilder.Entity("api_flms_service.Entity.User", b =>

@@ -153,7 +153,7 @@ namespace api_flms_service.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "bookloans",
+                name: "loans",
                 columns: table => new
                 {
                     bookloanid = table.Column<int>(type: "integer", nullable: false)
@@ -165,15 +165,15 @@ namespace api_flms_service.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("pk_bookloans", x => x.bookloanid);
+                    table.PrimaryKey("pk_loans", x => x.bookloanid);
                     table.ForeignKey(
-                        name: "FK_bookloans_books_bookid",
+                        name: "FK_loans_books_bookid",
                         column: x => x.bookid,
                         principalTable: "books",
                         principalColumn: "bookid",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_bookloans_users_userid",
+                        name: "FK_loans_users_userid",
                         column: x => x.userid,
                         principalTable: "users",
                         principalColumn: "userid",
@@ -181,7 +181,7 @@ namespace api_flms_service.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "bookreviews",
+                name: "reviews",
                 columns: table => new
                 {
                     reviewid = table.Column<int>(type: "integer", nullable: false)
@@ -195,21 +195,21 @@ namespace api_flms_service.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("pk_bookreviews", x => x.reviewid);
+                    table.PrimaryKey("pk_reviews", x => x.reviewid);
                     table.ForeignKey(
-                        name: "FK_bookreviews_books_bookid",
+                        name: "FK_reviews_books_bookid",
                         column: x => x.bookid,
                         principalTable: "books",
                         principalColumn: "bookid",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_bookreviews_users_userid",
+                        name: "FK_reviews_users_userid",
                         column: x => x.userid,
                         principalTable: "users",
                         principalColumn: "userid",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_bookreviews_users_userid1",
+                        name: "FK_reviews_users_userid1",
                         column: x => x.userid1,
                         principalTable: "users",
                         principalColumn: "userid");
@@ -226,34 +226,34 @@ namespace api_flms_service.Migrations
                 column: "categoriescategoryid");
 
             migrationBuilder.CreateIndex(
-                name: "IX_bookloans_bookid",
-                table: "bookloans",
-                column: "bookid");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_bookloans_userid",
-                table: "bookloans",
-                column: "userid");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_bookreviews_bookid",
-                table: "bookreviews",
-                column: "bookid");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_bookreviews_userid",
-                table: "bookreviews",
-                column: "userid");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_bookreviews_userid1",
-                table: "bookreviews",
-                column: "userid1");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_books_authorid",
                 table: "books",
                 column: "authorid");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_loans_bookid",
+                table: "loans",
+                column: "bookid");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_loans_userid",
+                table: "loans",
+                column: "userid");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_reviews_bookid",
+                table: "reviews",
+                column: "bookid");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_reviews_userid",
+                table: "reviews",
+                column: "userid");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_reviews_userid1",
+                table: "reviews",
+                column: "userid1");
         }
 
         /// <inheritdoc />
@@ -266,13 +266,13 @@ namespace api_flms_service.Migrations
                 name: "bookcategory");
 
             migrationBuilder.DropTable(
-                name: "bookloans");
-
-            migrationBuilder.DropTable(
-                name: "bookreviews");
-
-            migrationBuilder.DropTable(
                 name: "issuedbooks");
+
+            migrationBuilder.DropTable(
+                name: "loans");
+
+            migrationBuilder.DropTable(
+                name: "reviews");
 
             migrationBuilder.DropTable(
                 name: "categories");
