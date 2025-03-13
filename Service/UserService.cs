@@ -24,7 +24,11 @@ namespace api_flms_service.ServiceInterface
 
             public async Task<User?> GetUserByIdAsync(int id)
             {
-                return await _dbContext.Users.FindAsync(id);
+                // Bao gồm BookLoans khi lấy User
+                return await _dbContext.Users
+                    .Include(u => u.BookLoans)
+                    .ThenInclude(l => l.Book) // Nếu cần thông tin Book
+                    .FirstOrDefaultAsync(u => u.UserId == id);
             }
 
             public async Task<User> AddUserAsync(User user)
@@ -36,13 +40,17 @@ namespace api_flms_service.ServiceInterface
 
             public async Task<User?> UpdateUserAsync(User user)
             {
-                var existingUser = await _dbContext.Users.FindAsync(user.UserId);
+                var existingUser = await _dbContext.Users
+                .Include(u => u.BookLoans)
+                .FirstOrDefaultAsync(u => u.UserId == user.UserId);
                 if (existingUser == null) return null;
 
                 existingUser.Name = user.Name;
                 existingUser.Email = user.Email;
                 existingUser.PhoneNumber = user.PhoneNumber;
+                existingUser.Role = user.Role;
 
+                _dbContext.Users.Update(existingUser);
                 await _dbContext.SaveChangesAsync();
                 return existingUser;
             }
@@ -92,6 +100,28 @@ namespace api_flms_service.ServiceInterface
             public async Task<bool> IsAuthenticatedAdmin(string email)
             {
                 return await _dbContext.Admins.AnyAsync(a => a.Email == email);
+            }
+
+            // Triển khai phương thức mới cho Loan
+            public async Task<Loan?> GetLoanByIdAsync(int loanId)
+            {
+                return await _dbContext.BookLoans
+                    .Include(l => l.Book) // Nếu cần thông tin Book
+                    .FirstOrDefaultAsync(l => l.BookLoanId == loanId);
+            }
+
+            public async Task<Loan?> UpdateLoanAsync(Loan loan)
+            {
+                var existingLoan = await _dbContext.BookLoans.FindAsync(loan.BookLoanId);
+                if (existingLoan == null) return null;
+
+                // Chỉ cập nhật các trường được phép chỉnh sửa
+                existingLoan.LoanDate = loan.LoanDate;
+                existingLoan.ReturnDate = loan.ReturnDate;
+
+                _dbContext.BookLoans.Update(existingLoan);
+                await _dbContext.SaveChangesAsync();
+                return existingLoan;
             }
         }
     }

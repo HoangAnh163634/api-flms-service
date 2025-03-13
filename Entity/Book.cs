@@ -19,8 +19,8 @@ namespace api_flms_service.Entity
         public ICollection<BookCategory> BookCategories { get; set; } = new List<BookCategory>();  // Many-to-many relationship with Category
         public ICollection<Category> Categories => BookCategories.Select(bc => bc.Category).ToList();  // Navigation property for easy access
 
-        public ICollection<Loan> BookLoans { get; set; }
-        public ICollection<Review> Reviews { get; set; }
+        public ICollection<Loan>? BookLoans { get; set; } = new List<Loan>();
+        public ICollection<Review>? Reviews { get; set; } = new List<Review>();
     }
 
 }

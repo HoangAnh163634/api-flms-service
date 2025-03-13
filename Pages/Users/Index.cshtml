@@ -15,7 +15,6 @@
                 <th>Name</th>
                 <th>Email</th>
                 <th>Mobile</th>
-                <th>Address</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -33,6 +32,10 @@
                 </tr>
             }
         </tbody>
+        @if (!Model.Users.Any())
+        {
+            <tr><td colspan="4">No users found.</td></tr>
+        }
     </table>
 </div>
 
@@ -42,7 +45,7 @@
             try {
                 const response = await fetch(`/api/v0/users/${id}`, { method: 'DELETE' });
                 if (response.ok) {
-                    location.reload();
+                    location.reload(); // Tải lại trang sau khi xóa thành công
                 } else {
                     alert("Failed to delete user.");
                 }

@@ -1,5 +1,5 @@
 ﻿@page
-@model WebApplication1.Pages.BookLoans.ListModel
+@model api_flms_service.Pages.BookLoans.ListModel
 
 @{
     ViewData["Title"] = "My Book Loans";
@@ -18,7 +18,7 @@
           <div class="card-body">
                 <ul class="list-group list-group-flush">
                     <h3 class="card-title">@item.Book.Title</h3>
-                        <li class="card-text list-group-item">Book Author: @item.Book.Author.FirstName @item.Book.Author.LastName</li>
+                        <li class="card-text list-group-item">Book Author: @item.Book.Author.Name</li>
                     <li class="card-text list-group-item">Loan date: @item.LoanDate</li>
                         
 
@@ -48,7 +48,7 @@
                 <div class="card-body">
                     <ul class="list-group list-group-flush">
                         <h3 class="card-title">@item.Book.Title</h3>
-                        <li class="card-text list-group-item">Book Author: @item.Book.Author.FirstName @item.Book.Author.LastName</li>
+                        <li class="card-text list-group-item">Book Author: @item.Book.Author.Name</li>
                         <li class="card-text list-group-item">Loan date: @item.LoanDate</li>
                         <li class="card-text list-group-item">Return date: @item.ReturnDate</li>
 

@@ -13,7 +13,7 @@ namespace api_flms_service.Entity
         public DateTime? RegistrationDate { get; set; }
         public string? Role { get; set; }
 
-        public ICollection<Loan> BookLoans { get; set; }
-        public ICollection<Review> BookReviews { get; set; }
+        public ICollection<Loan>? BookLoans { get; set; } = new List<Loan>();
+        public ICollection<Review>? BookReviews { get; set; } = new List<Review>();
     }
 }
