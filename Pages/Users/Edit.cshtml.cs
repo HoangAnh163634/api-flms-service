@@ -29,6 +29,8 @@ namespace api_flms_service.Pages.Users
                 return NotFound();
             }
 
+
+
             BookLoans = User.BookLoans?.ToList() ?? new List<Loan>();
             return Page();
         }

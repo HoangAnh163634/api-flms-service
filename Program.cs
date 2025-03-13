@@ -1,4 +1,4 @@
-using api_flms_service.Model;
+﻿using api_flms_service.Model;
 using api_flms_service.Service;
 using api_flms_service.ServiceInterface;
 using api_flms_service.ServiceInterface.api_flms_service.Services;
@@ -19,13 +19,18 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<IReserveBookService, ReserveBookService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IBookService, BookService>();
+builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IAuthorService, AuthorService>();
 builder.Services.AddScoped<IIssuedBookService, IssuedBookService>();
+builder.Services.AddControllers();
 
 // Add controllers and Razor Pages
 builder.Services.AddControllers();
-builder.Services.AddRazorPages();
+builder.Services.AddRazorPages().AddViewOptions(options =>
+{
+    options.HtmlHelperOptions.ClientValidationEnabled = true; // Bật client-side validation
+});
 
 // Configure Swagger
 builder.Services.AddHttpClient();
@@ -54,6 +59,8 @@ if (app.Environment.IsDevelopment())
 
 // Add static file serving (for Razor Pages)
 app.UseStaticFiles();
+
+app.UseRouting();
 
 app.UseAuthorization();
 

@@ -1,45 +1,39 @@
 ﻿@page
-@model api_flms_service.Pages.Reviews.AddBookReviewModel
-
+@model api_flms_service.Pages.Reviews.AddModel
 @{
-    ViewData["Title"] = "Add Book Review";
+    ViewData["Title"] = "Add Review";
+    Layout = "~/Pages/Shared/_Layout.cshtml";
 }
-<main style="background-image: url('https://res.cloudinary.com/dxmsosoui/image/upload/v1697641274/vhszmrrgkdzdorvq4jxx.png');
-                 background-repeat: no-repeat;
-                 background-size: cover;
-                 background-position: center;
-                 width: 100%;
-                 opacity: 85%" ;>
-    >
-    <div class="row" style="opacity:85%; padding:20px;">
-        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-
-        <div class="card mx-auto text-center col-lg-5" style="padding:20px; border-radius:20px">
-            <h2 class="text-center mb-5">Please, leave your opinion</h2>
-            <form method="post" enctype="multipart/form-data">
-                <textarea class="form-control" style="border-radius:20px" asp-for="@Model.Opinion" placeholder="Enter your opinion"></textarea>
-                <span asp-validation-for="@Model.Opinion" class="text-danger"></span>
-                <br />
-                <select id="CountryOfOrigin" class="form-select" style="border-radius:20px" asp-for="@Model.Rating">
-                    @for (int i = 1; i <= 5; i++)
-                    {
-                        <option value="@i" style="border-radius:20px">@i</option>
-                    }
-                </select>
-                <br />
-                <div class="row mb-3">
-                    <div class="col d-grid">
-                        <button type="submit" class="btn btn-outline-primary" style="border-radius:20px" href="/">Add Review</button>
-                    </div>
-                    <div class="col d-grid">
-                        <a class="btn btn-outline-secondary" href="/" style="border-radius:20px" role="button">Cancel</a>
-                    </div>
-                </div>
-                <input type="hidden" name="someValue" value="@Model.SomeValue" />
-
-            </form>
-
+<div class="container">
+    <h4 class="text-center">Add Review</h4>
+    <form method="post">
+        <div asp-validation-summary="All" class="text-danger"></div>
+        <input type="hidden" asp-antiforgery="true" />
+        <div class="form-group">
+            <label asp-for="Review.BookId">Book ID</label>
+            <input type="number" class="form-control" asp-for="Review.BookId" required />
+            <span asp-validation-for="Review.BookId" class="text-danger"></span>
         </div>
-    </div>
-</main>
-
+        <div class="form-group">
+            <label asp-for="Review.UserId">User ID</label>
+            <input type="number" class="form-control" asp-for="Review.UserId" required />
+            <span asp-validation-for="Review.UserId" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="Review.Rating">Rating (1-5)</label>
+            <input type="number" class="form-control" asp-for="Review.Rating" min="1" max="5" required />
+            <span asp-validation-for="Review.Rating" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="Review.ReviewText">Review Text</label>
+            <textarea class="form-control" asp-for="Review.ReviewText" rows="3"></textarea>
+            <span asp-validation-for="Review.ReviewText" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="Review.ReviewDate">Review Date</label>
+            <input type="date" class="form-control" asp-for="Review.ReviewDate" required />
+            <span asp-validation-for="Review.ReviewDate" class="text-danger"></span>
+        </div>
+        <button type="submit" class="btn btn-success">Add Review</button>
+    </form>
+</div>

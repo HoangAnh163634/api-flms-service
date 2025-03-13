@@ -19,7 +19,10 @@ namespace api_flms_service.ServiceInterface
 
             public async Task<IEnumerable<User>> GetAllUsersAsync()
             {
-                return await _dbContext.Users.ToListAsync();
+                return await _dbContext.Users
+                    .Include(u => u.BookLoans)
+                    .ThenInclude(l => l.Book)
+                    .ToListAsync();
             }
 
             public async Task<User?> GetUserByIdAsync(int id)
@@ -67,11 +70,34 @@ namespace api_flms_service.ServiceInterface
 
             public async Task<User> GetUserByEmail(string email)
             {
-               var user = await _dbContext.Users
+                var user = await _dbContext.Users
                                 .Include(e => e.BookLoans)
                                 .ThenInclude(e => e.Book)
                                 .ThenInclude(b => b.Reviews)
                                 .FirstOrDefaultAsync(x => x.Email == email);
+
+                if (user == null)
+                {
+                    // Tạo user mới nếu chưa tồn tại
+                    user = new User
+                    {
+                        Email = email,
+                        Name = email.Split('@')[0] ?? "Unknown", // Tạm lấy phần trước @ làm Name
+                        Role = "User", // Gán mặc định là "User"
+                        RegistrationDate = DateTime.Now
+                    };
+                    _dbContext.Users.Add(user);
+                    try
+                    {
+                        await _dbContext.SaveChangesAsync();
+                        Console.WriteLine($"User created: {email}, Role: {user.Role}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error creating user: {ex.Message}");
+                        throw; // Ném lỗi để debug
+                    }
+                }
 
                 return user;
             }
@@ -125,5 +151,4 @@ namespace api_flms_service.ServiceInterface
             }
         }
     }
-
 }

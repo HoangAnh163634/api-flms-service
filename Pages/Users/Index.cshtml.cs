@@ -19,6 +19,7 @@ namespace api_flms_service.Pages.Users
         public async Task<IActionResult> OnGetAsync() // Sử dụng async để lấy dữ liệu
         {
             Users = (await _userService.GetAllUsersAsync()).ToList(); // Lấy danh sách từ service
+            Console.WriteLine($"Total users loaded: {Users.Count}");
             return Page();
         }
     }

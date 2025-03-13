@@ -28,20 +28,29 @@ namespace api_flms_service.Pages.Users
             {
                 foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
                 {
-                    Console.WriteLine(error.ErrorMessage);
+                    Console.WriteLine($"Validation Error: {error.ErrorMessage}");
                 }
                 return Page();
             }
 
-            // Thêm người dùng mới
-            var addedUser = await _userService.AddUserAsync(User);
-            if (addedUser == null)
+            // Thêm ngày đăng ký mặc định nếu cần
+            User.RegistrationDate = DateTime.Now;
+
+            try
             {
-                ModelState.AddModelError("", "Failed to add user.");
+                var addedUser = await _userService.AddUserAsync(User);
+                if (addedUser == null)
+                {
+                    ModelState.AddModelError("", "Failed to add user. Please try again.");
+                    return Page();
+                }
+                return RedirectToPage("/Users/Index");
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", $"An error occurred: {ex.Message}");
                 return Page();
             }
-
-            return RedirectToPage("/Users/Index"); // Quay lại danh sách sau khi thêm
         }
     }
 }
