@@ -50,11 +50,6 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-
-    app.MapGet("/admins", async (AppDbContext db) =>
-    {
-        return await db.Admins.ToListAsync();
-    });
 }
 
 // Add static file serving (for Razor Pages)
@@ -67,8 +62,8 @@ app.UseAuthorization();
 // Map Controllers and Razor Pages
 app.MapControllers();
 
-var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
-app.Urls.Add($"http://0.0.0.0:{port}");
+//var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+//Wapp.Urls.Add($"http://0.0.0.0:{port}");
 
 app.MapRazorPages();
 

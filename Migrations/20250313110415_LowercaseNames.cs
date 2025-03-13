@@ -13,22 +13,6 @@ namespace api_flms_service.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "admins",
-                columns: table => new
-                {
-                    id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    name = table.Column<string>(type: "text", nullable: false),
-                    email = table.Column<string>(type: "text", nullable: false),
-                    password = table.Column<string>(type: "text", nullable: false),
-                    mobile = table.Column<long>(type: "bigint", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_admins", x => x.id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "authors",
                 columns: table => new
                 {
@@ -81,11 +65,11 @@ namespace api_flms_service.Migrations
                 {
                     userid = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    email = table.Column<string>(type: "text", nullable: true),
-                    name = table.Column<string>(type: "text", nullable: true),
-                    phonenumber = table.Column<string>(type: "text", nullable: true),
+                    email = table.Column<string>(type: "text", nullable: false),
+                    name = table.Column<string>(type: "text", nullable: false),
+                    phonenumber = table.Column<string>(type: "text", nullable: false),
                     registrationdate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    role = table.Column<string>(type: "text", nullable: true)
+                    role = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -104,7 +88,10 @@ namespace api_flms_service.Migrations
                     cloudinaryimageid = table.Column<string>(type: "text", nullable: false),
                     isbn = table.Column<string>(type: "text", nullable: true),
                     publicationyear = table.Column<int>(type: "integer", nullable: false),
-                    title = table.Column<string>(type: "text", nullable: true)
+                    title = table.Column<string>(type: "text", nullable: true),
+                    borroweduntil = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    userid = table.Column<int>(type: "integer", nullable: false),
+                    imageurls = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -272,9 +259,6 @@ namespace api_flms_service.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "admins");
-
             migrationBuilder.DropTable(
                 name: "bookcategories");
 

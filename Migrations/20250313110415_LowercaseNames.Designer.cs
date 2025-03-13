@@ -12,8 +12,8 @@ using api_flms_service.Entity;
 namespace api_flms_service.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250313104309_ImageURls2")]
-    partial class ImageURls2
+    [Migration("20250313110415_LowercaseNames")]
+    partial class LowercaseNames
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -299,14 +299,17 @@ namespace api_flms_service.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("UserId"));
 
                     b.Property<string>("Email")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("email");
 
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("name");
 
                     b.Property<string>("PhoneNumber")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("phonenumber");
 
@@ -315,6 +318,7 @@ namespace api_flms_service.Migrations
                         .HasColumnName("registrationdate");
 
                     b.Property<string>("Role")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("role");
 
@@ -322,40 +326,6 @@ namespace api_flms_service.Migrations
                         .HasName("pk_users");
 
                     b.ToTable("users");
-                });
-
-            modelBuilder.Entity("api_flms_service.Model.Admin", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("email");
-
-                    b.Property<long>("Mobile")
-                        .HasColumnType("bigint")
-                        .HasColumnName("mobile");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("name");
-
-                    b.Property<string>("Password")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("password");
-
-                    b.HasKey("Id")
-                        .HasName("pk_admins");
-
-                    b.ToTable("admins");
                 });
 
             modelBuilder.Entity("BookCategory", b =>

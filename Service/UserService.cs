@@ -114,9 +114,8 @@ namespace api_flms_service.ServiceInterface
 
                 // Check the database for an existing user or admin
                 var user = await _dbContext.Users.AnyAsync(u => u.Email == email);
-                var admin = await _dbContext.Admins.AnyAsync(a => a.Email == email);
 
-                return user || admin; // Allow access if user or admin exists in the database
+                return user; // Allow access if user or admin exists in the database
             }
 
             public async Task<bool> IsAuthenticatedUser(string email)
@@ -126,7 +125,8 @@ namespace api_flms_service.ServiceInterface
 
             public async Task<bool> IsAuthenticatedAdmin(string email)
             {
-                return await _dbContext.Admins.AnyAsync(a => a.Email == email);
+                var user = await _dbContext.Users.FirstOrDefaultAsync(a => a.Email == email);
+                return user?.Role == "Admin";
             }
 
             // Triển khai phương thức mới cho Loan
