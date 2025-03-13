@@ -523,7 +523,7 @@ namespace api_flms_service.Migrations
 
             modelBuilder.Entity("api_flms_service.Model.Book", b =>
                 {
-                    b.HasOne("api_flms_service.Model.Author", "Author")
+                    b.HasOne("api_flms_service.Model.Author", "Author");
 
                     b.HasOne("api_flms_service.Entity.Book", null)
 

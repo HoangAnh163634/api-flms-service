@@ -130,44 +130,11 @@ namespace api_flms_service.Service
             }
         }
 
-        public async Task<List<Book>> GetBorrowedBooksAsync(int userId)
-
-            return await _dbContext.Books
-                                    .Where(b => b.UserId == userId)
-                                    .Select(b => new Book
-                                    {
-                                        BookId = b.BookId,
-                                        BookName = b.BookName,
-                                        BorrowedUntil = b.BorrowedUntil,
-                                        // Lấy các đường dẫn ảnh từ cơ sở dữ liệu
-                                        ImageUrls = b.ImageUrls // Giả sử ImageUrls là trường lưu trữ chuỗi các đường dẫn ảnh
-                                    })
-                                    .ToListAsync();
-
-            /*return await _dbContext.Books
-                                 .Where(b => b. == userId)
-                                 .Select(b => new Book
-                                 {
-                                     BookId = b.BookId,
-                                     BookName = b.BookName,
-                                     BorrowedUntil = b.BorrowedUntil
-                                 })
-                                 .ToListAsync();*/
-            return new List<Book>();
-
-        }
-
 
         public async Task<IActionResult> RenewBookAsync(int userId, int bookId)
         {
-
-        
-            var book = await _dbContext.Books
-                                     .FirstOrDefaultAsync(b => b.BookId == bookId && b.UserId == userId);
-
-            // Tìm sách mượn của người dùng
-            /* var book = await _dbContext.Books
-                                      .FirstOrDefaultAsync(b => b.BookId == bookId && b. == userId);
+              var book = await _dbContext.Books
+                                      .FirstOrDefaultAsync(b => b.BookId == bookId && b.UserId == userId);
 
 
              if (book == null)
@@ -197,43 +164,19 @@ namespace api_flms_service.Service
 
             return new OkObjectResult(new { message = "Book renewed successfully", newDueDate = vietnamTime.ToString("yyyy-MM-dd HH:mm:ss") });
 
-             // Kiểm tra nếu BorrowedUntil có giá trị mặc định (0001-01-01), nếu có thì gán giá trị là thời gian hiện tại (UTC)
-             if (book.BorrowedUntil == DateTime.MinValue)
-             {
-                 // Gán thời gian hiện tại nếu BorrowedUntil có giá trị mặc định
-                 book.BorrowedUntil = DateTime.UtcNow;
-             }
-
-             // Cộng thêm 3 ngày vào BorrowedUntil
-             book.BorrowedUntil = book.BorrowedUntil.AddDays(3);
-
-             // Chuyển đổi thời gian sang giờ Việt Nam (UTC+7)
-             var vietnamTime = TimeZoneInfo.ConvertTimeFromUtc(book.BorrowedUntil, TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time"));
-
-             // Lưu lại giá trị mới vào cơ sở dữ liệu
-             book.BorrowedUntil = vietnamTime;
-
-             // Cập nhật sách và lưu thay đổi vào cơ sở dữ liệu
-             _dbContext.Books.Update(book);
-             await _dbContext.SaveChangesAsync();
- */
-            // Trả kết quả với thời gian gia hạn
-            //return new OkObjectResult(new { message = "Book renewed successfully", newDueDate = vietnamTime.ToString("yyyy-MM-dd HH:mm:ss") });
-            return new OkObjectResult(new { });
 
         }
 
-        public async Task<IEnumerable<Book>> SearchBooksAsync(string? bookName, string? authorName, int? categoryId, int? minPrice, int? maxPrice)
+        public async Task<IEnumerable<Book>> SearchBooksAsync(string? title, string? authorName, int? categoryId)
         {
-         
             IQueryable<Book> query = _dbContext.Books
                 .Include(b => b.Author)
-                .Include(b => b.Categories);
+                .Include(b => b.BookCategories) 
+                .ThenInclude(bc => bc.Category); 
 
-           
-            if (!string.IsNullOrEmpty(bookName))
+            if (!string.IsNullOrEmpty(title))
             {
-                query = query.Where(b => b.Title.Contains(bookName));
+                query = query.Where(b => b.Title.Contains(title));
             }
 
             if (!string.IsNullOrEmpty(authorName))
@@ -243,31 +186,13 @@ namespace api_flms_service.Service
 
             if (categoryId.HasValue)
             {
-                query = query.Where(b => b.Categories == categoryId.Value);
-            }*/
-
-
-
-            /*// Nếu minPrice có giá trị, áp dụng điều kiện tìm kiếm
-
-            if (minPrice.HasValue)
-            {
-                query = query.Where(b => b.BookPrice >= minPrice.Value);
+                query = query.Where(b => b.BookCategories.Any(bc => bc.CategoryId == categoryId)); // Check if the book belongs to the specified category
             }
 
-           
-            if (maxPrice.HasValue)
-            {
-                query = query.Where(b => b.BookPrice <= maxPrice.Value);
-            }*/
 
-            
-  return await query.OrderBy(b => b.BookName).ToListAsync();
-
-            // Thực thi truy vấn và trả về kết quả
             return await query.OrderBy(b => b.Title).ToListAsync();
-
         }
+
 
         public async Task<Book> LoanBookAsync(int bookId, int userId)
         {
@@ -301,5 +226,25 @@ namespace api_flms_service.Service
             
             return book;
         }
+
+        public async Task<List<Book>> GetBorrowedBooksAsync(int userId)
+        {
+            return await _dbContext.Books
+                                    .Where(b => b.UserId == userId)
+                                    .Select(b => new Book
+                                    {
+                                        BookId = b.BookId,
+                                        Title = b.Title,
+                                        BorrowedUntil = b.BorrowedUntil,
+                                        ImageUrls = b.ImageUrls
+                                    })
+
+                                    .ToListAsync();
+
+
+          
+        }
+
+        
     }
 }
