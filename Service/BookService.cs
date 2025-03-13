@@ -221,7 +221,7 @@ namespace api_flms_service.Service
             book.BookLoans.Add(loan);
             user.BookLoans.Add(loan);
 
-            _dbContext.BookLoans.Add(loan);
+            _dbContext.Loans.Add(loan);
             await _dbContext.SaveChangesAsync();
             
             return book;

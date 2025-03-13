@@ -132,21 +132,21 @@ namespace api_flms_service.ServiceInterface
             // Triển khai phương thức mới cho Loan
             public async Task<Loan?> GetLoanByIdAsync(int loanId)
             {
-                return await _dbContext.BookLoans
+                return await _dbContext.Loans
                     .Include(l => l.Book) // Nếu cần thông tin Book
                     .FirstOrDefaultAsync(l => l.BookLoanId == loanId);
             }
 
             public async Task<Loan?> UpdateLoanAsync(Loan loan)
             {
-                var existingLoan = await _dbContext.BookLoans.FindAsync(loan.BookLoanId);
+                var existingLoan = await _dbContext.Loans.FindAsync(loan.BookLoanId);
                 if (existingLoan == null) return null;
 
                 // Chỉ cập nhật các trường được phép chỉnh sửa
                 existingLoan.LoanDate = loan.LoanDate;
                 existingLoan.ReturnDate = loan.ReturnDate;
 
-                _dbContext.BookLoans.Update(existingLoan);
+                _dbContext.Loans.Update(existingLoan);
                 await _dbContext.SaveChangesAsync();
                 return existingLoan;
             }

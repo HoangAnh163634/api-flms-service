@@ -18,7 +18,7 @@ namespace api_flms_service.Services
 
         public async Task<IEnumerable<Review>> GetAllReviewsAsync()
         {
-            return await _dbContext.BookReviews
+            return await _dbContext.Reviews
                 .Include(r => r.Book)
                 .Include(r => r.User)
                 .ToListAsync();
@@ -26,7 +26,7 @@ namespace api_flms_service.Services
 
         public async Task<Review?> GetReviewByIdAsync(int id)
         {
-            return await _dbContext.BookReviews
+            return await _dbContext.Reviews
                 .Include(r => r.Book)
                 .Include(r => r.User)
                 .FirstOrDefaultAsync(r => r.ReviewId == id);
@@ -34,14 +34,14 @@ namespace api_flms_service.Services
 
         public async Task<Review> AddReviewAsync(Review review)
         {
-            _dbContext.BookReviews.Add(review);
+            _dbContext.Reviews.Add(review);
             await _dbContext.SaveChangesAsync();
             return review;
         }
 
         public async Task<Review?> UpdateReviewAsync(Review review)
         {
-            var existingReview = await _dbContext.BookReviews
+            var existingReview = await _dbContext.Reviews
                 .FirstOrDefaultAsync(r => r.ReviewId == review.ReviewId);
             if (existingReview == null) return null;
 
@@ -51,24 +51,24 @@ namespace api_flms_service.Services
             existingReview.BookId = review.BookId;
             existingReview.UserId = review.UserId;
 
-            _dbContext.BookReviews.Update(existingReview);
+            _dbContext.Reviews.Update(existingReview);
             await _dbContext.SaveChangesAsync();
             return existingReview;
         }
 
         public async Task<bool> DeleteReviewAsync(int id)
         {
-            var review = await _dbContext.BookReviews.FindAsync(id);
+            var review = await _dbContext.Reviews.FindAsync(id);
             if (review == null) return false;
 
-            _dbContext.BookReviews.Remove(review);
+            _dbContext.Reviews.Remove(review);
             await _dbContext.SaveChangesAsync();
             return true;
         }
 
         public async Task<IEnumerable<Review>> GetReviewsByUserIdAsync(int userId)
         {
-            return await _dbContext.BookReviews
+            return await _dbContext.Reviews
                 .Include(r => r.Book)
                 .Include(r => r.User)
                 .Where(r => r.UserId == userId)

@@ -17,8 +17,8 @@ namespace api_flms_service.Entity
         public DbSet<Category> Categories { get; set; }
         public DbSet<BookCategory> BookCategories { get; set; }  // This represents the join table
 
-        public DbSet<Loan> BookLoans { get; set; }
-        public DbSet<Review> BookReviews { get; set; }
+        public DbSet<Loan> Loans { get; set; }
+        public DbSet<Review> Reviews { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<IssuedBook> IssuedBooks { get; set; }
 
