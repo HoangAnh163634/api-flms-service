@@ -322,11 +322,10 @@ namespace api_flms_service.Controllers
         }
 
         [HttpGet("search")]
-        public async Task<IActionResult> SearchBooks([FromQuery] string? bookName, [FromQuery] string? authorName,
-                                                  [FromQuery] int? categoryId, [FromQuery] int? minPrice,
-                                                  [FromQuery] int? maxPrice)
+        public async Task<IActionResult> SearchBooks([FromQuery] string? title, [FromQuery] string? authorName, [FromQuery]int categoryId )
+                                             
         {
-            var books = await _bookService.SearchBooksAsync(bookName, authorName, categoryId, minPrice, maxPrice);
+            var books = await _bookService.SearchBooksAsync(title, authorName, categoryId);
             return Ok(books);
         }
     }

@@ -204,7 +204,7 @@ namespace api_flms_service.Service
 
             var user = await _dbContext.Users.FindAsync(userId);
             if (user == null)
-            {
+            { 
                 return null;
             }
 
