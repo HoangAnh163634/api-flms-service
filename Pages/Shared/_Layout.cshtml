@@ -71,12 +71,15 @@
         @RenderBody()
     </div>
 
-    <!-- Tooltip initialization -->
+    <!-- Scripts for validation and tooltip -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.3/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
     <script>
         $(document).ready(function () {
             // Initialize all tooltips on the page
             $('[data-toggle="tooltip"]').tooltip();
         });
     </script>
+    @RenderSection("Scripts", required: false)
 </body>
 </html>

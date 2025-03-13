@@ -12,9 +12,11 @@
     <table class="table table-bordered table-hover text-center" id="usersTable">
         <thead>
             <tr>
+                <th>ID</th>
                 <th>Name</th>
                 <th>Email</th>
                 <th>Mobile</th>
+                <th>Role</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -22,9 +24,11 @@
             @foreach (var user in Model.Users)
             {
                 <tr>
+                    <td>@user.UserId</td>
                     <td>@user.Name</td>
                     <td>@user.Email</td>
                     <td>@user.PhoneNumber</td>
+                    <td>@user.Role</td>
                     <td>
                         <a href="/Users/Edit?id=@user.UserId" class="btn btn-primary">Edit</a>
                         <button class="btn btn-danger" onclick="deleteUser(@user.UserId)">Delete</button>

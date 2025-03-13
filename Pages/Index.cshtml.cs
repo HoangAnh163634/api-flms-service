@@ -13,8 +13,16 @@ namespace api_flms_service.Pages
         private readonly IAuthorService _author;
         private readonly IBookService _book;
 
-        public IndexModel(IAuthorService author, IBookService book)
+        private readonly AuthService _auth;
+        public CurrentUser? CurrentUser { get; private set; }
+        public string LoginUrl { get; set; }
+        public string LogoutUrl { get; set; }
+        public string _BaseUrl { get; set; }
+
+        public IndexModel(IAuthorService author, IBookService book, AuthService authService, IConfiguration configuration)
         {
+            _auth = authService;
+            _BaseUrl = configuration["ApiBaseUrl"];
             _author = author;
             _book = book;
         }
@@ -24,11 +32,24 @@ namespace api_flms_service.Pages
         [BindProperty]
         public List<Book> books { get; set; }
 
-        public async Task OnGet()
+        public async Task<IActionResult> OnGetAsync()
         {
             authors = await _author.GetAllAuthorsAsync();
             books = (await _book.GetAllBooksAsync()).ToList();
+            var token = Request?.Query["token"];
+
+            _auth.HandleLogin(Request, Response, token);
+
+            CurrentUser = await _auth.GetCurrentUserAsync();
+            LoginUrl = await _auth.GetLoginUrl(Request.GetEncodedUrl());
+            LogoutUrl = await _auth.GetLogoutUrl(Request.GetEncodedUrl());
+            if (!string.IsNullOrEmpty(token))
+            {
+                return Redirect(_BaseUrl);
+            }
+            return Page();
         }
 
     }
 }
+

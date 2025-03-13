@@ -12,14 +12,26 @@
         <div class="form-group">
             <label asp-for="User.Name">Name</label>
             <input type="text" class="form-control" asp-for="User.Name" required />
+            <span asp-validation-for="User.Name" class="text-danger"></span>
         </div>
         <div class="form-group">
             <label asp-for="User.Email">Email</label>
             <input type="email" class="form-control" asp-for="User.Email" required />
+            <span asp-validation-for="User.Email" class="text-danger"></span>
         </div>
         <div class="form-group">
             <label asp-for="User.PhoneNumber">Mobile</label>
             <input type="text" class="form-control" asp-for="User.PhoneNumber" required />
+            <span asp-validation-for="User.PhoneNumber" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="User.Role">Role</label>
+            <select asp-for="User.Role" class="form-control" required>
+                <option value="">Select Role</option>
+                <option value="Admin">Admin</option>
+                <option value="User">User</option>
+            </select>
+            <span asp-validation-for="User.Role" class="text-danger"></span>
         </div>
         <button type="submit" class="btn btn-success">Add User</button>
     </form>

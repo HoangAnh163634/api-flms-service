@@ -1,77 +1,51 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
+﻿using api_flms_service.Entity;
+using api_flms_service.ServiceInterface;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using api_flms_service.Model;
-using api_flms_service.Entity;
 
 namespace api_flms_service.Pages.Reviews
 {
-    //[RequireAuth(RequiredRole = "client")]
-    public class EditBookReviewModel : PageModel
+    public class EditModel : PageModel
     {
-        //private readonly api_flms_service.Model.DatabaseContext _context;
-
-        /*public EditBookReviewModel(IBookReviewSerice context)
-        {
-            _context = context;
-        }*/
+        private readonly IReviewService _reviewService;
 
         [BindProperty]
-        public Review BookReview { get; set; } = default!;
+        public Review Review { get; set; } = new Review();
 
-        public async Task<IActionResult> OnGetAsync(int? id)
+        public EditModel(IReviewService reviewService)
         {
-            /*if (id == null || _context.BookReviews == null)
-            {
-                return NotFound();
-            }
+            _reviewService = reviewService;
+        }
 
-            var bookreview =  await _context.BookReviews.FirstOrDefaultAsync(m => m.ReviewId == id);
-            if (bookreview == null)
+        public async Task<IActionResult> OnGetAsync(int id)
+        {
+            Review = await _reviewService.GetReviewByIdAsync(id);
+            if (Review == null)
             {
                 return NotFound();
             }
-            BookReview = bookreview;
-           ViewData["BookId"] = new SelectList(_context.Books, "BookId", "BookId");
-           ViewData["UserId"] = new SelectList(_context.Users, "UserId", "UserId");*/
             return Page();
         }
 
-        
         public async Task<IActionResult> OnPostAsync()
         {
-
-            /*BookReview.ReviewDate = DateTime.UtcNow;
-            _context.Attach(BookReview).State = EntityState.Modified;
-
-            try
+            if (!ModelState.IsValid)
             {
-                await _context.SaveChangesAsync();
+                foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
+                {
+                    Console.WriteLine(error.ErrorMessage);
+                }
+                return Page();
             }
-            catch (DbUpdateConcurrencyException)
+
+            var updatedReview = await _reviewService.UpdateReviewAsync(Review);
+            if (updatedReview == null)
             {
-                if (!BookReviewExists(BookReview.ReviewId))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                ModelState.AddModelError("", "Failed to update review.");
+                return Page();
             }
-*/
-            return RedirectToPage("/Index");
+
+            return RedirectToPage("/Reviews/Index");
         }
-
-        /*private bool BookReviewExists(int id)
-        {
-          return (_context.BookReviews?.Any(e => e.ReviewId == id)).GetValueOrDefault();
-        }*/
     }
 }

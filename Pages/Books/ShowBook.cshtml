@@ -4,7 +4,7 @@
 @{
     ViewData["Title"] = Model.Book.Title;
 }
-<br/>
+<br />
 <div class="card" style="border-radius:20px">
     <div class="row" style="padding:10px">
         <div class="col-lg-5">
@@ -17,62 +17,54 @@
                 <li class="list-group-item fontItem">Year of publication: @Model.Book.PublicationYear</li>
                 <li class="list-group-item fontItem">ISBN: @Model.Book.ISBN</li>
                 <li class="list-group-item fontItem">
-                    
                     <ul class="list-inline">
                         <div class="d-flex gap-2">
                         <li class="list-inline-item">Categories:</li>
-                        @foreach (var category in Model.Book.Categories)
-                        {
+                            @foreach (var category in Model.Book.Categories)
+                            {
                             <a class="btn btn-outline-secondary rounded-pill px-1" style="text-decoration:none" href="/Books/ShowBooks?Title=&Category=@(category.CategoryName)">@category.CategoryName</a>
-                        }
-                        </div>
-                    </ul>
-                </li>
-
-                @if(Model.Book.AvailableCopies == 1)
+                            }
+        </div>
+        </ul>
+        </li>
+                @if (Model.Book.AvailableCopies == 1)
                 {
-                    <li class="list-group-item fontItem">Available: Yes</li>
+            <li class="list-group-item fontItem">Available: Yes</li>
                 }
                 else
                 {
-                    <li class="list-group-item fontItem">Available: No</li>
+            <li class="list-group-item fontItem">Available: No</li>
                 }
-                <li class="list-group-item fontItem">
-                    <form method="post">
-                        @if (Model.role == "client" && Model.Book.AvailableCopies == 1 && Model.wasLoaned.Equals(false))
+        <li class="list-group-item fontItem">
+            <form method="post">
+                        @if (Model.role == "client" && Model.Book.AvailableCopies == 1 && !Model.wasLoaned)
                         {
-                            <button type="submit" name="handler" value="handler1" class="btn btn-outline-primary" style="border-radius:20px; position:relative;">Loan the book</button>
-                            <input type="hidden" name="someValue" value="@Model.SomeValue" />
+                    <button type="submit" name="handler" value="handler1" class="btn btn-outline-primary" style="border-radius:20px; position:relative;">Loan the book</button>
+                    <input type="hidden" name="someValue" value="@Model.SomeValue" />
                         }
-                    </form>
-
-                </li>
-            </ul>
-            
-        </div>
+            </form>
+        </li>
+        </ul>
     </div>
-    
 </div>
-<br/>
+</div>
+<br />
 <hr class="featurette-divider">
 <h2 class="display-5 text-center fw-bold text-body">Description</h2>
-
 <hr class="featurette-divider">
-    <div class="row">
-        <p class="fw-bold">@Model.Book.BookDescription</p>
-    </div>
-<br/>
+<div class="row">
+    <p class="fw-bold">@Model.Book.BookDescription</p>
+</div>
+<br />
 <hr class="featurette-divider">
 <h2 class="display-5 text-center fw-bold text-body">Reviews</h2>
 @if (Model.Book.Reviews.Count == 0)
 {
     <hr class="featurette-divider">
-
     <p class="fw-bold">There is no review yet! Be the first one to rate the book!</p>
-
-
 }
-else {
+else
+{
     @foreach (var review in Model.Book.Reviews)
     {
         <hr class="featurette-divider">
@@ -84,7 +76,6 @@ else {
                 </svg>
             </div>
             <div>
-                
                 <h3 class="fs-2 text-body-emphasis">@review.User.Name</h3>
                 @for (int i = 0; i < review.Rating; i++)
                 {
@@ -98,20 +89,53 @@ else {
                         <path d="M2.866 14.85c-.078.444.36.791.746.593l4.39-2.256 4.389 2.256c.386.198.824-.149.746-.592l-.83-4.73 3.522-3.356c.33-.314.16-.888-.282-.95l-4.898-.696L8.465.792a.513.513 0 0 0-.927 0L5.354 5.12l-4.898.696c-.441.062-.612.636-.283.95l3.523 3.356-.83 4.73zm4.905-2.767-3.686 1.894.694-3.957a.565.565 0 0 0-.163-.505L1.71 6.745l4.052-.576a.525.525 0 0 0 .393-.288L8 2.223l1.847 3.658a.525.525 0 0 0 .393.288l4.052.575-2.906 2.77a.565.565 0 0 0-.163.506l.694 3.957-3.686-1.894a.503.503 0 0 0-.461 0z" />
                     </svg>
                 }
-                <br/>
-
-                <br/>
-                <p class="small">@review.ReviewDate</p>
+                <br />
+                <br />
+                <p class="small">@review.ReviewDate?.ToString("yyyy-MM-dd HH:mm:ss")</p>
                 <p>@review.ReviewText</p>
-
             </div>
-            
         </div>
     }
 }
 
-        
-        
-
-
-
+<!-- Form thêm review -->
+@if (Model.role == "client" && Model.wasLoaned && !Model.wasReviewed)
+{
+    <hr class="featurette-divider">
+    <h3 class="text-center">Add Your Review</h3>
+    <form method="post" class="mt-4">
+        <div asp-validation-summary="All" class="text-danger"></div>
+        <input type="hidden" asp-for="NewReview.BookId" />
+        <input type="hidden" asp-for="NewReview.UserId" />
+        <div class="form-group">
+            <label asp-for="NewReview.Rating">Rating (1-5)</label>
+            <input type="number" class="form-control" asp-for="NewReview.Rating" min="1" max="5" required />
+            <span asp-validation-for="NewReview.Rating" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="NewReview.ReviewText">Review Text</label>
+            <textarea class="form-control" asp-for="NewReview.ReviewText" rows="3" required></textarea>
+            <span asp-validation-for="NewReview.ReviewText" class="text-danger"></span>
+        </div>
+        <button type="submit" name="handler" value="addReview" class="btn btn-primary">Submit Review</button>
+        <input type="hidden" name="someValue" value="@Model.SomeValue" />
+    </form>
+}
+else
+{
+    <hr class="featurette-divider">
+    <p class="text-danger">
+        @if (Model.role != "client")
+        {
+            @:Only clients can add reviews.
+        }
+        else if (!Model.wasLoaned)
+        {
+            @:You must loan the book to add a review.
+        }
+        else if (Model.wasReviewed)
+        {
+            @:You have already reviewed this book.
+        }
+    </p>
+}
