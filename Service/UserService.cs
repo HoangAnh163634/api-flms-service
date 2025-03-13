@@ -83,6 +83,7 @@ namespace api_flms_service.ServiceInterface
                     {
                         Email = email,
                         Name = email.Split('@')[0] ?? "Unknown", // Tạm lấy phần trước @ làm Name
+                        PhoneNumber = "",
                         Role = "User", // Gán mặc định là "User"
                         RegistrationDate = DateTime.Now
                     };

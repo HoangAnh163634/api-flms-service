@@ -67,9 +67,9 @@ app.UseAuthorization();
 // Map Controllers and Razor Pages
 app.MapControllers();
 
-if (!app.Environment.IsDevelopment())
+var port = Environment.GetEnvironmentVariable("PORT");
+if (port != null)
 {
-    var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
     app.Urls.Add($"http://0.0.0.0:{port}");
 }
 
