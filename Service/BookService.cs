@@ -1,4 +1,5 @@
-﻿using api_flms_service.Model;
+﻿using api_flms_service.Entity;
+using api_flms_service.Model;
 using api_flms_service.ServiceInterface;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -18,7 +19,7 @@ namespace api_flms_service.Service
         {
             return await _dbContext.Books
                 .Include(b => b.Author)
-                .Include(b => b.Category)
+                .Include(b => b.Categories)
                 .ToListAsync();
         }
 
@@ -26,8 +27,12 @@ namespace api_flms_service.Service
         {
             return await _dbContext.Books
                 .Include(b => b.Author)
-                .Include(b => b.Category)
+                .Include(b => b.Categories)
+                .Include(b => b.Reviews)
+                .ThenInclude(b => b.User)
                 .FirstOrDefaultAsync(b => b.BookId == id);
+
+
         }
 
         public async Task<Book> CreateBookAsync(Book book, List<IFormFile> images)
@@ -71,7 +76,7 @@ namespace api_flms_service.Service
             // Trả về sách đã được thêm vào cơ sở dữ liệu
             return await _dbContext.Books
                 .Include(b => b.Author)
-                .Include(b => b.Category)
+                .Include(b => b.Categories)
                 .FirstOrDefaultAsync(b => b.BookId == book.BookId);
         }
 
@@ -110,7 +115,7 @@ namespace api_flms_service.Service
 
             return await _dbContext.Books
                 .Include(b => b.Author)
-                .Include(b => b.Category)
+                .Include(b => b.Categories)
                 .FirstOrDefaultAsync(b => b.BookId == book.BookId);
         }
 
@@ -126,7 +131,7 @@ namespace api_flms_service.Service
         }
 
         public async Task<List<Book>> GetBorrowedBooksAsync(int userId)
-        {
+
             return await _dbContext.Books
                                     .Where(b => b.UserId == userId)
                                     .Select(b => new Book
@@ -138,19 +143,38 @@ namespace api_flms_service.Service
                                         ImageUrls = b.ImageUrls // Giả sử ImageUrls là trường lưu trữ chuỗi các đường dẫn ảnh
                                     })
                                     .ToListAsync();
+
+            /*return await _dbContext.Books
+                                 .Where(b => b. == userId)
+                                 .Select(b => new Book
+                                 {
+                                     BookId = b.BookId,
+                                     BookName = b.BookName,
+                                     BorrowedUntil = b.BorrowedUntil
+                                 })
+                                 .ToListAsync();*/
+            return new List<Book>();
+
         }
 
 
         public async Task<IActionResult> RenewBookAsync(int userId, int bookId)
         {
+
         
             var book = await _dbContext.Books
                                      .FirstOrDefaultAsync(b => b.BookId == bookId && b.UserId == userId);
 
-            if (book == null)
-            {
-                return new NotFoundObjectResult("Book not found or not borrowed by this user");
-            }
+            // Tìm sách mượn của người dùng
+            /* var book = await _dbContext.Books
+                                      .FirstOrDefaultAsync(b => b.BookId == bookId && b. == userId);
+
+
+             if (book == null)
+             {
+                 return new NotFoundObjectResult("Book not found or not borrowed by this user");
+             }
+
 
           
             if (book.BorrowedUntil == DateTime.MinValue)
@@ -172,6 +196,31 @@ namespace api_flms_service.Service
             await _dbContext.SaveChangesAsync();
 
             return new OkObjectResult(new { message = "Book renewed successfully", newDueDate = vietnamTime.ToString("yyyy-MM-dd HH:mm:ss") });
+
+             // Kiểm tra nếu BorrowedUntil có giá trị mặc định (0001-01-01), nếu có thì gán giá trị là thời gian hiện tại (UTC)
+             if (book.BorrowedUntil == DateTime.MinValue)
+             {
+                 // Gán thời gian hiện tại nếu BorrowedUntil có giá trị mặc định
+                 book.BorrowedUntil = DateTime.UtcNow;
+             }
+
+             // Cộng thêm 3 ngày vào BorrowedUntil
+             book.BorrowedUntil = book.BorrowedUntil.AddDays(3);
+
+             // Chuyển đổi thời gian sang giờ Việt Nam (UTC+7)
+             var vietnamTime = TimeZoneInfo.ConvertTimeFromUtc(book.BorrowedUntil, TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time"));
+
+             // Lưu lại giá trị mới vào cơ sở dữ liệu
+             book.BorrowedUntil = vietnamTime;
+
+             // Cập nhật sách và lưu thay đổi vào cơ sở dữ liệu
+             _dbContext.Books.Update(book);
+             await _dbContext.SaveChangesAsync();
+ */
+            // Trả kết quả với thời gian gia hạn
+            //return new OkObjectResult(new { message = "Book renewed successfully", newDueDate = vietnamTime.ToString("yyyy-MM-dd HH:mm:ss") });
+            return new OkObjectResult(new { });
+
         }
 
         public async Task<IEnumerable<Book>> SearchBooksAsync(string? bookName, string? authorName, int? categoryId, int? minPrice, int? maxPrice)
@@ -179,24 +228,27 @@ namespace api_flms_service.Service
          
             IQueryable<Book> query = _dbContext.Books
                 .Include(b => b.Author)
-                .Include(b => b.Category);
+                .Include(b => b.Categories);
 
            
             if (!string.IsNullOrEmpty(bookName))
             {
-                query = query.Where(b => b.BookName.Contains(bookName));
+                query = query.Where(b => b.Title.Contains(bookName));
             }
 
             if (!string.IsNullOrEmpty(authorName))
             {
-                query = query.Where(b => b.Author.AuthorName.Contains(authorName));
+                query = query.Where(b => b.Author.Name.Contains(authorName));
             }
 
-          
             if (categoryId.HasValue)
             {
-                query = query.Where(b => b.CatId == categoryId.Value);
-            }
+                query = query.Where(b => b.Categories == categoryId.Value);
+            }*/
+
+
+
+            /*// Nếu minPrice có giá trị, áp dụng điều kiện tìm kiếm
 
             if (minPrice.HasValue)
             {
@@ -207,12 +259,47 @@ namespace api_flms_service.Service
             if (maxPrice.HasValue)
             {
                 query = query.Where(b => b.BookPrice <= maxPrice.Value);
-            }
+            }*/
 
             
-            return await query.OrderBy(b => b.BookName).ToListAsync();
+  return await query.OrderBy(b => b.BookName).ToListAsync();
+
+            // Thực thi truy vấn và trả về kết quả
+            return await query.OrderBy(b => b.Title).ToListAsync();
+
         }
 
+        public async Task<Book> LoanBookAsync(int bookId, int userId)
+        {
+            var book = await _dbContext.Books.Include(b => b.Author).SingleOrDefaultAsync(b => b.BookId == bookId);
+            if (book == null)
+            {
+                return null;
+            }
 
+            var user = await _dbContext.Users.FindAsync(userId);
+            if (user == null)
+            {
+                return null;
+            }
+
+            // Create a new loan
+            var loan = new Loan
+            {
+                Book = book,
+                LoanDate = DateTime.UtcNow,
+                ReturnDate = DateTime.UtcNow.AddDays(14),  // Example: returning in 14 days
+                User = user
+            };
+
+            book.AvailableCopies -= 1;
+            book.BookLoans.Add(loan);
+            user.BookLoans.Add(loan);
+
+            _dbContext.BookLoans.Add(loan);
+            await _dbContext.SaveChangesAsync();
+            
+            return book;
+        }
     }
 }

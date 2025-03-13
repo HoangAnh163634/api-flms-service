@@ -1,4 +1,5 @@
-﻿using api_flms_service.Model;
+﻿using api_flms_service.Entity;
+using api_flms_service.Model;
 using api_flms_service.ServiceInterface;
 using Microsoft.EntityFrameworkCore;
 
@@ -20,8 +21,11 @@ namespace api_flms_service.Service
 
         public async Task<Author?> GetAuthorByIdAsync(int id)
         {
-            return await _dbContext.Authors.FindAsync(id);
+            return await _dbContext.Authors
+                                   .Include(e => e.Books)
+                                   .FirstOrDefaultAsync(e => e.AuthorId == id);  // Use FirstOrDefaultAsync for non-primary key queries
         }
+
 
         public async Task<Author> AddAuthorAsync(Author author)
         {
@@ -35,7 +39,7 @@ namespace api_flms_service.Service
             var existingAuthor = await _dbContext.Authors.FindAsync(author.AuthorId);
             if (existingAuthor == null) return null;
 
-            existingAuthor.AuthorName = author.AuthorName;
+            existingAuthor.Name = author.Name;
             await _dbContext.SaveChangesAsync();
             return existingAuthor;
         }

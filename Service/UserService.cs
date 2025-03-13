@@ -1,7 +1,6 @@
-﻿using api_auth_service.Service;
+﻿using api_flms_service.Entity;
 using api_flms_service.Model;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
 namespace api_flms_service.ServiceInterface
 {
 
@@ -10,10 +9,12 @@ namespace api_flms_service.ServiceInterface
         public class UserService : IUserService
         {
             private readonly AppDbContext _dbContext;
+            private readonly IConfiguration _configuration;
 
-            public UserService(AppDbContext dbContext)
+            public UserService(AppDbContext dbContext, IConfiguration configuration)
             {
                 _dbContext = dbContext;
+                _configuration = configuration;
             }
 
             public async Task<IEnumerable<User>> GetAllUsersAsync()
@@ -23,7 +24,11 @@ namespace api_flms_service.ServiceInterface
 
             public async Task<User?> GetUserByIdAsync(int id)
             {
-                return await _dbContext.Users.FindAsync(id);
+                // Bao gồm BookLoans khi lấy User
+                return await _dbContext.Users
+                    .Include(u => u.BookLoans)
+                    .ThenInclude(l => l.Book) // Nếu cần thông tin Book
+                    .FirstOrDefaultAsync(u => u.UserId == id);
             }
 
             public async Task<User> AddUserAsync(User user)
@@ -35,15 +40,17 @@ namespace api_flms_service.ServiceInterface
 
             public async Task<User?> UpdateUserAsync(User user)
             {
-                var existingUser = await _dbContext.Users.FindAsync(user.Id);
+                var existingUser = await _dbContext.Users
+                .Include(u => u.BookLoans)
+                .FirstOrDefaultAsync(u => u.UserId == user.UserId);
                 if (existingUser == null) return null;
 
                 existingUser.Name = user.Name;
                 existingUser.Email = user.Email;
-                existingUser.Password = user.Password;
-                existingUser.Mobile = user.Mobile;
-                existingUser.Address = user.Address;
+                existingUser.PhoneNumber = user.PhoneNumber;
+                existingUser.Role = user.Role;
 
+                _dbContext.Users.Update(existingUser);
                 await _dbContext.SaveChangesAsync();
                 return existingUser;
             }
@@ -60,9 +67,61 @@ namespace api_flms_service.ServiceInterface
 
             public async Task<User> GetUserByEmail(string email)
             {
-               var user = await _dbContext.Users.FirstOrDefaultAsync(x => x.Email == email);
+               var user = await _dbContext.Users
+                                .Include(e => e.BookLoans)
+                                .ThenInclude(e => e.Book)
+                                .ThenInclude(b => b.Reviews)
+                                .FirstOrDefaultAsync(x => x.Email == email);
 
                 return user;
+            }
+
+            public async Task<bool> IsUserAllowedAsync(string email)
+            {
+                var allowedEmails = _configuration.GetSection("AllowEmail").Get<string[]>();
+
+                if (allowedEmails != null && allowedEmails.Any(format => email.EndsWith(format)))
+                {
+                    return true; // Email matches one of the allowed formats
+                }
+
+                // Check the database for an existing user or admin
+                var user = await _dbContext.Users.AnyAsync(u => u.Email == email);
+                var admin = await _dbContext.Admins.AnyAsync(a => a.Email == email);
+
+                return user || admin; // Allow access if user or admin exists in the database
+            }
+
+            public async Task<bool> IsAuthenticatedUser(string email)
+            {
+                return await _dbContext.Users.AnyAsync(u => u.Email == email);
+            }
+
+            public async Task<bool> IsAuthenticatedAdmin(string email)
+            {
+                return await _dbContext.Admins.AnyAsync(a => a.Email == email);
+            }
+
+            // Triển khai phương thức mới cho Loan
+            public async Task<Loan?> GetLoanByIdAsync(int loanId)
+            {
+                return await _dbContext.BookLoans
+                    .Include(l => l.Book) // Nếu cần thông tin Book
+                    .FirstOrDefaultAsync(l => l.BookLoanId == loanId);
+            }
+
+            public async Task<Loan?> UpdateLoanAsync(Loan loan)
+            {
+                var existingLoan = await _dbContext.BookLoans.FindAsync(loan.BookLoanId);
+                if (existingLoan == null) return null;
+
+                // Chỉ cập nhật các trường được phép chỉnh sửa
+                existingLoan.LoanDate = loan.LoanDate;
+                existingLoan.ReturnDate = loan.ReturnDate;
+
+                _dbContext.BookLoans.Update(existingLoan);
+                await _dbContext.SaveChangesAsync();
+                return existingLoan;
             }
         }
     }

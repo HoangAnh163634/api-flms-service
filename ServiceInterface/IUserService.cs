@@ -1,5 +1,4 @@
-﻿using api_flms_service.Model;
-using System.Security.Claims;
+﻿using api_flms_service.Entity;
 
 namespace api_flms_service.ServiceInterface
 {
@@ -11,5 +10,12 @@ namespace api_flms_service.ServiceInterface
         Task<User?> UpdateUserAsync(User user);
         Task<bool> DeleteUserAsync(int id);
         Task<User> GetUserByEmail(String email); // Lấy UserId từ JWT hoặc Session
+        Task<bool> IsUserAllowedAsync(string email);
+        Task<bool> IsAuthenticatedUser(string email);
+        Task<bool> IsAuthenticatedAdmin(string email);
+
+        // Thêm các phương thức mới cho Loan
+        Task<Loan?> GetLoanByIdAsync(int loanId);
+        Task<Loan?> UpdateLoanAsync(Loan loan);
     }
 }

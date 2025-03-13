@@ -1,18 +1,19 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using api_flms_service.Entity;
+using System.ComponentModel.DataAnnotations;
 
-namespace api_flms_service.Model
+namespace api_flms_service.Entity
 {
     public class User
     {
         [Key]
-        public int Id { get; set; } // Primary Key
-        public string Name { get; set; } = null!;
-        public string Email { get; set; } = null!;
-        public string Password { get; set; } = null!;
-        public long Mobile { get; set; }
-        public string Address { get; set; } = null!;
+        public int UserId { get; set; }
+        public string? Email { get; set; }
+        public string? Name { get; set; }
+        public string? PhoneNumber { get; set; }
+        public DateTime? RegistrationDate { get; set; }
+        public string? Role { get; set; }
 
-        public string? GoogleId { get; set; } 
+        public ICollection<Loan>? BookLoans { get; set; } = new List<Loan>();
+        public ICollection<Review>? BookReviews { get; set; } = new List<Review>();
     }
-
 }

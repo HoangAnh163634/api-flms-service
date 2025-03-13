@@ -1,4 +1,5 @@
-﻿using api_flms_service.Model;
+﻿using api_flms_service.Entity;
+using api_flms_service.Model;
 using api_flms_service.ServiceInterface;
 using global::api_flms_service.Model;
 using global::api_flms_service.ServiceInterface;
@@ -47,7 +48,7 @@ namespace api_flms_service.Controllers
             }
 
             var createdCategory = await _categoryService.AddCategoryAsync(category);
-            return CreatedAtAction(nameof(GetCategoryById), new { id = createdCategory.CatId }, createdCategory);
+            return CreatedAtAction(nameof(GetCategoryById), new { id = createdCategory.CategoryId }, createdCategory);
         }
 
         // PUT: api/v0/category/{id}
@@ -59,7 +60,7 @@ namespace api_flms_service.Controllers
                 return BadRequest(ModelState);
             }
 
-            if (id != category.CatId)
+            if (id != category.CategoryId)
             {
                 return BadRequest(new { message = "Category ID mismatch" });
             }

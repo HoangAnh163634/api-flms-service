@@ -4,8 +4,8 @@ using api_flms_service.ServiceInterface;
 using api_flms_service.ServiceInterface.api_flms_service.Services;
 using api_flms_service.Services;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authentication.Google;
-using api_auth_service.Service;
+using api_auth_service.Services;
+using api_flms_service.Entity;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +16,7 @@ builder.Services.AddHttpClient<AuthService>();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.AddScoped<IReserveBookService, ReserveBookService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IBookService, BookService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
@@ -31,7 +32,10 @@ builder.Services.AddHttpClient();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-
+builder.Services.AddLogging(logging =>
+{
+    logging.AddConsole();
+});
 
 
 var app = builder.Build();
@@ -55,8 +59,13 @@ app.UseAuthorization();
 
 // Map Controllers and Razor Pages
 app.MapControllers();
-//var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
-//app.Urls.Add($"http://0.0.0.0:{port}");
+
+if (!app.Environment.IsDevelopment())
+{
+    var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+    app.Urls.Add($"http://0.0.0.0:{port}");
+}
+
 app.MapRazorPages();
 
 app.Run();
