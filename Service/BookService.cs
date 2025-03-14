@@ -196,34 +196,51 @@ namespace api_flms_service.Service
 
         public async Task<Book> LoanBookAsync(int bookId, int userId)
         {
-            var book = await _dbContext.Books.Include(b => b.Author).SingleOrDefaultAsync(b => b.BookId == bookId);
+            var book = await _dbContext.Books
+                .Include(b => b.BookLoans)
+                .SingleOrDefaultAsync(b => b.BookId == bookId);
             if (book == null)
             {
+                Console.WriteLine($"Book with ID {bookId} not found.");
                 return null;
             }
 
-            var user = await _dbContext.Users.FindAsync(userId);
+            if (book.AvailableCopies <= 0)
+            {
+                Console.WriteLine($"Book with ID {bookId} is not available for loan.");
+                return null;
+            }
+
+            var user = await _dbContext.Users
+                .Include(u => u.BookLoans)
+                .FirstOrDefaultAsync(u => u.UserId == userId);
             if (user == null)
-            { 
+            {
+                Console.WriteLine($"User with ID {userId} not found.");
                 return null;
             }
 
-            // Create a new loan
+            // Kiểm tra xem user đã mượn sách này chưa
+            if (book.BookLoans.Any(l => l.UserId == userId && l.ReturnDate == null))
+            {
+                Console.WriteLine($"User {userId} has already loaned book {bookId}.");
+                return null;
+            }
+
+            // Tạo bản ghi mượn sách
             var loan = new Loan
             {
-                Book = book,
+                BookId = bookId,
+                UserId = userId,
                 LoanDate = DateTime.UtcNow,
-                ReturnDate = DateTime.UtcNow.AddDays(14),  // Example: returning in 14 days
-                User = user
+                ReturnDate = DateTime.UtcNow.AddDays(14)
             };
 
             book.AvailableCopies -= 1;
-            book.BookLoans.Add(loan);
-            user.BookLoans.Add(loan);
-
             _dbContext.Loans.Add(loan);
             await _dbContext.SaveChangesAsync();
-            
+
+            Console.WriteLine($"Book {bookId} loaned to user {userId} successfully.");
             return book;
         }
 

@@ -1,17 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
 using api_flms_service.Model;
 using api_flms_service.ServiceInterface;
 using api_flms_service.Entity;
 using api_auth_service.Services;
-using Microsoft.AspNetCore.Identity.Data;
-using api_flms_service.Services;
 
 namespace api_flms_service.Pages.Books
 {
@@ -27,22 +23,20 @@ namespace api_flms_service.Pages.Books
             _authService = authService;
             _bookService = bookService;
             _userService = userService;
-            _reviewService = reviewService; // Chỉ khởi tạo một lần
+            _reviewService = reviewService;
         }
 
         [BindProperty]
         public Book Book { get; set; } = default!;
         [BindProperty]
         public User User { get; set; } = default!;
-        public string role { get; set; } = "User"; // Khởi tạo mặc định
+        public string role { get; set; } = "guest";
         [BindProperty]
         public string errorMessage { get; set; } = "";
         [BindProperty]
         public int SomeValue { get; set; }
         [BindProperty]
         public bool wasLoaned { get; set; } = false;
-        [BindProperty]
-        public string opinion { get; set; }
         [BindProperty]
         public bool wasReviewed { get; set; } = false;
 
@@ -65,6 +59,7 @@ namespace api_flms_service.Pages.Books
             else
             {
                 Book = book;
+                await Console.Out.WriteLineAsync($"Book ID: {id}, AvailableCopies: {Book.AvailableCopies}");
                 await Console.Out.WriteLineAsync("Count: " + Book.Reviews.Count() + " Number");
             }
 
@@ -72,7 +67,7 @@ namespace api_flms_service.Pages.Books
             if (userEmail != null)
             {
                 User = await _userService.GetUserByEmail(userEmail);
-                role = User?.Role ?? "guest"; // Gán role từ User
+                role = User?.Role ?? "guest";
 
                 if (User != null)
                 {
@@ -80,12 +75,14 @@ namespace api_flms_service.Pages.Books
                     {
                         if (bookloan.Book != null && bookloan.Book.BookId == id)
                         {
-                            wasLoaned = true;
-                            break; // Thoát vòng lặp khi tìm thấy
+                            if (bookloan.ReturnDate == null || bookloan.ReturnDate > DateTime.UtcNow)
+                            {
+                                wasLoaned = true;
+                                break;
+                            }
                         }
                     }
 
-                    // Kiểm tra xem user đã review sách này chưa
                     if (Book.Reviews != null && Book.Reviews.Any(r => r.UserId == User.UserId))
                     {
                         wasReviewed = true;
@@ -93,11 +90,9 @@ namespace api_flms_service.Pages.Books
                 }
             }
 
-            // Khởi tạo NewReview với BookId và UserId mặc định
             NewReview.BookId = (int)id;
             if (User != null) NewReview.UserId = User.UserId;
 
-            // Log để debug
             await Console.Out.WriteLineAsync($"Role: {role}, WasLoaned: {wasLoaned}, WasReviewed: {wasReviewed}");
 
             return Page();
@@ -107,29 +102,104 @@ namespace api_flms_service.Pages.Books
         {
             int someValue = int.Parse(Request.Form["someValue"]);
 
+            // Tải lại thông tin user để đảm bảo role được cập nhật
+            var userEmail = (await _authService.GetCurrentUserAsync())?.Email;
+            if (userEmail != null)
+            {
+                User = await _userService.GetUserByEmail(userEmail);
+                role = User?.Role ?? "guest";
+            }
+            else
+            {
+                ModelState.AddModelError("", "You must be logged in to perform this action.");
+                Book = await _bookService.GetBookByIdAsync(someValue);
+                return Page();
+            }
+
             if (handler == "handler1")
             {
-                // Handle the book loan
-                var result = await LoanBookAsync(someValue);
-                if (result != null)
+                var userOfGG = await _authService.GetCurrentUserAsync();
+                if (userOfGG == null || string.IsNullOrEmpty(userOfGG.Email))
                 {
+                    ModelState.AddModelError("", "You must be logged in to loan a book.");
+                    Book = await _bookService.GetBookByIdAsync(someValue);
                     return Page();
                 }
+
+                var user = await _userService.GetUserByEmail(userOfGG.Email);
+                if (user == null || user.Role != "User")
+                {
+                    ModelState.AddModelError("", "Only users with role 'User' can loan books.");
+                    Book = await _bookService.GetBookByIdAsync(someValue);
+                    return Page();
+                }
+
+                var result = await _bookService.LoanBookAsync(someValue, user.UserId);
+                if (result == null)
+                {
+                    ModelState.AddModelError("", "Failed to loan the book. It may not be available or you have already loaned it.");
+                    Book = await _bookService.GetBookByIdAsync(someValue);
+                    return Page();
+                }
+
+                TempData["SuccessMessage"] = "Book loaned successfully!";
+                return RedirectToPage(new { id = someValue });
             }
             else if (handler == "addReview")
             {
+                // Xóa các lỗi validation không liên quan đến NewReview
+                var keysToRemove = ModelState.Keys.Where(k => !k.StartsWith("NewReview")).ToList();
+                foreach (var key in keysToRemove)
+                {
+                    ModelState.Remove(key);
+                }
+
+                // Validate chỉ các trường của NewReview
                 if (!ModelState.IsValid)
                 {
                     foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
                     {
                         Console.WriteLine(error.ErrorMessage);
                     }
+                    Book = await _bookService.GetBookByIdAsync(someValue);
+
+                    // Cập nhật lại wasLoaned và wasReviewed để hiển thị form
+                    if (User != null)
+                    {
+                        foreach (var bookloan in User.BookLoans)
+                        {
+                            if (bookloan.Book != null && bookloan.Book.BookId == someValue)
+                            {
+                                if (bookloan.ReturnDate == null || bookloan.ReturnDate > DateTime.UtcNow)
+                                {
+                                    wasLoaned = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (Book.Reviews != null && Book.Reviews.Any(r => r.UserId == User.UserId))
+                        {
+                            wasReviewed = true;
+                        }
+                    }
+
+                    await Console.Out.WriteLineAsync($"Validation failed - Role: {role}, WasLoaned: {wasLoaned}, WasReviewed: {wasReviewed}");
+                    return Page();
+                }
+
+                // Kiểm tra role trước khi thêm review
+                if (role != "User")
+                {
+                    ModelState.AddModelError("", "Only users with role 'User' can add reviews.");
+                    Book = await _bookService.GetBookByIdAsync(someValue);
                     return Page();
                 }
 
                 if (wasReviewed)
                 {
                     ModelState.AddModelError("", "You have already reviewed this book.");
+                    Book = await _bookService.GetBookByIdAsync(someValue);
                     return Page();
                 }
 
@@ -138,39 +208,21 @@ namespace api_flms_service.Pages.Books
                 if (addedReview == null)
                 {
                     ModelState.AddModelError("", "Failed to add review.");
+                    Book = await _bookService.GetBookByIdAsync(someValue);
                     return Page();
                 }
 
-                wasReviewed = true;
-                Book = await _bookService.GetBookByIdAsync(someValue);
-                return Page();
+                TempData["SuccessMessage"] = "Review added successfully!";
+                return RedirectToPage(new { id = someValue });
             }
 
-            Book = await GetBookDetailsAsync(someValue);
+            Book = await _bookService.GetBookByIdAsync(someValue);
             if (Book == null)
             {
                 return NotFound();
             }
 
             return Page();
-        }
-
-        private async Task<Book> LoanBookAsync(int bookId)
-        {
-            var userOfGG = await _authService.GetCurrentUserAsync();
-            var user = await _userService.GetUserByEmail(userOfGG.Email);
-
-            if (user == null || user.UserId <= 0)
-            {
-                return null;
-            }
-
-            return await _bookService.LoanBookAsync(bookId, user.UserId);
-        }
-
-        private async Task<Book?> GetBookDetailsAsync(int bookId)
-        {
-            return await _bookService.GetBookByIdAsync(bookId);
         }
     }
 }

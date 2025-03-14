@@ -5,6 +5,10 @@
     ViewData["Title"] = Model.Book.Title;
 }
 <br />
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success text-center">@TempData["SuccessMessage"]</div>
+}
 <div class="card" style="border-radius:20px">
     <div class="row" style="padding:10px">
         <div class="col-lg-5">
@@ -27,7 +31,7 @@
         </div>
         </ul>
         </li>
-                @if (Model.Book.AvailableCopies == 1)
+                @if (Model.Book.AvailableCopies > 0)
                 {
             <li class="list-group-item fontItem">Available: Yes</li>
                 }
@@ -36,13 +40,30 @@
             <li class="list-group-item fontItem">Available: No</li>
                 }
         <li class="list-group-item fontItem">
+            <div asp-validation-summary="All" class="text-danger"></div>
             <form method="post">
-                        @if (Model.role == "client" && Model.Book.AvailableCopies == 1 && !Model.wasLoaned)
+                        @if (Model.role == "User" && Model.Book.AvailableCopies > 0 && !Model.wasLoaned)
                         {
                     <button type="submit" name="handler" value="handler1" class="btn btn-outline-primary" style="border-radius:20px; position:relative;">Loan the book</button>
                     <input type="hidden" name="someValue" value="@Model.SomeValue" />
                         }
             </form>
+                    @if (Model.wasLoaned)
+                    {
+                        var loan = Model.User.BookLoans.FirstOrDefault(l => l.BookId == Model.Book.BookId && (l.ReturnDate == null || l.ReturnDate > DateTime.UtcNow));
+                        if (loan != null)
+                        {
+                    <p class="text-success">You have loaned this book. Please return by @loan.ReturnDate?.ToString("yyyy-MM-dd").</p>
+                        }
+                    }
+                    else if (Model.role != "User")
+                    {
+                <p class="text-danger">Only users with role 'User' can loan books.</p>
+                    }
+                    else if (Model.Book.AvailableCopies <= 0)
+                    {
+                <p class="text-danger">This book is not available for loan.</p>
+                    }
         </li>
         </ul>
     </div>
@@ -77,19 +98,23 @@ else
             </div>
             <div>
                 <h3 class="fs-2 text-body-emphasis">@review.User.Name</h3>
-                @for (int i = 0; i < review.Rating; i++)
-                {
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-star-fill" viewBox="0 0 16 16">
-                        <path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z" />
-                    </svg>
-                }
-                @for (int i = 5; i > review.Rating; i--)
-                {
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-star" viewBox="0 0 16 16">
-                        <path d="M2.866 14.85c-.078.444.36.791.746.593l4.39-2.256 4.389 2.256c.386.198.824-.149.746-.592l-.83-4.73 3.522-3.356c.33-.314.16-.888-.282-.95l-4.898-.696L8.465.792a.513.513 0 0 0-.927 0L5.354 5.12l-4.898.696c-.441.062-.612.636-.283.95l3.523 3.356-.83 4.73zm4.905-2.767-3.686 1.894.694-3.957a.565.565 0 0 0-.163-.505L1.71 6.745l4.052-.576a.525.525 0 0 0 .393-.288L8 2.223l1.847 3.658a.525.525 0 0 0 .393.288l4.052.575-2.906 2.77a.565.565 0 0 0-.163.506l.694 3.957-3.686-1.894a.503.503 0 0 0-.461 0z" />
-                    </svg>
-                }
-                <br />
+                <div class="star-rating">
+                    @for (int i = 1; i <= 5; i++)
+                    {
+                        if (i <= review.Rating)
+                        {
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-star-fill" viewBox="0 0 16 16">
+                                <path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z" />
+                            </svg>
+                        }
+                        else
+                        {
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-star" viewBox="0 0 16 16">
+                                <path d="M2.866 14.85c-.078.444.36.791.746.593l4.39-2.256 4.389 2.256c.386.198.824-.149.746-.592l-.83-4.73 3.522-3.356c.33-.314.16-.888-.282-.95l-4.898-.696L8.465.792a.513.513 0 0 0-.927 0L5.354 5.12l-4.898.696c-.441.062-.612.636-.283.95l3.523 3.356-.83 4.73zm4.905-2.767-3.686 1.894.694-3.957a.565.565 0 0 0-.163-.505L1.71 6.745l4.052-.576a.525.525 0 0 0 .393-.288L8 2.223l1.847 3.658a.525.525 0 0 0 .393.288l4.052.575-2.906 2.77a.565.565 0 0 0-.163.506l.694 3.957-3.686-1.894a.503.503 0 0 0-.461 0z" />
+                            </svg>
+                        }
+                    }
+                </div>
                 <br />
                 <p class="small">@review.ReviewDate?.ToString("yyyy-MM-dd HH:mm:ss")</p>
                 <p>@review.ReviewText</p>
@@ -99,8 +124,13 @@ else
 }
 
 <!-- Form thêm review -->
-@if (Model.role == "client" && Model.wasLoaned && !Model.wasReviewed)
+@if (Model.role == "User" && Model.wasLoaned && !Model.wasReviewed)
 {
+    var loan = Model.User.BookLoans.FirstOrDefault(l => l.BookId == Model.Book.BookId && (l.ReturnDate == null || l.ReturnDate > DateTime.UtcNow));
+    if (loan != null)
+    {
+        <p class="text-info">You loaned this book on @loan.LoanDate?.ToString("yyyy-MM-dd").</p>
+    }
     <hr class="featurette-divider">
     <h3 class="text-center">Add Your Review</h3>
     <form method="post" class="mt-4">
@@ -109,7 +139,17 @@ else
         <input type="hidden" asp-for="NewReview.UserId" />
         <div class="form-group">
             <label asp-for="NewReview.Rating">Rating (1-5)</label>
-            <input type="number" class="form-control" asp-for="NewReview.Rating" min="1" max="5" required />
+            <div class="star-rating" id="star-rating">
+                @for (int i = 1; i <= 5; i++)
+                {
+                    <input type="radio" name="NewReview.Rating" value="@i" id="star@(i)" class="star-input" required>
+                    <label for="star@(i)" class="star">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-star" viewBox="0 0 16 16">
+                            <path d="M2.866 14.85c-.078.444.36.791.746.593l4.39-2.256 4.389 2.256c.386.198.824-.149.746-.592l-.83-4.73 3.522-3.356c.33-.314.16-.888-.282-.95l-4.898-.696L8.465.792a.513.513 0 0 0-.927 0L5.354 5.12l-4.898.696c-.441.062-.612.636-.283.95l3.523 3.356-.83 4.73zm4.905-2.767-3.686 1.894.694-3.957a.565.565 0 0 0-.163-.505L1.71 6.745l4.052-.576a.525.525 0 0 0 .393-.288L8 2.223l1.847 3.658a.525.525 0 0 0 .393.288l4.052.575-2.906 2.77a.565.565 0 0 0-.163.506l.694 3.957-3.686-1.894a.503.503 0 0 0-.461 0z" />
+                        </svg>
+                    </label>
+                }
+            </div>
             <span asp-validation-for="NewReview.Rating" class="text-danger"></span>
         </div>
         <div class="form-group">
@@ -125,9 +165,9 @@ else
 {
     <hr class="featurette-divider">
     <p class="text-danger">
-        @if (Model.role != "client")
+        @if (Model.role != "User")
         {
-            @:Only clients can add reviews.
+            @:Only users with role 'User' can add reviews.
         }
         else if (!Model.wasLoaned)
         {
@@ -139,3 +179,80 @@ else
         }
     </p>
 }
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const stars = document.querySelectorAll('.star-input');
+            const labels = document.querySelectorAll('.star');
+
+            stars.forEach((star, index) => {
+                star.addEventListener('change', function () {
+                    const rating = parseInt(this.value);
+                    labels.forEach((label, i) => {
+                        const starSvg = label.querySelector('svg');
+                        if (i < rating) {
+                            starSvg.classList.add('bi-star-fill');
+                            starSvg.classList.remove('bi-star');
+                        } else {
+                            starSvg.classList.remove('bi-star-fill');
+                            starSvg.classList.add('bi-star');
+                        }
+                    });
+                });
+
+                star.addEventListener('mouseover', function () {
+                    const rating = parseInt(this.value);
+                    labels.forEach((label, i) => {
+                        const starSvg = label.querySelector('svg');
+                        if (i < rating) {
+                            starSvg.classList.add('bi-star-fill');
+                            starSvg.classList.remove('bi-star');
+                        }
+                    });
+                });
+
+                star.addEventListener('mouseout', function () {
+                    const checkedRating = document.querySelector('.star-input:checked');
+                    labels.forEach((label, i) => {
+                        const starSvg = label.querySelector('svg');
+                        if (checkedRating && i < parseInt(checkedRating.value)) {
+                            starSvg.classList.add('bi-star-fill');
+                            starSvg.classList.remove('bi-star');
+                        } else {
+                            starSvg.classList.remove('bi-star-fill');
+                            starSvg.classList.add('bi-star');
+                        }
+                    });
+                });
+            });
+        });
+    </script>
+}
+
+<style>
+    .star-rating {
+        display: flex;
+        flex-direction: row-reverse;
+        gap: 5px;
+    }
+
+    .star-input {
+        display: none;
+    }
+
+    .star {
+        cursor: pointer;
+        color: #ccc;
+        transition: color 0.2s;
+    }
+
+        .star:hover,
+        .star:hover ~ .star {
+            color: #ffd700;
+        }
+
+    .bi-star-fill {
+        color: #ffd700;
+    }
+</style>
