@@ -11,8 +11,6 @@
         <option value="">Select Category</option>
         <!-- Categories will be populated by JavaScript -->
     </select>
-    <input type="number" id="minPrice" placeholder="Min Price" />
-    <input type="number" id="maxPrice" placeholder="Max Price" />
     <button type="submit">Search</button>
 </form>
 
@@ -30,17 +28,17 @@
                 'Content-Type': 'application/json',
             }
         })
-            .then(response => response.json()) // Chuyển phản hồi thành JSON
-            .then(data => {
-                const categorySelect = document.getElementById('categoryId');
-                data.forEach(category => {
-                    const option = document.createElement('option');
-                    option.value = category.catId;
-                    option.textContent = category.catName;
-                    categorySelect.appendChild(option);
-                });
-            })
-            .catch(error => console.error('Error loading categories:', error));
+        .then(response => response.json()) // Chuyển phản hồi thành JSON
+        .then(data => {
+            const categorySelect = document.getElementById('categoryId');
+            data.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category.catId;
+                option.textContent = category.catName;
+                categorySelect.appendChild(option);
+            });
+        })
+        .catch(error => console.error('Error loading categories:', error));
     });
 
     // Hàm xử lý khi form tìm kiếm được submit
@@ -50,16 +48,12 @@
         const bookName = document.getElementById('bookName').value;
         const authorName = document.getElementById('authorName').value;
         const categoryId = document.getElementById('categoryId').value;
-        const minPrice = document.getElementById('minPrice').value;
-        const maxPrice = document.getElementById('maxPrice').value;
 
         // Gọi API để tìm kiếm sách
         let queryParams = [];
         if (bookName) queryParams.push(`bookName=${encodeURIComponent(bookName)}`);
         if (authorName) queryParams.push(`authorName=${encodeURIComponent(authorName)}`);
         if (categoryId) queryParams.push(`categoryId=${categoryId}`);
-        if (minPrice) queryParams.push(`minPrice=${minPrice}`);
-        if (maxPrice) queryParams.push(`maxPrice=${maxPrice}`);
 
         const queryString = queryParams.length > 0 ? '?' + queryParams.join('&') : '';
 
@@ -69,37 +63,39 @@
                 'Content-Type': 'application/json',
             }
         })
-            .then(response => response.json()) // Chuyển phản hồi thành JSON
-            .then(data => {
-                const container = document.getElementById('booksContainer');
-                container.innerHTML = ''; // Xóa dữ liệu cũ trước khi hiển thị kết quả mới
+        .then(response => response.json()) // Chuyển phản hồi thành JSON
+        .then(data => {
+            const container = document.getElementById('booksContainer');
+            container.innerHTML = ''; // Xóa dữ liệu cũ trước khi hiển thị kết quả mới
 
-                if (data.length === 0) {
-                    container.innerHTML = '<p>No books found matching your search.</p>';
-                } else {
-                    data.forEach(book => {
-                        const card = document.createElement('div');
-                        card.classList.add('col-4', 'mb-4');
+            if (data.length === 0) {
+                container.innerHTML = '<p>No books found matching your search.</p>';
+            } else {
+                data.forEach(book => {
+                    const card = document.createElement('div');
+                    card.classList.add('col-4', 'mb-4');
 
-                        // Hiển thị thẻ card với ảnh, tên sách, tác giả, thể loại và giá
-                        card.innerHTML = `
-                                <div class="card" style="width: 18rem;">
-                                    <!-- Hiển thị ảnh sách nếu có -->
-                                    ${book.imageUrls ? `<img src="${book.imageUrls.split(',')[0]}" class="card-img-top" alt="${book.bookName}" style="height: 200px; object-fit: cover;">` : '<img src="https://via.placeholder.com/150" class="card-img-top" alt="No Image Available" style="height: 200px; object-fit: cover;">'}
-                                    <div class="card-body">
-                                        <h5 class="card-title">${book.bookName}</h5>
-                                        <p class="card-text">${book.author.authorName}</p>
-                                        <p class="card-text">Category: ${book.category.catName}</p>
-                                        <p class="card-text">Price: ${book.bookPrice} VND</p>
-                                        <a href="#" class="btn btn-primary">View Details</a>
-                                    </div>
-                                </div>
-                            `;
-                        container.appendChild(card);
-                    });
-                }
-            })
-            .catch(error => console.error('Error searching books:', error));
+                    // Hiển thị thẻ card với ảnh, tên sách, tác giả, thể loại và giá
+                    card.innerHTML = `
+                        <div class="card" style="width: 18rem;">
+                            <!-- Hiển thị ảnh sách nếu có -->
+                            ${book.imageUrls ? 
+                                `<img src="${book.imageUrls.split(',')[0]}" class="card-img-top" alt="${book.title}" style="height: 200px; object-fit: cover;">` : 
+                                '<img src="https://via.placeholder.com/150" class="card-img-top" alt="No Image Available" style="height: 200px; object-fit: cover;">'
+                            }
+                            <div class="card-body">
+                                <h5 class="card-title">${book.title}</h5>
+                                <p class="card-text">${book.author.authorName}</p>
+                                <p class="card-text">Category: ${book.category.catName}</p>
+                                <a href="/Books/Details?id=${book.bookId}" class="btn btn-primary">View Details</a>
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            }
+        })
+        .catch(error => console.error('Error searching books:', error));
     }
 </script>
 

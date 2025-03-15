@@ -284,16 +284,31 @@ namespace api_flms_service.Controllers
             }
         }
 
-        // API để lấy danh sách sách mượn của người dùng
         [HttpGet("borrowed")]
         public async Task<IActionResult> GetBorrowedBooks()
         {
             var userOfGG = await _authService.GetCurrentUserAsync();
 
-            var user = await _userService.GetUserByEmail(userOfGG.Email); // Lấy UserId từ JWT hoặc Session
-            if (user.UserId <= 0)
+            // Kiểm tra nếu người dùng chưa đăng nhập (userOfGG là null)
+            if (userOfGG == null)
             {
                 return Unauthorized("User is not logged in");
+            }
+
+            var user = await _userService.GetUserByEmail(userOfGG.Email);
+
+            // Kiểm tra nếu không có user
+            if (user == null || user.UserId <= 0)
+            {
+                return RedirectToPage("/AccessDenied");
+                //dreturn Unauthorized("User does not exist or has invalid data.");
+            }
+
+            // Kiểm tra quyền của người dùng
+            if (user.Role != "User" && user.Role != "Admin")
+            {
+                // Nếu không có quyền, chuyển hướng đến trang AccessDenied
+                return RedirectToPage("/AccessDenied");
             }
 
             var books = await _bookService.GetBorrowedBooksAsync(user.UserId);
@@ -305,27 +320,31 @@ namespace api_flms_service.Controllers
         public async Task<IActionResult> RenewBook([FromBody] RenewRequest request)
         {
             var userOfGG = await _authService.GetCurrentUserAsync();
-
             var user = await _userService.GetUserByEmail(userOfGG.Email); // Lấy UserId từ JWT hoặc Session
             if (user.UserId <= 0)
             {
                 return Unauthorized("User is not logged in");
             }
 
+            // Kiểm tra nếu BookId không hợp lệ
             if (request.BookId <= 0)
             {
                 return BadRequest("Invalid ID");
             }
 
+            // Gọi service gia hạn sách
             var result = await _bookService.RenewBookAsync(user.UserId, request.BookId);
             return result;
         }
 
-        [HttpGet("search")]
-        public async Task<IActionResult> SearchBooks([FromQuery] string? title, [FromQuery] string? authorName, [FromQuery]int categoryId )
-                                             
+        // Phương thức tìm kiếm sách
+        [HttpGet]
+        public async Task<IActionResult> Search(string bookName, string authorName, string categoryId)
         {
-            var books = await _bookService.SearchBooksAsync(title, authorName, categoryId);
+            // Lọc sách theo tên sách, tên tác giả, và thể loại (nếu có)
+            var books = await _bookService.SearchBooks(bookName, authorName, categoryId);
+
+            
             return Ok(books);
         }
     }

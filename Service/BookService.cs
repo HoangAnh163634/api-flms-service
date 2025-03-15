@@ -129,68 +129,77 @@ namespace api_flms_service.Service
                 await _dbContext.SaveChangesAsync();
             }
         }
-
-
-        public async Task<IActionResult> RenewBookAsync(int userId, int bookId)
+            public async Task<List<Book>> GetBorrowedBooksAsync(int userId)
         {
-              var book = await _dbContext.Books
-                                      .FirstOrDefaultAsync(b => b.BookId == bookId && b.UserId == userId);
+            return await _dbContext.Books
+                                    .Where(b => b.UserId == userId)
+                                    .Select(b => new Book
+                                    {
+                                        BookId = b.BookId,
+                                        Title = b.Title,
+                                        BorrowedUntil = b.BorrowedUntil,
+                                        ImageUrls = b.ImageUrls
+                                    })
 
-
-             if (book == null)
-             {
-                 return new NotFoundObjectResult("Book not found or not borrowed by this user");
-             }
+                                    .ToListAsync();
 
 
           
-            if (book.BorrowedUntil == DateTime.MinValue)
+        }
+
+        public async Task<IActionResult> RenewBookAsync(int userId, int bookId)
+        {
+            var book = await _dbContext.Books
+                                       .FirstOrDefaultAsync(b => b.BookId == bookId && b.UserId == userId);
+
+            if (book == null)
             {
-            
-                book.BorrowedUntil = DateTime.UtcNow;
+                return new NotFoundObjectResult("Book not found or not borrowed by this user");
             }
 
-         
+            // Kiểm tra nếu sách có thể gia hạn hay không (không quá hạn)
+            if (book.BorrowedUntil <= DateTime.Now)
+            {
+                return new BadRequestObjectResult("Cannot renew. The book's due date has already passed.");
+            }
+
+            // Gia hạn sách thêm 3 ngày
             book.BorrowedUntil = book.BorrowedUntil.AddDays(3);
 
-    
+            // Chuyển thời gian về múi giờ Việt Nam
             var vietnamTime = TimeZoneInfo.ConvertTimeFromUtc(book.BorrowedUntil, TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time"));
-
             book.BorrowedUntil = vietnamTime;
 
-      
+            // Cập nhật lại sách trong DB
             _dbContext.Books.Update(book);
             await _dbContext.SaveChangesAsync();
 
             return new OkObjectResult(new { message = "Book renewed successfully", newDueDate = vietnamTime.ToString("yyyy-MM-dd HH:mm:ss") });
-
-
         }
 
-        public async Task<IEnumerable<Book>> SearchBooksAsync(string? title, string? authorName, int? categoryId)
+        public async Task<List<Book>> SearchBooks(string bookName, string authorName, string categoryId)
         {
-            IQueryable<Book> query = _dbContext.Books
-                .Include(b => b.Author)
-                .Include(b => b.BookCategories) 
-                .ThenInclude(bc => bc.Category); 
+            var query = _dbContext.Books.AsQueryable();
 
-            if (!string.IsNullOrEmpty(title))
+            // Tìm kiếm theo tên sách
+            if (!string.IsNullOrEmpty(bookName))
             {
-                query = query.Where(b => b.Title.Contains(title));
+                query = query.Where(b => b.Title.Contains(bookName));
             }
 
+            // Tìm kiếm theo tên tác giả
             if (!string.IsNullOrEmpty(authorName))
             {
                 query = query.Where(b => b.Author.Name.Contains(authorName));
             }
 
-            if (categoryId.HasValue)
+            // Tìm kiếm theo thể loại
+            if (!string.IsNullOrEmpty(categoryId))
             {
-                query = query.Where(b => b.BookCategories.Any(bc => bc.CategoryId == categoryId)); // Check if the book belongs to the specified category
+                query = query.Where(b => b.BookCategories.Any(bc => bc.CategoryId.ToString() == categoryId));
             }
 
-
-            return await query.OrderBy(b => b.Title).ToListAsync();
+            return await query.ToListAsync();
         }
 
 
@@ -244,23 +253,7 @@ namespace api_flms_service.Service
             return book;
         }
 
-        public async Task<List<Book>> GetBorrowedBooksAsync(int userId)
-        {
-            return await _dbContext.Books
-                                    .Where(b => b.UserId == userId)
-                                    .Select(b => new Book
-                                    {
-                                        BookId = b.BookId,
-                                        Title = b.Title,
-                                        BorrowedUntil = b.BorrowedUntil,
-                                        ImageUrls = b.ImageUrls
-                                    })
-
-                                    .ToListAsync();
-
-
-          
-        }
+    
 
         
     }

@@ -1,72 +1,98 @@
 ﻿@page
 @model api_flms_service.Pages.Books.ManagerRenewedBookModel
+@{
+    ViewData["Title"] = "Manage Renewed Book";
+    Layout = "~/Pages/Shared/_Layout.cshtml";
+}
 
-<h2>Your Borrowed Books</h2>
+<!-- Thêm phần Bootstrap -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
 
-<table id="borrowedBooksTable">
-    <thead>
-        <tr>
-            <th>Book Name</th>
-            <th>Due Date</th>
-            <th>Image</th> <!-- Cột để hiển thị ảnh -->
-            <th>Action</th>
-        </tr>
-    </thead>
-    <tbody>
-        <!-- Data will be populated here by JavaScript -->
-    </tbody>
-</table>
+<h2 class="my-4">Your Borrowed Books</h2>
+
+<div class="container">
+    <table id="borrowedBooksTable" class="table table-striped">
+        <thead class="thead-dark">
+            <tr>
+                <th>Book Name</th>
+                <th>Due Date</th>
+                <th>Image</th> <!-- Column to display image -->
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Data will be populated here by JavaScript -->
+        </tbody>
+    </table>
+</div>
+
+<!-- Thêm phần jQuery và Bootstrap JS -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        // Gọi API để lấy danh sách sách mượn
-        fetch('/api/v0/books/borrowed', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        })
-        .then(response => {
+    $(document).ready(async function () {
+        try {
+            const response = await fetch('/api/v0/books/borrowed', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
-            return response.json(); // Chuyển phản hồi thành JSON
-        })
-        .then(data => {
-            const tableBody = document.querySelector('#borrowedBooksTable tbody');
-            data.forEach(book => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${book.bookName}</td>
-                    <td>${new Date(book.borrowedUntil).toLocaleDateString()}</td>
-                    <td>
-                        <!-- Hiển thị ảnh nếu có -->
-                        ${book.imageUrls ? `<img src="${book.imageUrls.split(',')[0]}" alt="Book Image" style="width: 50px; height: 75px; object-fit: cover;" />` : 'No image'}
-                    </td>
-                    <td><button onclick="renewBook(${book.bookId})">Renew</button></td>
-                `;
-                tableBody.appendChild(row);
-            });
-        })
-        .catch(error => console.error('Error:', error));
+
+            const data = await response.json();
+            const tableBody = $('#borrowedBooksTable tbody');
+
+            if (data.length > 0) {
+                data.forEach(book => {
+                    const row = `
+                            <tr>
+                                <td>${book.title}</td>
+                                <td>${new Date(book.borrowedUntil).toLocaleDateString()}</td>
+                                <td>
+                                    ${book.imageUrls ? `<img src="${book.imageUrls.split(',')[0]}" alt="Book Image" class="img-fluid" style="max-width: 50px; height: auto; object-fit: cover;" />` : 'No image'}
+                                </td>
+                                <td>
+                                    <button class="btn btn-primary btn-sm" onclick="renewBook(${book.bookId})">Renew</button>
+                                </td>
+                            </tr>
+                        `;
+                    tableBody.append(row);
+                });
+            } else {
+                const row = `<tr><td colspan="4" class="text-center">No borrowed books found.</td></tr>`;
+                tableBody.append(row);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Failed to load borrowed books. Please try again later.');
+        }
     });
 
-    // Hàm gia hạn sách
-    function renewBook(bookId) {
-        fetch('/api/v0/books/renew', {
-            method: 'POST',
-            body: JSON.stringify({ BookId: bookId }), // Gửi bookId lên API
-            headers: {
-                'Content-Type': 'application/json',
+    async function renewBook(bookId) {
+        try {
+            const response = await fetch('/api/v0/books/renew', {
+                method: 'POST',
+                body: JSON.stringify({ BookId: bookId }),
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to renew book');
             }
-        })
-        .then(response => response.json())
-        .then(data => {
-            alert('Book renewed successfully. New due date: ' + data.newDueDate);
-            location.reload(); // Tải lại trang sau khi gia hạn
-        })
-        .catch(error => {
-            alert('Error renewing book: ' + error);
-        });
+
+            const data = await response.json();
+            alert('Book renewed successfully. New due date: ' + new Date(data.newDueDate).toLocaleDateString());
+            location.reload(); // Reload the page to update the list
+        } catch (error) {
+            console.error('Error renewing book:', error);
+            alert('Error renewing book: ' + error.message);
+        }
     }
 </script>
