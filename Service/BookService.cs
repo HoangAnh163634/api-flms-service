@@ -177,30 +177,7 @@ namespace api_flms_service.Service
             return new OkObjectResult(new { message = "Book renewed successfully", newDueDate = vietnamTime.ToString("yyyy-MM-dd HH:mm:ss") });
         }
 
-        public async Task<List<Book>> SearchBooks(string bookName, string authorName, string categoryId)
-        {
-            var query = _dbContext.Books.AsQueryable();
-
-            // Tìm kiếm theo tên sách
-            if (!string.IsNullOrEmpty(bookName))
-            {
-                query = query.Where(b => b.Title.Contains(bookName));
-            }
-
-            // Tìm kiếm theo tên tác giả
-            if (!string.IsNullOrEmpty(authorName))
-            {
-                query = query.Where(b => b.Author.Name.Contains(authorName));
-            }
-
-            // Tìm kiếm theo thể loại
-            if (!string.IsNullOrEmpty(categoryId))
-            {
-                query = query.Where(b => b.BookCategories.Any(bc => bc.CategoryId.ToString() == categoryId));
-            }
-
-            return await query.ToListAsync();
-        }
+     
 
 
         public async Task<Book> LoanBookAsync(int bookId, int userId)
@@ -253,8 +230,61 @@ namespace api_flms_service.Service
             return book;
         }
 
-    
+        //public async Task<IEnumerable<Book>> SearchBooksAsync(string searchTerm, string categoryName)
+        //{
+        //    var query = _dbContext.Books.AsQueryable();
 
-        
+        //    // If searchTerm is not empty, search by book title and description
+        //    if (!string.IsNullOrEmpty(searchTerm))
+        //    {
+        //        query = query.Where(b => b.Title.Contains(searchTerm) || b.BookDescription.Contains(searchTerm));
+        //    }
+
+        //    // If categoryName is not empty, filter by category name (case-insensitive)
+        //    if (!string.IsNullOrEmpty(categoryName))
+        //    {
+        //        query = query.Where(b => b.Categories.Any(c => c.CategoryName.ToLower().Equals(categoryName.ToLower())));
+        //    }
+
+        //    // Execute query and return the list of matching books
+        //    return await query
+        //        .Include(b => b.Author)          // Include author information
+        //        .Include(b => b.Categories)      // Include category information
+        //        .ToListAsync();                  // Execute the query and return results
+        //}
+
+        public async Task<IEnumerable<Book>> SearchBooksAsync(string searchTerm, string categoryName, int? publicationYear)
+        {
+            var query = _dbContext.Books.AsQueryable();
+
+            // If searchTerm is not empty, search by book title and description
+            if (!string.IsNullOrEmpty(searchTerm))
+            {
+                query = query.Where(b => b.Title.Contains(searchTerm) || b.BookDescription.Contains(searchTerm));
+            }
+
+            // If categoryName is not empty, filter by category name (case-insensitive)
+            if (!string.IsNullOrEmpty(categoryName))
+            {
+                query = query.Where(b => b.Categories.Any(c => c.CategoryName.ToLower().Equals(categoryName.ToLower())));
+            }
+
+            // If publicationYear is specified, filter by publication year
+            if (publicationYear.HasValue)
+            {
+                query = query.Where(b => b.PublicationYear == publicationYear.Value);
+            }
+
+            // Execute query and return the list of matching books
+            return await query
+                .Include(b => b.Author)          // Include author information
+                .Include(b => b.Categories)      // Include category information
+                .ToListAsync();                  // Execute the query and return results
+        }
+
+        public Task<IEnumerable<Book>> SearchBooksAsync(string searchTerm, string categoryName)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
