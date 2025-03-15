@@ -338,7 +338,7 @@ namespace api_flms_service.Controllers
         }
 
         // Phương thức tìm kiếm sách
-        [HttpGet]
+        [HttpGet("search")]
         public async Task<IActionResult> Search(string bookName, string authorName, string categoryId)
         {
             // Lọc sách theo tên sách, tên tác giả, và thể loại (nếu có)
