@@ -17,10 +17,20 @@ namespace api_flms_service.Service
 
         public async Task<IEnumerable<Book>> GetAllBooksAsync()
         {
-            return await _dbContext.Books
-                .Include(b => b.Author)
-                .Include(b => b.Categories)
-                .ToListAsync();
+            try
+            {
+                return await _dbContext.Books
+                    .Include(b => b.Author)
+                    .Include(b => b.BookCategories)
+                    .ThenInclude(bc => bc.Category)
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in GetAllBooksAsync: {ex.Message}");
+                Console.WriteLine($"StackTrace: {ex.StackTrace}");
+                throw; // Ném lại ngoại lệ để BookController xử lý
+            }
         }
 
         public async Task<Book?> GetBookByIdAsync(int id)

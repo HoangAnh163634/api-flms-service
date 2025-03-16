@@ -9,7 +9,6 @@
     <h4 class="text-center">Books</h4>
     <div class="text-right mb-3">
         <a href="/Books/Manage" class="btn btn-success">Add New Book</a>
-        
     </div>
     <table class="table table-bordered table-hover text-center" id="booksTable">
         <thead>
@@ -19,7 +18,7 @@
                 <th>Category</th>
                 <th>Number</th>
                 <th>Price</th>
-                <th>Image</th> <!-- Thêm cột hình ảnh -->
+                <th>Image</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -37,21 +36,23 @@
             tableBody.innerHTML = '';
 
             books.forEach(book => {
+                // Lấy tên category đầu tiên từ danh sách category, nếu có
+                const categoryName = book.category && book.category.length > 0 ? book.category[0].categoryName : 'No Category';
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                        <td>${book.bookName}</td>
-                        <td>${book.authorName}</td>
-                        <td>${book.categoryName}</td>
-                        <td>${book.bookNo}</td>
-                        <td>${book.bookPrice}</td>
-                            <td>
-                                        ${book.imageUrls ? `<img src="${book.imageUrls.split(',')[0]}" alt="Book Image" class="img-fluid" style="max-width: 50px; height: auto; object-fit: cover;" />` : 'No image'}
-                                    </td>
-                        <td>
-                            <a href="/Books/Manage?id=${book.bookId}" class="btn btn-primary">Edit</a>
-                            <button class="btn btn-danger" onclick="deleteBook(${book.bookId})">Delete</button>
-                        </td>
-                    `;
+                    <td>${book.bookName || 'N/A'}</td>
+                    <td>${book.authorName || 'N/A'}</td>
+                    <td>${categoryName}</td>
+                    <td>${book.bookNo || 'N/A'}</td>
+                    <td>${book.bookPrice || 'N/A'}</td>
+                    <td>
+                        ${book.imageUrls ? `<img src="${book.imageUrls.split(',')[0]}" alt="Book Image" class="img-fluid" style="max-width: 50px; height: auto; object-fit: cover;" />` : 'No image'}
+                    </td>
+                    <td>
+                        <a href="/Books/Manage?id=${book.bookId}" class="btn btn-primary">Edit</a>
+                        <button class="btn btn-danger" onclick="deleteBook(${book.bookId})">Delete</button>
+                    </td>
+                `;
                 tableBody.appendChild(row);
             });
         } catch (err) {
@@ -77,4 +78,3 @@
     // Fetch books on page load
     fetchBooks();
 </script>
-

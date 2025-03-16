@@ -35,11 +35,15 @@ namespace api_flms_service.Controllers
                 var bookDtos = books.Select(b => new BookDto
                 {
                     BookId = b.BookId,
-                    BookName = b.Title,
+                    BookName = b.Title ?? "No Title",
                     AuthorId = b.AuthorId,
-                    AuthorName = b.Author.Name,
-                    Category = b.Categories.ToList(),
-                    BookNo = b.ISBN,
+                    AuthorName = b.Author?.Name ?? "No Author",
+                    Category = b.Categories?.Select(c => new Category
+                    {
+                        CategoryId = c.CategoryId,
+                        CategoryName = c.CategoryName
+                    }).ToList() ?? new List<Category>(),
+                    BookNo = b.ISBN ?? "No ISBN",
                     BookPrice = b.PublicationYear
                 }).ToList();
 
@@ -47,6 +51,8 @@ namespace api_flms_service.Controllers
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Error in GetAllBooks: {ex.Message}");
+                Console.WriteLine($"StackTrace: {ex.StackTrace}");
                 return StatusCode(500, new { message = "An error occurred while retrieving books.", details = ex.Message });
             }
         }
