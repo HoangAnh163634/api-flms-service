@@ -16,9 +16,12 @@
                 <th>Book Name</th>
                 <th>Author</th>
                 <th>Category</th>
-                <th>Number</th>
-                <th>Price</th>
+                <th>Number (ISBN)</th>
+                <th>Publication Year</th>
+                <th>Available Copies</th>
                 <th>Image</th>
+                <th>Description</th>
+                <th>Image URLs</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -27,27 +30,42 @@
         </tbody>
     </table>
 </div>
+
 <script>
     async function fetchBooks() {
         try {
             const response = await fetch('/api/v0/books');
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
             const books = await response.json();
             const tableBody = document.querySelector('#booksTable tbody');
             tableBody.innerHTML = '';
 
             books.forEach(book => {
-                // Lấy tên category đầu tiên từ danh sách category, nếu có
-                const categoryName = book.category && book.category.length > 0 ? book.category[0].categoryName : 'No Category';
+                // Lấy danh sách category
+                const categoryNames = book.category && book.category.length > 0
+                    ? book.category.map(cat => cat.categoryName).join(', ')
+                    : 'No Category';
+
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${book.bookName || 'N/A'}</td>
                     <td>${book.authorName || 'N/A'}</td>
-                    <td>${categoryName}</td>
+                    <td>${categoryNames}</td>
                     <td>${book.bookNo || 'N/A'}</td>
                     <td>${book.bookPrice || 'N/A'}</td>
+                    <td>${book.availableCopies ?? 'N/A'}</td>
                     <td>
-                        ${book.imageUrls ? `<img src="${book.imageUrls.split(',')[0]}" alt="Book Image" class="img-fluid" style="max-width: 50px; height: auto; object-fit: cover;" />` : 'No image'}
+                        ${book.cloudinaryImageId ?
+                            `<img src="${book.cloudinaryImageId}" alt="Book Image" class="img-fluid" style="max-width: 50px; height: auto; object-fit: cover;" />` :
+                            (book.imageUrls ?
+                                `<img src="${book.imageUrls.split(',')[0]}" alt="Book Image" class="img-fluid" style="max-width: 50px; height: auto; object-fit: cover;" />` :
+                                'No image')
+                        }
                     </td>
+                    <td>${book.bookDescription ?? 'N/A'}</td>
+                    <td>${book.imageUrls || 'N/A'}</td>
                     <td>
                         <a href="/Books/Manage?id=${book.bookId}" class="btn btn-primary">Edit</a>
                         <button class="btn btn-danger" onclick="deleteBook(${book.bookId})">Delete</button>
