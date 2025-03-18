@@ -11,9 +11,9 @@ namespace api_flms_service.ServiceInterface
         Task<Book> UpdateBookAsync(Book book, List<IFormFile> images);
         Task DeleteBookAsync(int id);
         Task<List<Book>> GetBorrowedBooksAsync(int userId);
-        Task<IActionResult> RenewBookAsync(int userId, int bookId); 
-        Task<List<Book>> SearchBooks(string bookName, string authorName, string categoryId);
-
+        Task<IActionResult> RenewBookAsync(int userId, int bookId);
+        Task<IEnumerable<Book>> SearchBooksAsync(string searchTerm, string categoryName);
+        //Task<IEnumerable<Book>> SearchBooksAsync(string searchTerm, string categoryName, int? publicationYear);
         Task<Book> LoanBookAsync(int bookId, int userId);
     }
 }

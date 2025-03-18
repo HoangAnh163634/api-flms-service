@@ -1,8 +1,10 @@
-﻿@page
+﻿
+ @page
 @model api_flms_service.Pages.IndexModel
 @{
     ViewData["Title"] = "Library";
 }
+
 
 <body>
     <div id="carouselExampleCaptions" class="carousel slide">
@@ -43,51 +45,134 @@
             <span class="visually-hidden">Next</span>
         </button>
     </div>
-    <br/>
+    <br />
+
+    <!-- Search & Filter Section -->
+    <h1 class="display-4 fw-bold text-body text-center">Search & Filter Books</h1>
+    <hr class="featurette-divider">
+  <form method="get" action="" class="container">
+    <div class="row g-3 align-items-end">
+        <div class="col-md-4">
+            <label for="searchTerm" class="form-label">Search Books</label>
+            <input type="text" id="searchTerm" name="searchTerm" class="form-control" 
+                   placeholder="Enter book title..." value="@Request.Query["searchTerm"]" />
+        </div>
+        
+        <div class="col-md-4">
+            <label for="categoryName" class="form-label">Category</label>
+            <select id="categoryName" name="categoryName" class="form-control">
+                <option value="">All Categories</option>
+                    @foreach (var category in Model.Categories)
+                    {
+                        <option value="@category.CategoryName" selected="@(category.CategoryName == Request.Query["categoryName"])">@category.CategoryName</option>
+                    }
+            </select>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-search me-1"></i> Search
+                </button>
+                <a href="/" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-circle me-1"></i> Reset
+                </a>
+            </div>
+        </div>
+    </div>
+</form>
+
+    <!-- Search Results Feedback -->
+    @if (!string.IsNullOrEmpty(Request.Query["searchTerm"]) ||
+    !string.IsNullOrEmpty(Request.Query["categoryName"]) ||
+    !string.IsNullOrEmpty(Request.Query["publicationYear"]))
+    {
+        <div class="container mt-3">
+            <div class="alert alert-info">
+                <h4>Kết quả tìm kiếm</h4>
+                <p>
+                    @if (!string.IsNullOrEmpty(Request.Query["searchTerm"]))
+                    {
+                        <span>Từ khóa: "@Request.Query["searchTerm"]" </span>
+                    }
+                    @if (!string.IsNullOrEmpty(Request.Query["categoryName"]))
+                    {
+                        <span>Thể loại: "@Request.Query["categoryName"]" </span>
+                    }
+                    
+                </p>
+                <p>Tìm thấy @Model.books.Count sách phù hợp với tiêu chí của bạn</p>
+            </div>
+        </div>
+    }
+
     <h1 class="display-4 fw-bold text-body text-center">Best Authors</h1>
     <hr class="featurette-divider">
 
     <div class="container marketing">
         <div class="row">
-            @foreach(var item in Model.authors) {
-            <div class="col-lg-4 text-center">
-                <img src="@item.CloudinaryId" alt="Image Description" width="200" height="200" class="rounded-circle" >
-                <h2 class="fw-normal">@item.Name</h2>
-                <p>@item.Biography</p>
-                <p><a class="btn btn-secondary" href="/Authors/SeeAuthor?id=@(item.AuthorId)">View Books &raquo;</a></p>
-            </div>
+            @foreach (var item in Model.authors)
+            {
+                <div class="col-lg-4 text-center">
+                    <img src="@item.CloudinaryId" alt="Image Description" width="200" height="200" class="rounded-circle">
+                    <h2 class="fw-normal">@item.Name</h2>
+                    <p>@item.Biography</p>
+                    <p><a class="btn btn-secondary" href="/Authors/SeeAuthor?id=@(item.AuthorId)">View Books &raquo;</a></p>
+                </div>
             }
         </div>
         <hr class="featurette-divider">
     </div>
 
-    <h1 class="display-4 fw-bold text-body text-center">Best Books</h1>
+    <h1 class="display-4 fw-bold text-body text-center">
+        @if (!string.IsNullOrEmpty(Request.Query["searchTerm"]) ||
+        !string.IsNullOrEmpty(Request.Query["categoryName"]))
+        {
+            <span>Kết quả tìm kiếm</span>
+        }
+        else
+        {
+            <span>Best Books</span>
+        }
+    </h1>
     <hr class="featurette-divider">
 
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-0 text-center">
-
-        @foreach(var item in Model.books)
+        @if (Model.books.Count == 0 && (!string.IsNullOrEmpty(Request.Query["searchTerm"]) ||
+        !string.IsNullOrEmpty(Request.Query["categoryName"])
+       ))
         {
-            
-            <div class="card" style="width:19rem; padding:10px;margin:10px; border-radius:20px" >
-                <a href="/Books/ShowBook?id=@(item.BookId)" style="text-decoration:none">
-                <img src="@item.CloudinaryImageId" class="card-img-top" style="border-radius:20px" alt="...">
-                
-                <div class="card-body">
-                    <h5 class="card-title" style="font-family:sans-serif; color:black">@item.Title</h5>
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item">Author: @item.Author?.Name</li>
-                        <li class="list-group-item">Year of publication: @item.PublicationYear</li>
-                    </ul>
+            <div class="col-12 text-center">
+                <div class="alert alert-warning">
+                    <h4>Không tìm thấy sách phù hợp với tiêu chí của bạn</h4>
+                    <p>Vui lòng thử lại với các tiêu chí khác</p>
                 </div>
-                </a>
             </div>
-            
+        }
+        else
+        {
+            @foreach (var item in Model.books)
+            {
+                <div class="card" style="width:19rem; padding:10px;margin:10px; border-radius:20px">
+                    <a href="/Books/ShowBook?id=@(item.BookId)" style="text-decoration:none">
+                        <img src="@item.CloudinaryImageId" class="card-img-top" style="border-radius:20px" alt="...">
+
+                        <div class="card-body">
+                            <h5 class="card-title" style="font-family:sans-serif; color:black">@item.Title</h5>
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item">Author: @item.Author?.Name</li>
+                               
+                            </ul>
+                        </div>
+                    </a>
+                </div>
+            }
         }
     </div>
-
-        
- 
-    
-
 </body>
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Popper.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+<!-- Bootstrap JS -->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
