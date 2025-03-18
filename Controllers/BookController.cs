@@ -337,19 +337,19 @@ namespace api_flms_service.Controllers
             return result;
         }
 
-        //[HttpGet("search")]
-        //public async Task<IActionResult> Search(string searchTerm, string categoryName)
-        //{
-        //    var books = await _bookService.SearchBooksAsync(searchTerm, categoryName);
-        //    return Ok(books);
-        //}
-
         [HttpGet("search")]
-        public async Task<IActionResult> Search(string searchTerm, string categoryName, int? publicationYear)
+        public async Task<IActionResult> Search(string searchTerm, string categoryName)
         {
-            var books = await _bookService.SearchBooksAsync(searchTerm, categoryName, publicationYear);
+            var books = await _bookService.SearchBooksAsync(searchTerm, categoryName);
             return Ok(books);
         }
+
+        //[HttpGet("search")]
+        //public async Task<IActionResult> Search(string searchTerm, string categoryName, int? publicationYear)
+        //{
+        //    var books = await _bookService.SearchBooksAsync(searchTerm, categoryName, publicationYear);
+        //    return Ok(books);
+        //}
 
     }
 }

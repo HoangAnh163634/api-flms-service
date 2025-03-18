@@ -95,7 +95,7 @@ namespace api_flms_service.Pages
         [BindProperty]
         public List<Book> books { get; set; }
 
-        public async Task<IActionResult> OnGetAsync(string searchTerm, string categoryName, int? publicationYear)
+        public async Task<IActionResult> OnGetAsync(string searchTerm, string categoryName)
         {
             // Lấy tất cả danh mục
             Categories = (await _category.GetAllCategoriesAsync()).ToList();
@@ -104,10 +104,10 @@ namespace api_flms_service.Pages
             authors = await _author.GetAllAuthorsAsync();
 
             // Kiểm tra xem có tham số tìm kiếm hay không
-            if (!string.IsNullOrEmpty(searchTerm) || !string.IsNullOrEmpty(categoryName) || publicationYear.HasValue)
+            if (!string.IsNullOrEmpty(searchTerm) || !string.IsNullOrEmpty(categoryName))
             {
                 // Sử dụng phương thức tìm kiếm nếu có tham số tìm kiếm
-                books = (await _book.SearchBooksAsync(searchTerm, categoryName, publicationYear)).ToList();
+                books = (await _book.SearchBooksAsync(searchTerm, categoryName)).ToList();
             }
             else
             {

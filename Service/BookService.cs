@@ -230,30 +230,7 @@ namespace api_flms_service.Service
             return book;
         }
 
-        //public async Task<IEnumerable<Book>> SearchBooksAsync(string searchTerm, string categoryName)
-        //{
-        //    var query = _dbContext.Books.AsQueryable();
-
-        //    // If searchTerm is not empty, search by book title and description
-        //    if (!string.IsNullOrEmpty(searchTerm))
-        //    {
-        //        query = query.Where(b => b.Title.Contains(searchTerm) || b.BookDescription.Contains(searchTerm));
-        //    }
-
-        //    // If categoryName is not empty, filter by category name (case-insensitive)
-        //    if (!string.IsNullOrEmpty(categoryName))
-        //    {
-        //        query = query.Where(b => b.Categories.Any(c => c.CategoryName.ToLower().Equals(categoryName.ToLower())));
-        //    }
-
-        //    // Execute query and return the list of matching books
-        //    return await query
-        //        .Include(b => b.Author)          // Include author information
-        //        .Include(b => b.Categories)      // Include category information
-        //        .ToListAsync();                  // Execute the query and return results
-        //}
-
-        public async Task<IEnumerable<Book>> SearchBooksAsync(string searchTerm, string categoryName, int? publicationYear)
+        public async Task<IEnumerable<Book>> SearchBooksAsync(string searchTerm, string categoryName)
         {
             var query = _dbContext.Books.AsQueryable();
 
@@ -269,12 +246,6 @@ namespace api_flms_service.Service
                 query = query.Where(b => b.Categories.Any(c => c.CategoryName.ToLower().Equals(categoryName.ToLower())));
             }
 
-            // If publicationYear is specified, filter by publication year
-            if (publicationYear.HasValue)
-            {
-                query = query.Where(b => b.PublicationYear == publicationYear.Value);
-            }
-
             // Execute query and return the list of matching books
             return await query
                 .Include(b => b.Author)          // Include author information
@@ -282,9 +253,6 @@ namespace api_flms_service.Service
                 .ToListAsync();                  // Execute the query and return results
         }
 
-        public Task<IEnumerable<Book>> SearchBooksAsync(string searchTerm, string categoryName)
-        {
-            throw new NotImplementedException();
-        }
+
     }
 }
