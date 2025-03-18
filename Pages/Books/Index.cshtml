@@ -5,94 +5,136 @@
     Layout = "~/Pages/Shared/_Layout.cshtml";
 }
 
-<div class="container">
-    <h4 class="text-center">Books</h4>
-    <div class="text-right mb-3">
-        <a href="/Books/Manage" class="btn btn-success">Add New Book</a>
-    </div>
-    <table class="table table-bordered table-hover text-center" id="booksTable">
-        <thead>
-            <tr>
-                <th>Book Name</th>
-                <th>Author</th>
-                <th>Category</th>
-                <th>Number (ISBN)</th>
-                <th>Publication Year</th>
-                <th>Available Copies</th>
-                <th>Image</th>
-                <th>Description</th>
-                <th>Image URLs</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            <!-- Books will be dynamically loaded here -->
-        </tbody>
-    </table>
-</div>
+<h2>Books</h2>
+
+<p>
+    <a asp-page="./Manage" class="btn btn-success">Add New Book</a>
+</p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Book Name</th>
+            <th>Author</th>
+            <th>Category</th>
+            <th>Number (ISBN)</th>
+            <th>Publication Year</th>
+            <th>Available Copies</th>
+            <th>Image</th>
+            <th>Description</th>
+            <th>Image URLs</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody id="bookTable">
+    </tbody>
+</table>
 
 <script>
     async function fetchBooks() {
         try {
             const response = await fetch('/api/v0/books');
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
             const books = await response.json();
-            const tableBody = document.querySelector('#booksTable tbody');
+
+            const tableBody = document.getElementById('bookTable');
             tableBody.innerHTML = '';
 
             books.forEach(book => {
-                // Lấy danh sách category
-                const categoryNames = book.category && book.category.length > 0
+                const row = document.createElement('tr');
+
+                // Book Name
+                const nameCell = document.createElement('td');
+                nameCell.textContent = book.bookName || 'No Title';
+                row.appendChild(nameCell);
+
+                // Author
+                const authorCell = document.createElement('td');
+                authorCell.textContent = book.authorName || 'No Author';
+                row.appendChild(authorCell);
+
+                // Category
+                const categoryCell = document.createElement('td');
+                const categoryNames = book.category && Array.isArray(book.category)
                     ? book.category.map(cat => cat.categoryName).join(', ')
                     : 'No Category';
+                categoryCell.textContent = categoryNames;
+                row.appendChild(categoryCell);
 
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${book.bookName || 'N/A'}</td>
-                    <td>${book.authorName || 'N/A'}</td>
-                    <td>${categoryNames}</td>
-                    <td>${book.bookNo || 'N/A'}</td>
-                    <td>${book.bookPrice || 'N/A'}</td>
-                    <td>${book.availableCopies ?? 'N/A'}</td>
-                    <td>
-                        ${book.cloudinaryImageId ?
-                            `<img src="${book.cloudinaryImageId}" alt="Book Image" class="img-fluid" style="max-width: 50px; height: auto; object-fit: cover;" />` :
-                            (book.imageUrls ?
-                                `<img src="${book.imageUrls.split(',')[0]}" alt="Book Image" class="img-fluid" style="max-width: 50px; height: auto; object-fit: cover;" />` :
-                                'No image')
+                // ISBN
+                const isbnCell = document.createElement('td');
+                isbnCell.textContent = book.bookNo || 'No ISBN';
+                row.appendChild(isbnCell);
+
+                // Publication Year
+                const yearCell = document.createElement('td');
+                yearCell.textContent = book.bookPrice || 'N/A';
+                row.appendChild(yearCell);
+
+                // Available Copies
+                const copiesCell = document.createElement('td');
+                copiesCell.textContent = book.availableCopies || 0;
+                row.appendChild(copiesCell);
+
+                // Image
+                const imageCell = document.createElement('td');
+                if (book.imageUrls) {
+                    const img = document.createElement('img');
+                    img.src = book.imageUrls.split(',')[0]; // Lấy URL đầu tiên
+                    img.alt = 'Book Image';
+                    img.style.maxWidth = '50px';
+                    img.style.height = 'auto';
+                    imageCell.appendChild(img);
+                }
+                row.appendChild(imageCell);
+
+                // Description
+                const descriptionCell = document.createElement('td');
+                descriptionCell.textContent = book.bookDescription || 'N/A';
+                row.appendChild(descriptionCell);
+
+                // Image URLs
+                const urlsCell = document.createElement('td');
+                urlsCell.textContent = book.imageUrls || 'N/A';
+                row.appendChild(urlsCell);
+
+                // Actions
+                const actionsCell = document.createElement('td');
+                const editButton = document.createElement('a');
+                editButton.href = `/Books/Manage?id=${book.bookId}`;
+                editButton.className = 'btn btn-primary btn-sm';
+                editButton.textContent = 'Edit';
+                actionsCell.appendChild(editButton);
+
+                actionsCell.appendChild(document.createTextNode(' '));
+
+                const deleteButton = document.createElement('button');
+                deleteButton.className = 'btn btn-danger btn-sm';
+                deleteButton.textContent = 'Delete';
+                deleteButton.onclick = async () => {
+                    if (confirm('Are you sure you want to delete this book?')) {
+                        try {
+                            const response = await fetch(`/api/v0/books/${book.bookId}`, {
+                                method: 'DELETE'
+                            });
+                            if (response.ok) {
+                                fetchBooks();
+                            } else {
+                                alert('Error deleting book');
+                            }
+                        } catch (err) {
+                            alert('Error deleting book: ' + err.message);
                         }
-                    </td>
-                    <td>${book.bookDescription ?? 'N/A'}</td>
-                    <td>${book.imageUrls || 'N/A'}</td>
-                    <td>
-                        <a href="/Books/Manage?id=${book.bookId}" class="btn btn-primary">Edit</a>
-                        <button class="btn btn-danger" onclick="deleteBook(${book.bookId})">Delete</button>
-                    </td>
-                `;
+                    }
+                };
+                actionsCell.appendChild(deleteButton);
+
+                row.appendChild(actionsCell);
                 tableBody.appendChild(row);
             });
         } catch (err) {
-            console.error("Failed to fetch books:", err);
+            console.error('Error fetching books:', err);
         }
     }
 
-    async function deleteBook(id) {
-        if (confirm("Are you sure you want to delete this book?")) {
-            try {
-                const response = await fetch(`/api/v0/books/${id}`, { method: 'DELETE' });
-                if (response.ok) {
-                    fetchBooks();
-                } else {
-                    console.error("Failed to delete book:", await response.json());
-                }
-            } catch (err) {
-                console.error("Error during book deletion:", err);
-            }
-        }
-    }
-
-    // Fetch books on page load
     fetchBooks();
 </script>

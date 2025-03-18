@@ -1,4 +1,5 @@
-﻿using api_auth_service.Services;
+﻿using System.Net;
+using api_auth_service.Services;
 using api_flms_service.Entity;
 using api_flms_service.Model;
 using api_flms_service.ServiceInterface;
@@ -21,10 +22,6 @@ namespace api_flms_service.Controllers
             _authService = authService;
         }
 
-        /// <summary>
-        /// Get all books
-        /// </summary>
-        /// <returns>List of books with their authors and categories</returns>
         [HttpGet]
         public async Task<IActionResult> GetAllBooks()
         {
@@ -56,11 +53,6 @@ namespace api_flms_service.Controllers
             }
         }
 
-        /// <summary>
-        /// Get book by ID
-        /// </summary>
-        /// <param name="id">Book ID</param>
-        /// <returns>Book details</returns>
         [HttpGet("{id}")]
         public async Task<IActionResult> GetBookById(int id)
         {
@@ -95,14 +87,8 @@ namespace api_flms_service.Controllers
             }
         }
 
-        /// <summary>
-        /// Add a new book
-        /// </summary>
-        /// <param name="bookDto">Book DTO</param>
-        /// <param name="images">List of images</param>
-        /// <returns>Created book</returns>
         [HttpPost]
-        public async Task<IActionResult> CreateBook([FromForm] BookDto bookDto, [FromForm] List<IFormFile> images)
+        public async Task<IActionResult> CreateBook([FromForm] BookDto bookDto, [FromForm] List<IFormFile> images, [FromForm] List<int> categoryIds)
         {
             if (!ModelState.IsValid)
             {
@@ -118,8 +104,8 @@ namespace api_flms_service.Controllers
                     ISBN = bookDto.BookNo,
                     PublicationYear = bookDto.BookPrice,
                     AvailableCopies = bookDto.AvailableCopies,
-                    BookDescription = bookDto.BookDescription
-                    // Category không ánh xạ trực tiếp ở đây, sẽ xử lý trong service nếu cần
+                    BookDescription = bookDto.BookDescription,
+                    BookCategories = categoryIds.Select(id => new BookCategory { CategoryId = id }).ToList()
                 };
 
                 var createdBook = await _bookService.CreateBookAsync(book, images);
@@ -147,15 +133,15 @@ namespace api_flms_service.Controllers
             }
         }
 
-        /// <summary>
-        /// Update an existing book
-        /// </summary>
-        /// <param name="bookDto">Updated book DTO</param>
-        /// <param name="images">List of images</param>
-        /// <returns>Updated book</returns>
-        [HttpPut]
-        public async Task<IActionResult> UpdateBook([FromForm] BookDto bookDto, [FromForm] List<IFormFile> images)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateBook(int id, [FromForm] BookDto bookDto, [FromForm] List<IFormFile> images, [FromForm] List<int> categoryIds)
         {
+            Console.WriteLine($"UpdateBook called with id: {id}, bookDto.BookId: {bookDto.BookId}"); // Debug: Kiểm tra request
+            if (id != bookDto.BookId)
+            {
+                return BadRequest(new { message = "Book ID in URL does not match Book ID in form data" });
+            }
+
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
@@ -175,7 +161,9 @@ namespace api_flms_service.Controllers
                 existingBook.PublicationYear = bookDto.BookPrice;
                 existingBook.AvailableCopies = bookDto.AvailableCopies;
                 existingBook.BookDescription = bookDto.BookDescription;
-                // Category không ánh xạ trực tiếp ở đây, sẽ xử lý trong service nếu cần
+
+                existingBook.BookCategories.Clear();
+                existingBook.BookCategories = categoryIds.Select(cid => new BookCategory { BookId = bookDto.BookId, CategoryId = cid }).ToList();
 
                 var updatedBook = await _bookService.UpdateBookAsync(existingBook, images);
 
@@ -198,15 +186,12 @@ namespace api_flms_service.Controllers
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Error in UpdateBook: {ex.Message}");
+                Console.WriteLine($"StackTrace: {ex.StackTrace}");
                 return StatusCode(500, new { message = "An error occurred while updating the book.", details = ex.Message });
             }
         }
 
-        /// <summary>
-        /// Delete a book by ID
-        /// </summary>
-        /// <param name="id">Book ID</param>
-        /// <returns>No content on success</returns>
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteBook(int id)
         {
@@ -227,16 +212,11 @@ namespace api_flms_service.Controllers
             }
         }
 
-        /// <summary>
-        /// Get borrowed books for the logged-in user
-        /// </summary>
-        /// <returns>List of borrowed books</returns>
         [HttpGet("borrowed")]
         public async Task<IActionResult> GetBorrowedBooks()
         {
             var userOfGG = await _authService.GetCurrentUserAsync();
 
-            // Kiểm tra nếu người dùng chưa đăng nhập (userOfGG là null)
             if (userOfGG == null)
             {
                 return Unauthorized("User is not logged in");
@@ -244,13 +224,11 @@ namespace api_flms_service.Controllers
 
             var user = await _userService.GetUserByEmail(userOfGG.Email);
 
-            // Kiểm tra nếu không có user
             if (user == null || user.UserId <= 0)
             {
                 return RedirectToPage("/AccessDenied");
             }
 
-            // Kiểm tra quyền của người dùng
             if (user.Role != "User" && user.Role != "Admin")
             {
                 return RedirectToPage("/AccessDenied");
@@ -260,43 +238,28 @@ namespace api_flms_service.Controllers
             return Ok(books);
         }
 
-        /// <summary>
-        /// Renew a book
-        /// </summary>
-        /// <param name="request">Renew request containing BookId</param>
-        /// <returns>Result of renewal</returns>
         [HttpPost("renew")]
         public async Task<IActionResult> RenewBook([FromBody] RenewRequest request)
         {
             var userOfGG = await _authService.GetCurrentUserAsync();
-            var user = await _userService.GetUserByEmail(userOfGG?.Email); // Kiểm tra null cho userOfGG
+            var user = await _userService.GetUserByEmail(userOfGG?.Email);
             if (user == null || user.UserId <= 0)
             {
                 return Unauthorized("User is not logged in");
             }
 
-            // Kiểm tra nếu BookId không hợp lệ
             if (request.BookId <= 0)
             {
                 return BadRequest("Invalid ID");
             }
 
-            // Gọi service gia hạn sách
             var result = await _bookService.RenewBookAsync(user.UserId, request.BookId);
             return result;
         }
 
-        /// <summary>
-        /// Search books by name, author, and category
-        /// </summary>
-        /// <param name="bookName">Book name to search</param>
-        /// <param name="authorName">Author name to search</param>
-        /// <param name="categoryId">Category ID to search</param>
-        /// <returns>List of matching books</returns>
         [HttpGet("search")]
         public async Task<IActionResult> Search(string bookName, string authorName, string categoryId)
         {
-            // Lọc sách theo tên sách, tên tác giả, và thể loại (nếu có)
             var books = await _bookService.SearchBooks(bookName, authorName, categoryId);
             return Ok(books);
         }

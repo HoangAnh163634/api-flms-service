@@ -7,9 +7,10 @@ namespace api_flms_service.Entity
     {
         [Key]
         public int CategoryId { get; set; }
-        public string? CategoryName { get; set; }
+        public string CategoryName { get; set; } = string.Empty; // Khởi tạo mặc định
 
-        public ICollection<BookCategory> BookCategories { get; set; } = new List<BookCategory>();  // Many-to-many relationship with Book
-        public ICollection<Book> Books => BookCategories.Select(bc => bc.Book).ToList();  // Navigation property for easy access
+        public ICollection<BookCategory> BookCategories { get; set; } = new List<BookCategory>(); // Đã khởi tạo
+        [JsonIgnore] // Thêm để tránh vòng lặp JSON serialization
+        public ICollection<Book> Books => BookCategories.Select(bc => bc.Book).ToList(); // Navigation property
     }
 }
