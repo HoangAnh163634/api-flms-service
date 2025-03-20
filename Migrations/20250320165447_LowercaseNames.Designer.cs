@@ -5,15 +5,14 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using api_flms_service.Entity;
 
 #nullable disable
 
 namespace api_flms_service.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250314164002_DBupdate")]
-    partial class DBupdate
+    [Migration("20250320165447_LowercaseNames")]
+    partial class LowercaseNames
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,24 +23,6 @@ namespace api_flms_service.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
-
-            modelBuilder.Entity("BookCategory", b =>
-                {
-                    b.Property<int>("BooksBookId")
-                        .HasColumnType("integer")
-                        .HasColumnName("booksbookid");
-
-                    b.Property<int>("CategoriesCategoryId")
-                        .HasColumnType("integer")
-                        .HasColumnName("categoriescategoryid");
-
-                    b.HasKey("BooksBookId", "CategoriesCategoryId")
-                        .HasName("pk_bookcategory");
-
-                    b.HasIndex("CategoriesCategoryId");
-
-                    b.ToTable("bookcategory");
-                });
 
             modelBuilder.Entity("api_flms_service.Entity.Author", b =>
                 {
@@ -143,12 +124,24 @@ namespace api_flms_service.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("categoryid");
 
+                    b.Property<int?>("BookId1")
+                        .HasColumnType("integer")
+                        .HasColumnName("bookid1");
+
+                    b.Property<int?>("CategoryId1")
+                        .HasColumnType("integer")
+                        .HasColumnName("categoryid1");
+
                     b.HasKey("BookId", "CategoryId")
-                        .HasName("pk_bookcategories");
+                        .HasName("pk_bookcategory");
+
+                    b.HasIndex("BookId1");
 
                     b.HasIndex("CategoryId");
 
-                    b.ToTable("bookcategories");
+                    b.HasIndex("CategoryId1");
+
+                    b.ToTable("bookcategory", (string)null);
                 });
 
             modelBuilder.Entity("api_flms_service.Entity.Category", b =>
@@ -329,21 +322,6 @@ namespace api_flms_service.Migrations
                     b.ToTable("users");
                 });
 
-            modelBuilder.Entity("BookCategory", b =>
-                {
-                    b.HasOne("api_flms_service.Entity.Book", null)
-                        .WithMany()
-                        .HasForeignKey("BooksBookId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("api_flms_service.Entity.Category", null)
-                        .WithMany()
-                        .HasForeignKey("CategoriesCategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("api_flms_service.Entity.Book", b =>
                 {
                     b.HasOne("api_flms_service.Entity.Author", "Author")
@@ -358,16 +336,24 @@ namespace api_flms_service.Migrations
             modelBuilder.Entity("api_flms_service.Entity.BookCategory", b =>
                 {
                     b.HasOne("api_flms_service.Entity.Book", "Book")
-                        .WithMany("BookCategories")
+                        .WithMany()
                         .HasForeignKey("BookId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("api_flms_service.Entity.Category", "Category")
+                    b.HasOne("api_flms_service.Entity.Book", null)
                         .WithMany("BookCategories")
+                        .HasForeignKey("BookId1");
+
+                    b.HasOne("api_flms_service.Entity.Category", "Category")
+                        .WithMany()
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("api_flms_service.Entity.Category", null)
+                        .WithMany("BookCategories")
+                        .HasForeignKey("CategoryId1");
 
                     b.Navigation("Book");
 
