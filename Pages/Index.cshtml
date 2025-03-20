@@ -84,8 +84,8 @@
 
     <!-- Search Results Feedback -->
     @if (!string.IsNullOrEmpty(Request.Query["searchTerm"]) ||
-    !string.IsNullOrEmpty(Request.Query["categoryName"]) ||
-    !string.IsNullOrEmpty(Request.Query["publicationYear"]))
+    !string.IsNullOrEmpty(Request.Query["categoryName"]))
+    
     {
         <div class="container mt-3">
             <div class="alert alert-info">
