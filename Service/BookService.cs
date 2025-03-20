@@ -242,27 +242,23 @@ namespace api_flms_service.Service
 
         public async Task<IEnumerable<Book>> SearchBooksAsync(string searchTerm, string categoryName)
         {
-            var query = _dbContext.Books.AsQueryable();
+            var query = _dbContext.Books
+                .Include(b => b.Author)
+                .Include(b => b.Categories)
+                .AsQueryable();
 
-            // If searchTerm is not empty, search by book title and description
             if (!string.IsNullOrEmpty(searchTerm))
             {
-                query = query.Where(b => b.Title.Contains(searchTerm) || b.BookDescription.Contains(searchTerm));
+                query = query.Where(b => (b.Title != null && b.Title.Contains(searchTerm)) ||
+                                         (b.BookDescription != null && b.BookDescription.Contains(searchTerm)));
             }
 
-            // If categoryName is not empty, filter by category name (case-insensitive)
             if (!string.IsNullOrEmpty(categoryName))
             {
-                query = query.Where(b => b.Categories.Any(c => c.CategoryName.ToLower().Equals(categoryName.ToLower())));
+                query = query.Where(b => b.Categories.Any(c => EF.Functions.ILike(c.CategoryName ?? "", categoryName)));
             }
 
-            // Execute query and return the list of matching books
-            return await query
-                .Include(b => b.Author)          // Include author information
-                .Include(b => b.Categories)      // Include category information
-                .ToListAsync();                  // Execute the query and return results
+            return await query.ToListAsync();
         }
-
-
     }
 }

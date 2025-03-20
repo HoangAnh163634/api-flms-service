@@ -129,6 +129,12 @@ namespace api_flms_service.ServiceInterface
                 return user?.Role == "Admin";
             }
 
+            public async Task<bool> IsAuthenticatedLibrarian(string email)
+            {
+                var user = await _dbContext.Users.FirstOrDefaultAsync(a => a.Email == email);
+                return user?.Role == "Librarian";
+            }
+
             // Triển khai phương thức mới cho Loan
             public async Task<Loan?> GetLoanByIdAsync(int loanId)
             {
@@ -150,6 +156,8 @@ namespace api_flms_service.ServiceInterface
                 await _dbContext.SaveChangesAsync();
                 return existingLoan;
             }
+
+            
         }
     }
 }

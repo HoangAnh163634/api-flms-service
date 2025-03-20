@@ -105,51 +105,39 @@ namespace api_flms_service.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "bookcategories",
+                name: "bookcategory",
                 columns: table => new
                 {
                     bookid = table.Column<int>(type: "integer", nullable: false),
-                    categoryid = table.Column<int>(type: "integer", nullable: false)
+                    categoryid = table.Column<int>(type: "integer", nullable: false),
+                    bookid1 = table.Column<int>(type: "integer", nullable: true),
+                    categoryid1 = table.Column<int>(type: "integer", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("pk_bookcategories", x => new { x.bookid, x.categoryid });
+                    table.PrimaryKey("pk_bookcategory", x => new { x.bookid, x.categoryid });
                     table.ForeignKey(
-                        name: "FK_bookcategories_books_bookid",
+                        name: "FK_bookcategory_books_bookid",
                         column: x => x.bookid,
                         principalTable: "books",
                         principalColumn: "bookid",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_bookcategories_categories_categoryid",
+                        name: "FK_bookcategory_books_bookid1",
+                        column: x => x.bookid1,
+                        principalTable: "books",
+                        principalColumn: "bookid");
+                    table.ForeignKey(
+                        name: "FK_bookcategory_categories_categoryid",
                         column: x => x.categoryid,
                         principalTable: "categories",
                         principalColumn: "categoryid",
                         onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "bookcategory",
-                columns: table => new
-                {
-                    booksbookid = table.Column<int>(type: "integer", nullable: false),
-                    categoriescategoryid = table.Column<int>(type: "integer", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_bookcategory", x => new { x.booksbookid, x.categoriescategoryid });
                     table.ForeignKey(
-                        name: "FK_bookcategory_books_booksbookid",
-                        column: x => x.booksbookid,
-                        principalTable: "books",
-                        principalColumn: "bookid",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_bookcategory_categories_categoriescategoryid",
-                        column: x => x.categoriescategoryid,
+                        name: "FK_bookcategory_categories_categoryid1",
+                        column: x => x.categoryid1,
                         principalTable: "categories",
-                        principalColumn: "categoryid",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "categoryid");
                 });
 
             migrationBuilder.CreateTable(
@@ -187,9 +175,9 @@ namespace api_flms_service.Migrations
                     reviewid = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     bookid = table.Column<int>(type: "integer", nullable: false),
-                    rating = table.Column<int>(type: "integer", nullable: true),
+                    rating = table.Column<int>(type: "integer", nullable: false),
                     reviewdate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    reviewtext = table.Column<string>(type: "text", nullable: true),
+                    reviewtext = table.Column<string>(type: "text", nullable: false),
                     userid = table.Column<int>(type: "integer", nullable: false),
                     userid1 = table.Column<int>(type: "integer", nullable: true)
                 },
@@ -216,14 +204,19 @@ namespace api_flms_service.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_bookcategories_categoryid",
-                table: "bookcategories",
+                name: "IX_bookcategory_bookid1",
+                table: "bookcategory",
+                column: "bookid1");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_bookcategory_categoryid",
+                table: "bookcategory",
                 column: "categoryid");
 
             migrationBuilder.CreateIndex(
-                name: "IX_bookcategory_categoriescategoryid",
+                name: "IX_bookcategory_categoryid1",
                 table: "bookcategory",
-                column: "categoriescategoryid");
+                column: "categoryid1");
 
             migrationBuilder.CreateIndex(
                 name: "IX_books_authorid",
@@ -259,9 +252,6 @@ namespace api_flms_service.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "bookcategories");
-
             migrationBuilder.DropTable(
                 name: "bookcategory");
 
