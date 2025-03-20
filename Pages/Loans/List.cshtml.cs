@@ -7,18 +7,26 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using api_flms_service.Model;
 using api_flms_service.Entity;
+using api_auth_service.Services;
+using api_flms_service.ServiceInterface;
 
 namespace api_flms_service.Pages.BookLoans
 {
     public class ListModel : PageModel
     {
-        
-        //private readonly api_flms_service.Model.DatabaseContext _context;
 
-        /*public ListModel(api_flms_service.Model.DatabaseContext context)
+        private readonly AuthService _auth;
+        private readonly IUserService _userService;
+        private readonly IReviewService _reviewService;
+        private readonly ILoanService _loanService;
+
+        public ListModel(AuthService auth, IUserService userService, IReviewService reviewService, ILoanService loanService)
         {
-            _context = context;
-        }*/
+            _auth = auth;
+            _userService = userService;
+            _reviewService = reviewService;
+            _loanService = loanService;
+        }
 
         public List<Loan> BookLoan { get;set; } = default!;
         [BindProperty]
@@ -36,60 +44,57 @@ namespace api_flms_service.Pages.BookLoans
 
         public async Task OnGetAsync()
         {
-            int id = (int)HttpContext.Session.GetInt32("id");
+            var currentUser = await _auth.GetCurrentUserAsync();
+            user = await _userService.GetUserByEmail(currentUser.Email);
 
-            /*if (_context.Users != null)
-            {
-                user = await _context.Users
-                    .Include(b => b.BookLoans)
-                        .ThenInclude(b1 => b1.Book)
-                            .ThenInclude(b2 => b2.Author).SingleOrDefaultAsync(b => b.UserId == id);
-            }
-            BookReviews = await _context.BookReviews.Include(b => b.User).Include(b => b.Book).ToListAsync();
-            BookLoan = (List<BookLoan>)user.BookLoans;
-            BookLoanCurrent = new List<BookLoan>();
-            BookLoanPast = new List<BookLoan>();
+            BookReviews = (await _reviewService.GetAllReviewsAsync()).ToList();
+            BookLoan = user.BookLoans?.ToList() ?? new List<Loan>();
+            BookLoanCurrent = new List<Loan>();
+            BookLoanPast = new List<Loan>();
+
             foreach (var item in BookLoan)
             {
-                if(item.LoanDate.Equals(item.ReturnDate))
+                if (item.ReturnDate == null || item.LoanDate >= item.ReturnDate)
                 {
                     BookLoanCurrent.Add(item);
                 }
-                else { BookLoanPast.Add(item); }
+                else
+                {
+                    BookLoanPast.Add(item);
+                }
             }
-*/
-            
         }
+
 
         public async Task<IActionResult> OnPostAsync(int id, string handler)
         {
-            /*BookReviews = await _context.BookReviews.Include(b => b.User).Include(b => b.Book).ToListAsync();
+            BookReviews = (await _reviewService.GetAllReviewsAsync()).ToList();
 
-            var bookloan = await _context.BookLoans.Include(b => b.Book).FirstOrDefaultAsync(m => m.BookLoanId == id);
+            var bookloan = await _loanService.GetLoanByIdAsync(id);
 
             if (handler == "handler")
             {
-                bookloan.ReturnDate = DateTime.UtcNow;
-                var book = bookloan.Book;
-                book.AvailableCopies = 1;
-                await _context.SaveChangesAsync();
+                await _loanService.ReturnLoanAsync(id);
             }
-            
-            if (_context.Users != null)
-            {
-                user = await _context.Users.Include(b => b.BookLoans).ThenInclude(b1 => b1.Book).ThenInclude(b2 => b2.Author).SingleOrDefaultAsync(b => b.UserId == (int)HttpContext.Session.GetInt32("id"));
-            }
-            BookLoan = (List<BookLoan>)user.BookLoans;
-            BookLoanCurrent = new List<BookLoan>();
-            BookLoanPast = new List<BookLoan>();
+
+            var currentUser = await _auth.GetCurrentUserAsync();
+
+            user = await _userService.GetUserByEmail(currentUser.Email);
+
+            BookLoan = (List<Loan>) user.BookLoans;
+            BookLoanCurrent = new List<Loan>();
+            BookLoanPast = new List<Loan>();
             foreach (var item in BookLoan)
             {
-                if (item.LoanDate.Equals(item.ReturnDate))
+                if (item.ReturnDate == null || item.LoanDate >= item.ReturnDate)
                 {
                     BookLoanCurrent.Add(item);
                 }
-                else { BookLoanPast.Add(item); }
-            }*/
+                else
+                {
+                    BookLoanPast.Add(item);
+                }
+            }
             
             
             return Page();
