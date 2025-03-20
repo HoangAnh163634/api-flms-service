@@ -1,4 +1,5 @@
-﻿using api_auth_service.Services;
+﻿using System.Net;
+using api_auth_service.Services;
 using api_flms_service.Entity;
 using api_flms_service.Model;
 using api_flms_service.ServiceInterface;
@@ -21,11 +22,6 @@ namespace api_flms_service.Controllers
             _authService = authService;
         }
 
-
-        /// <summary>
-        /// Get all books
-        /// </summary>
-        /// <returns>List of books with their authors and categories</returns>
         [HttpGet]
         public async Task<IActionResult> GetAllBooks()
         {
@@ -35,28 +31,28 @@ namespace api_flms_service.Controllers
                 var bookDtos = books.Select(b => new BookDto
                 {
                     BookId = b.BookId,
-                    BookName = b.Title,
+                    BookName = b.Title ?? "No Title",
                     AuthorId = b.AuthorId,
-                    AuthorName = b.Author.Name,
-                    Category = b.Categories.ToList(),
-                    BookNo = b.ISBN,
-                    BookPrice = b.PublicationYear
+                    AuthorName = b.Author?.Name ?? "No Author",
+                    Category = b.BookCategories?.Select(bc => bc.Category).ToList() ?? new List<Category>(),
+                    BookNo = b.ISBN ?? "No ISBN",
+                    BookPrice = b.PublicationYear,
+                    AvailableCopies = b.AvailableCopies,
+                    BookDescription = b.BookDescription,
+                    CloudinaryImageId = b.CloudinaryImageId,
+                    ImageUrls = b.ImageUrls
                 }).ToList();
 
                 return Ok(bookDtos);
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Error in GetAllBooks: {ex.Message}");
+                Console.WriteLine($"StackTrace: {ex.StackTrace}");
                 return StatusCode(500, new { message = "An error occurred while retrieving books.", details = ex.Message });
             }
         }
 
-
-        /// <summary>
-        /// Get book by ID
-        /// </summary>
-        /// <param name="id">Book ID</param>
-        /// <returns>Book details</returns>
         [HttpGet("{id}")]
         public async Task<IActionResult> GetBookById(int id)
         {
@@ -73,10 +69,14 @@ namespace api_flms_service.Controllers
                     BookId = book.BookId,
                     BookName = book.Title,
                     AuthorId = book.AuthorId,
-                    AuthorName = book.Author.Name,
-                    Category = book.Categories.ToList(),
+                    AuthorName = book.Author?.Name ?? "No Author",
+                    Category = book.BookCategories?.Select(bc => bc.Category).ToList() ?? new List<Category>(),
                     BookNo = book.ISBN,
-                    BookPrice = book.PublicationYear
+                    BookPrice = book.PublicationYear,
+                    AvailableCopies = book.AvailableCopies,
+                    BookDescription = book.BookDescription,
+                    CloudinaryImageId = book.CloudinaryImageId,
+                    ImageUrls = book.ImageUrls
                 };
 
                 return Ok(bookDto);
@@ -87,53 +87,8 @@ namespace api_flms_service.Controllers
             }
         }
 
-        /// <summary>
-        /// Add a new book
-        /// </summary>
-        /// <param name="bookDto">Book DTO</param>
-        /// <returns>Created book</returns>
-        //[HttpPost]
-        //public async Task<IActionResult> CreateBook([FromBody] BookDto bookDto)
-        //{
-        //    if (!ModelState.IsValid)
-        //    {
-        //        return BadRequest(ModelState);
-        //    }
-
-        //    try
-        //    {
-        //        var book = new Book
-        //        {
-        //            BookName = bookDto.BookName,
-        //            AuthorId = bookDto.AuthorId,
-        //            CatId = bookDto.CatId,
-        //            BookNo = bookDto.BookNo,
-        //            BookPrice = bookDto.BookPrice
-        //        };
-
-        //        var createdBook = await _bookService.CreateBookAsync(book);
-
-        //        var createdBookDto = new BookDto
-        //        {
-        //            BookId = createdBook.BookId,
-        //            BookName = createdBook.BookName,
-        //            AuthorId = createdBook.AuthorId,
-        //            AuthorName = createdBook.Author.AuthorName,
-        //            CatId = createdBook.CatId,
-        //            CategoryName = createdBook.Category.CatName,
-        //            BookNo = createdBook.BookNo,
-        //            BookPrice = createdBook.BookPrice
-        //        };
-
-        //        return CreatedAtAction(nameof(GetBookById), new { id = createdBook.BookId }, createdBookDto);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return StatusCode(500, new { message = "An error occurred while creating the book.", details = ex.Message });
-        //    }
-        //}
         [HttpPost]
-        public async Task<IActionResult> CreateBook([FromForm] BookDto bookDto, [FromForm] List<IFormFile> images)
+        public async Task<IActionResult> CreateBook([FromForm] BookDto bookDto, [FromForm] List<IFormFile> images, [FromForm] List<int> categoryIds)
         {
             if (!ModelState.IsValid)
             {
@@ -147,19 +102,27 @@ namespace api_flms_service.Controllers
                     Title = bookDto.BookName,
                     AuthorId = bookDto.AuthorId,
                     ISBN = bookDto.BookNo,
-                    AvailableCopies = bookDto.BookPrice
+                    PublicationYear = bookDto.BookPrice,
+                    AvailableCopies = bookDto.AvailableCopies,
+                    BookDescription = bookDto.BookDescription,
+                    BookCategories = categoryIds.Select(id => new BookCategory { CategoryId = id }).ToList()
                 };
 
-                var createdBook = await _bookService.CreateBookAsync(book, images); // Truyền List<IFormFile> images
+                var createdBook = await _bookService.CreateBookAsync(book, images);
 
                 var createdBookDto = new BookDto
                 {
                     BookId = createdBook.BookId,
                     BookName = createdBook.Title,
                     AuthorId = createdBook.AuthorId,
-                    AuthorName = createdBook.Author.Name,
+                    AuthorName = createdBook.Author?.Name ?? "No Author",
+                    Category = createdBook.BookCategories?.Select(bc => bc.Category).ToList() ?? new List<Category>(),
                     BookNo = createdBook.ISBN,
-                    BookPrice = 0
+                    BookPrice = createdBook.PublicationYear,
+                    AvailableCopies = createdBook.AvailableCopies,
+                    BookDescription = createdBook.BookDescription,
+                    CloudinaryImageId = createdBook.CloudinaryImageId,
+                    ImageUrls = createdBook.ImageUrls
                 };
 
                 return CreatedAtAction(nameof(GetBookById), new { id = createdBook.BookId }, createdBookDto);
@@ -170,9 +133,15 @@ namespace api_flms_service.Controllers
             }
         }
 
-        [HttpPut]
-        public async Task<IActionResult> UpdateBook([FromForm] BookDto bookDto, [FromForm] List<IFormFile> images)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateBook(int id, [FromForm] BookDto bookDto, [FromForm] List<IFormFile> images, [FromForm] List<int> categoryIds)
         {
+            Console.WriteLine($"UpdateBook called with id: {id}, bookDto.BookId: {bookDto.BookId}"); // Debug: Kiểm tra request
+            if (id != bookDto.BookId)
+            {
+                return BadRequest(new { message = "Book ID in URL does not match Book ID in form data" });
+            }
+
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
@@ -189,81 +158,40 @@ namespace api_flms_service.Controllers
                 existingBook.Title = bookDto.BookName;
                 existingBook.AuthorId = bookDto.AuthorId;
                 existingBook.ISBN = bookDto.BookNo;
+                existingBook.PublicationYear = bookDto.BookPrice;
+                existingBook.AvailableCopies = bookDto.AvailableCopies;
+                existingBook.BookDescription = bookDto.BookDescription;
 
-                var updatedBook = await _bookService.UpdateBookAsync(existingBook, images); // Truyền List<IFormFile> images
+                existingBook.BookCategories.Clear();
+                existingBook.BookCategories = categoryIds.Select(cid => new BookCategory { BookId = bookDto.BookId, CategoryId = cid }).ToList();
+
+                var updatedBook = await _bookService.UpdateBookAsync(existingBook, images);
 
                 var updatedBookDto = new BookDto
                 {
                     BookId = updatedBook.BookId,
                     BookName = updatedBook.Title,
                     AuthorId = updatedBook.AuthorId,
-                    AuthorName = updatedBook.Author.Name,
-                    BookNo = updatedBook.ISBN
+                    AuthorName = updatedBook.Author?.Name ?? "No Author",
+                    Category = updatedBook.BookCategories?.Select(bc => bc.Category).ToList() ?? new List<Category>(),
+                    BookNo = updatedBook.ISBN,
+                    BookPrice = updatedBook.PublicationYear,
+                    AvailableCopies = updatedBook.AvailableCopies,
+                    BookDescription = updatedBook.BookDescription,
+                    CloudinaryImageId = updatedBook.CloudinaryImageId,
+                    ImageUrls = updatedBook.ImageUrls
                 };
 
                 return Ok(updatedBookDto);
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Error in UpdateBook: {ex.Message}");
+                Console.WriteLine($"StackTrace: {ex.StackTrace}");
                 return StatusCode(500, new { message = "An error occurred while updating the book.", details = ex.Message });
             }
         }
 
-
-        /// <summary>
-        /// Update an existing book
-        /// </summary>
-        /// <param name="bookDto">Updated book DTO</param>
-        /// <returns>Updated book</returns>
-        //[HttpPut]
-        //public async Task<IActionResult> UpdateBook([FromBody] BookDto bookDto)
-        //{
-        //    if (!ModelState.IsValid)
-        //    {
-        //        return BadRequest(ModelState);
-        //    }
-
-        //    try
-        //    {
-        //        var existingBook = await _bookService.GetBookByIdAsync(bookDto.BookId);
-        //        if (existingBook == null)
-        //        {
-        //            return NotFound(new { message = "Book not found" });
-        //        }
-
-        //        existingBook.BookName = bookDto.BookName;
-        //        existingBook.AuthorId = bookDto.AuthorId;
-        //        existingBook.CatId = bookDto.CatId;
-        //        existingBook.BookNo = bookDto.BookNo;
-        //        existingBook.BookPrice = bookDto.BookPrice;
-
-        //        var updatedBook = await _bookService.UpdateBookAsync(existingBook);
-
-        //        var updatedBookDto = new BookDto
-        //        {
-        //            BookId = updatedBook.BookId,
-        //            BookName = updatedBook.BookName,
-        //            AuthorId = updatedBook.AuthorId,
-        //            AuthorName = updatedBook.Author.AuthorName,
-        //            CatId = updatedBook.CatId,
-        //            CategoryName = updatedBook.Category.CatName,
-        //            BookNo = updatedBook.BookNo,
-        //            BookPrice = updatedBook.BookPrice
-        //        };
-
-        //        return Ok(updatedBookDto);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return StatusCode(500, new { message = "An error occurred while updating the book.", details = ex.Message });
-        //    }
-        //}
-
-        /// <summary>
-        /// Delete a book by ID
-        /// </summary>
-        /// <param name="id">Book ID</param>
-        /// <returns>No content on success</returns>
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteBook(int id)
         {
@@ -289,7 +217,6 @@ namespace api_flms_service.Controllers
         {
             var userOfGG = await _authService.GetCurrentUserAsync();
 
-            // Kiểm tra nếu người dùng chưa đăng nhập (userOfGG là null)
             if (userOfGG == null)
             {
                 return Unauthorized("User is not logged in");
@@ -297,17 +224,13 @@ namespace api_flms_service.Controllers
 
             var user = await _userService.GetUserByEmail(userOfGG.Email);
 
-            // Kiểm tra nếu không có user
             if (user == null || user.UserId <= 0)
             {
                 return RedirectToPage("/AccessDenied");
-                //dreturn Unauthorized("User does not exist or has invalid data.");
             }
 
-            // Kiểm tra quyền của người dùng
             if (user.Role != "User" && user.Role != "Admin")
             {
-                // Nếu không có quyền, chuyển hướng đến trang AccessDenied
                 return RedirectToPage("/AccessDenied");
             }
 
@@ -315,41 +238,40 @@ namespace api_flms_service.Controllers
             return Ok(books);
         }
 
-        // API gia hạn sách
         [HttpPost("renew")]
         public async Task<IActionResult> RenewBook([FromBody] RenewRequest request)
         {
             var userOfGG = await _authService.GetCurrentUserAsync();
-            var user = await _userService.GetUserByEmail(userOfGG.Email); // Lấy UserId từ JWT hoặc Session
-            if (user.UserId <= 0)
+            var user = await _userService.GetUserByEmail(userOfGG?.Email);
+            if (user == null || user.UserId <= 0)
             {
                 return Unauthorized("User is not logged in");
             }
 
-            // Kiểm tra nếu BookId không hợp lệ
             if (request.BookId <= 0)
             {
                 return BadRequest("Invalid ID");
             }
 
-            // Gọi service gia hạn sách
             var result = await _bookService.RenewBookAsync(user.UserId, request.BookId);
             return result;
         }
 
-        //[HttpGet("search")]
-        //public async Task<IActionResult> Search(string searchTerm, string categoryName)
-        //{
-        //    var books = await _bookService.SearchBooksAsync(searchTerm, categoryName);
-        //    return Ok(books);
-        //}
-
         [HttpGet("search")]
-        public async Task<IActionResult> Search(string searchTerm, string categoryName, int? publicationYear)
+        public async Task<IActionResult> Search(string searchTerm, string categoryName)
         {
-            var books = await _bookService.SearchBooksAsync(searchTerm, categoryName, publicationYear);
+
+            var books = await _bookService.SearchBooksAsync(searchTerm, categoryName);
+
             return Ok(books);
         }
+
+        //[HttpGet("search")]
+        //public async Task<IActionResult> Search(string searchTerm, string categoryName, int? publicationYear)
+        //{
+        //    var books = await _bookService.SearchBooksAsync(searchTerm, categoryName, publicationYear);
+        //    return Ok(books);
+        //}
 
     }
 }

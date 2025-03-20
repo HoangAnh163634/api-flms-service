@@ -17,10 +17,20 @@ namespace api_flms_service.Service
 
         public async Task<IEnumerable<Book>> GetAllBooksAsync()
         {
-            return await _dbContext.Books
-                .Include(b => b.Author)
-                .Include(b => b.Categories)
-                .ToListAsync();
+            try
+            {
+                return await _dbContext.Books
+                    .Include(b => b.Author)
+                    .Include(b => b.BookCategories)
+                    .ThenInclude(bc => bc.Category)
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in GetAllBooksAsync: {ex.Message}");
+                Console.WriteLine($"StackTrace: {ex.StackTrace}");
+                throw; // Ném lại ngoại lệ để BookController xử lý
+            }
         }
 
         public async Task<Book?> GetBookByIdAsync(int id)
@@ -230,61 +240,25 @@ namespace api_flms_service.Service
             return book;
         }
 
-        //public async Task<IEnumerable<Book>> SearchBooksAsync(string searchTerm, string categoryName)
-        //{
-        //    var query = _dbContext.Books.AsQueryable();
-
-        //    // If searchTerm is not empty, search by book title and description
-        //    if (!string.IsNullOrEmpty(searchTerm))
-        //    {
-        //        query = query.Where(b => b.Title.Contains(searchTerm) || b.BookDescription.Contains(searchTerm));
-        //    }
-
-        //    // If categoryName is not empty, filter by category name (case-insensitive)
-        //    if (!string.IsNullOrEmpty(categoryName))
-        //    {
-        //        query = query.Where(b => b.Categories.Any(c => c.CategoryName.ToLower().Equals(categoryName.ToLower())));
-        //    }
-
-        //    // Execute query and return the list of matching books
-        //    return await query
-        //        .Include(b => b.Author)          // Include author information
-        //        .Include(b => b.Categories)      // Include category information
-        //        .ToListAsync();                  // Execute the query and return results
-        //}
-
-        public async Task<IEnumerable<Book>> SearchBooksAsync(string searchTerm, string categoryName, int? publicationYear)
+        public async Task<IEnumerable<Book>> SearchBooksAsync(string searchTerm, string categoryName)
         {
-            var query = _dbContext.Books.AsQueryable();
+            var query = _dbContext.Books
+                .Include(b => b.Author)
+                .Include(b => b.Categories)
+                .AsQueryable();
 
-            // If searchTerm is not empty, search by book title and description
             if (!string.IsNullOrEmpty(searchTerm))
             {
-                query = query.Where(b => b.Title.Contains(searchTerm) || b.BookDescription.Contains(searchTerm));
+                query = query.Where(b => (b.Title != null && b.Title.Contains(searchTerm)) ||
+                                         (b.BookDescription != null && b.BookDescription.Contains(searchTerm)));
             }
 
-            // If categoryName is not empty, filter by category name (case-insensitive)
             if (!string.IsNullOrEmpty(categoryName))
             {
-                query = query.Where(b => b.Categories.Any(c => c.CategoryName.ToLower().Equals(categoryName.ToLower())));
+                query = query.Where(b => b.Categories.Any(c => EF.Functions.ILike(c.CategoryName ?? "", categoryName)));
             }
 
-            // If publicationYear is specified, filter by publication year
-            if (publicationYear.HasValue)
-            {
-                query = query.Where(b => b.PublicationYear == publicationYear.Value);
-            }
-
-            // Execute query and return the list of matching books
-            return await query
-                .Include(b => b.Author)          // Include author information
-                .Include(b => b.Categories)      // Include category information
-                .ToListAsync();                  // Execute the query and return results
-        }
-
-        public Task<IEnumerable<Book>> SearchBooksAsync(string searchTerm, string categoryName)
-        {
-            throw new NotImplementedException();
+            return await query.ToListAsync();
         }
     }
 }

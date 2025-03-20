@@ -13,6 +13,7 @@ namespace api_flms_service.ServiceInterface
         Task<bool> IsUserAllowedAsync(string email);
         Task<bool> IsAuthenticatedUser(string email);
         Task<bool> IsAuthenticatedAdmin(string email);
+        Task<bool> IsAuthenticatedLibrarian(string email);
 
         // Thêm các phương thức mới cho Loan
         Task<Loan?> GetLoanByIdAsync(int loanId);
