@@ -85,7 +85,7 @@ WebApplication RunApp()
     return app;
 }
 
-try
+/*try
 {
     var productionApp = RunApp();
     var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
@@ -96,4 +96,7 @@ catch (IOException)
 {
     var devApp = RunApp();
     devApp.Run();
-}
+}*/
+
+var devApp = RunApp();
+devApp.Run();
