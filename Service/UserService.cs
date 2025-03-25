@@ -74,6 +74,9 @@ namespace api_flms_service.ServiceInterface
                                 .Include(e => e.BookLoans)
                                 .ThenInclude(e => e.Book)
                                 .ThenInclude(b => b.Reviews)
+                                .Include(e => e.BookLoans)
+                                .ThenInclude(e => e.Book)
+                                .ThenInclude(e => e.Author)
                                 .FirstOrDefaultAsync(x => x.Email == email);
 
                 if (user == null)

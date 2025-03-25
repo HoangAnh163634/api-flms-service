@@ -35,6 +35,7 @@
         try {
             const response = await fetch('/api/v0/books');
             const books = await response.json();
+            console.log('Books data:', books);
 
             const tableBody = document.getElementById('bookTable');
             tableBody.innerHTML = '';
@@ -55,8 +56,8 @@
                 // Category
                 const categoryCell = document.createElement('td');
                 const categoryNames = book.category && Array.isArray(book.category)
-                    ? book.category.map(cat => cat.categoryName).join(', ')
-                    : 'No Category';
+                      ? book.category.map(cat => cat.categoryName).filter(name => name).join(', ')
+                      : 'No Category';
                 categoryCell.textContent = categoryNames;
                 row.appendChild(categoryCell);
 

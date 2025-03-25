@@ -1,0 +1,16 @@
+﻿@page
+@model api_flms_service.Pages.Loans.PaymentCallbackModel
+@{
+    ViewData["Title"] = "VNPay Payment Callback";
+}
+
+<h2>VNPay Payment Status</h2>
+
+@if (Model.PaymentSuccess)
+{
+    <p style="color: green;">Payment successful! Transaction ID: @Model.TransactionId</p>
+}
+else
+{
+    <p style="color: red;">Payment failed.</p>
+}

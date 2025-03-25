@@ -1,0 +1,17 @@
+﻿@page
+@model api_flms_service.Pages.Loans.VNPayModel
+@{
+    ViewData["Title"] = "VNPay Payment";
+}
+
+<h2>VNPay Payment</h2>
+
+<form method="post">
+    <label>Book Loan ID:</label>
+    <input type="number" name="BookLoanId" required />
+
+    <label>Amount (VND):</label>
+    <input type="number" name="Amount" required />
+
+    <button type="submit">Pay with VNPay</button>
+</form>

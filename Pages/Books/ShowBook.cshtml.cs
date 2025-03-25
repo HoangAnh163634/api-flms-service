@@ -8,6 +8,7 @@ using api_flms_service.Model;
 using api_flms_service.ServiceInterface;
 using api_flms_service.Entity;
 using api_auth_service.Services;
+using Microsoft.EntityFrameworkCore;
 
 namespace api_flms_service.Pages.Books
 {
@@ -17,13 +18,15 @@ namespace api_flms_service.Pages.Books
         private readonly AuthService _authService;
         private readonly IUserService _userService;
         private readonly IReviewService _reviewService;
+        private readonly AppDbContext _dbContext;
 
-        public ShowBookModel(IBookService bookService, AuthService authService, IUserService userService, IReviewService reviewService)
+        public ShowBookModel(IBookService bookService, AuthService authService, IUserService userService, IReviewService reviewService, AppDbContext dbContext)
         {
             _authService = authService;
             _bookService = bookService;
             _userService = userService;
             _reviewService = reviewService;
+            _dbContext = dbContext; 
         }
 
         [BindProperty]
@@ -58,9 +61,20 @@ namespace api_flms_service.Pages.Books
             }
             else
             {
+                // Tải lại BookCategories vì GetBookByIdAsync không tải đúng
+                book.BookCategories = await _dbContext.BookCategories
+                    .Include(bc => bc.Category)
+                    .Where(bc => bc.BookId == book.BookId)
+                    .ToListAsync();
                 Book = book;
                 await Console.Out.WriteLineAsync($"Book ID: {id}, AvailableCopies: {Book.AvailableCopies}");
                 await Console.Out.WriteLineAsync("Count: " + Book.Reviews.Count() + " Number");
+                // Thêm logging cho Categories
+                await Console.Out.WriteLineAsync("Categories Count: " + Book.Categories.Count());
+                foreach (var category in Book.Categories)
+                {
+                    await Console.Out.WriteLineAsync($"Category: {category.CategoryName}");
+                }
             }
 
             var userEmail = (await _authService.GetCurrentUserAsync())?.Email;

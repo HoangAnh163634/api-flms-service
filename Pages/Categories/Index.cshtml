@@ -32,7 +32,7 @@
         categories.forEach(category => {
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td>${category.catName}</td>
+                <td>${category.categoryName}</td>
                 <td>
                     <a href="/Categories/Manage?id=${category.catId}" class="btn btn-primary">Edit</a>
                     <button class="btn btn-danger" onclick="deleteCategory(${category.catId})">Delete</button>
