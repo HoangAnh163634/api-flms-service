@@ -4,7 +4,7 @@ namespace api_flms_service.Entity
 {
     public class BookCategory
     {
-        [Key]
+        //[Key]
         public int BookId { get; set; }
         public Book Book { get; set; } = new Book(); // Khởi tạo mặc định
 

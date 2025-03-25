@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace api_flms_service.Pages.Users
 {
-    [AuthorizeUser]
+    //[AuthorizeUser]
     public class AddModel : PageModel
     {
         private readonly IUserService _userService;
