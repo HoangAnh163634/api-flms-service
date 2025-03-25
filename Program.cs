@@ -88,8 +88,8 @@ WebApplication RunApp()
 try
 {
     var productionApp = RunApp();
-    //var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
-    //productionApp.Urls.Add($"http://0.0.0.0:{port}");
+    var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+    productionApp.Urls.Add($"http://0.0.0.0:{port}");
     productionApp.Run();
 }
 catch (IOException)
