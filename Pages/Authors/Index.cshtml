@@ -33,7 +33,7 @@
         authors.forEach(author => {
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td>${author.authorName}</td>
+                <td>${author.name}</td>
                 <td>
                     <a href="/Authors/Manage?id=${author.authorId}" class="btn btn-primary">Edit</a>
                     <button class="btn btn-danger" onclick="deleteAuthor(${author.authorId})">Delete</button>
