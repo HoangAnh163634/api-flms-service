@@ -62,11 +62,11 @@ namespace api_flms_service.Pages.Books
             else
             {
                 // Tải lại BookCategories vì GetBookByIdAsync không tải đúng
-                book.BookCategories = await _dbContext.BookCategories
+                /*book.BookCategories = await _dbContext.BookCategories
                     .Include(bc => bc.Category)
                     .Where(bc => bc.BookId == book.BookId)
                     .ToListAsync();
-                Book = book;
+                Book = book;*/
                 await Console.Out.WriteLineAsync($"Book ID: {id}, AvailableCopies: {Book.AvailableCopies}");
                 await Console.Out.WriteLineAsync("Count: " + Book.Reviews.Count() + " Number");
                 // Thêm logging cho Categories
