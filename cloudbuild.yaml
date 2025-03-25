@@ -22,7 +22,7 @@ steps:
         "managed",
         "--allow-unauthenticated",
         "--port",
-        "5000",
+        "8080",
       ]
 
 # Define a Google Cloud Storage bucket for build logs
