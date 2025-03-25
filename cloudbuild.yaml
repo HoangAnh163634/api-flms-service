@@ -26,7 +26,7 @@ steps:
       ]
 
 # Define a Google Cloud Storage bucket for build logs
-logsBucket: "gs://flms-service-log"
+logsBucket: "gs://flms-service-log-fork"
 
 images:
   - "gcr.io/project-prn231-gr3/api-flms-service"
