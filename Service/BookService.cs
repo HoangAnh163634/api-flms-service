@@ -45,40 +45,9 @@ namespace api_flms_service.Service
 
         }
 
-        public async Task<Book> CreateBookAsync(Book book, List<IFormFile> images)
+        public async Task<Book> CreateBookAsync(Book book)
         {
-            var uploadedImagePaths = new List<string>();
-
-            // Định nghĩa đường dẫn thư mục lưu ảnh
-            var imageFolderPath = Path.Combine("wwwroot", "images");
-
-            // Kiểm tra nếu thư mục không tồn tại thì tạo thư mục
-            if (!Directory.Exists(imageFolderPath))
-            {
-                Directory.CreateDirectory(imageFolderPath);
-            }
-
-            foreach (var image in images)
-            {
-                // Đường dẫn để lưu tệp ảnh
-                var filePath = Path.Combine(imageFolderPath, image.FileName);
-
-                // Lưu ảnh vào thư mục
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    await image.CopyToAsync(stream);
-                }
-
-                // Thêm đường dẫn ảnh vào danh sách
-                uploadedImagePaths.Add("/images/" + image.FileName);
-            }
-
-            // Nối các đường dẫn ảnh thành một chuỗi phân tách bởi dấu phẩy
-            var imageUrls = string.Join(",", uploadedImagePaths);
-
-            // Cập nhật đường dẫn ảnh vào Book object
-            book.ImageUrls = imageUrls;
-
+            
             // Thêm sách vào cơ sở dữ liệu
             _dbContext.Books.Add(book);
             await _dbContext.SaveChangesAsync();
@@ -92,34 +61,10 @@ namespace api_flms_service.Service
 
 
 
-        public async Task<Book> UpdateBookAsync(Book book, List<IFormFile> images)
+        public async Task<Book> UpdateBookAsync(Book book)
         {
             
-            var uploadedImagePaths = new List<string>();
-
-            foreach (var image in images)
-            {
-                var filePath = Path.Combine("wwwroot", "images", image.FileName);
-
-              
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    await image.CopyToAsync(stream);
-                }
-
-               
-                uploadedImagePaths.Add("/images/" + image.FileName);
-            }
-
             
-            if (uploadedImagePaths.Any())
-            {
-                var existingImageUrls = book.ImageUrls.Split(",", StringSplitOptions.RemoveEmptyEntries).ToList();
-                existingImageUrls.AddRange(uploadedImagePaths); 
-                book.ImageUrls = string.Join(",", existingImageUrls);
-            }
-
-       
             _dbContext.Books.Update(book);
             await _dbContext.SaveChangesAsync();
 
@@ -259,6 +204,16 @@ namespace api_flms_service.Service
             }
 
             return await query.ToListAsync();
+        }
+
+        public async Task<bool> AuthorExistsAsync(int authorId)
+        {
+            return await _dbContext.Authors.AnyAsync(a => a.AuthorId == authorId);
+        }
+
+        public async Task<bool> CategoryExistsAsync(int categoryId)
+        {
+            return await _dbContext.Categories.AnyAsync(c => c.CategoryId == categoryId);
         }
     }
 }

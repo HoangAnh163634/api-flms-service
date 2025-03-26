@@ -167,18 +167,44 @@
         formData.append('availableCopies', document.getElementById('availableCopies').value);
 
         const categoryIds = Array.from(document.getElementById('categoryIds').selectedOptions).map(option => option.value);
-        console.log("Selected categoryIds:", categoryIds);
         categoryIds.forEach(id => formData.append('categoryIds', id));
 
-        const images = document.getElementById('images').files;
-        console.log("Selected images:", images);
-        for (let i = 0; i < images.length; i++) {
-            formData.append('images', images[i]);
+        // Xử lý upload ảnh
+        const imageInput = document.getElementById('images');
+        let uploadedImageUrls = [];
+
+        if (imageInput.files.length > 0) {
+            for (let i = 0; i < imageInput.files.length; i++) {
+                const imageFormData = new FormData();
+                imageFormData.append('file', imageInput.files[i]);
+
+                try {
+                    const uploadResponse = await fetch('/api/v0/books/upload', {
+                        method: 'POST',
+                        body: imageFormData
+                    });
+
+                    if (uploadResponse.ok) {
+                        const result = await uploadResponse.json();
+                        uploadedImageUrls.push(result.imageUrl); // Lưu URL ảnh trả về
+                    } else {
+                        console.error("Upload failed:", await uploadResponse.text());
+                        document.getElementById('message').innerHTML = `<div class="alert alert-danger">Image upload failed.</div>`;
+                        return;
+                    }
+                } catch (err) {
+                    console.error("Upload error:", err);
+                    document.getElementById('message').innerHTML = `<div class="alert alert-danger">Image upload error.</div>`;
+                    return;
+                }
+            }
         }
+
+        // Đưa URL ảnh vào form data
+        uploadedImageUrls.forEach(url => formData.append('imageUrls', url));
 
         const method = '@(Model.BookId.HasValue ? "PUT" : "POST")';
         const url = method === 'PUT' ? `/api/v0/books/${document.getElementById('bookId').value}` : '/api/v0/books';
-        console.log("Method:", method, "URL:", url);
 
         try {
             const response = await fetch(url, {
@@ -186,7 +212,6 @@
                 body: formData
             });
 
-            console.log("Response status:", response.status);
             if (response.ok) {
                 document.getElementById('message').innerHTML = `<div class="alert alert-success">${method === 'PUT' ? "Book updated" : "Book added"} successfully!</div>`;
                 setTimeout(() => window.location.href = "/Books", 1000);
@@ -200,6 +225,7 @@
             document.getElementById('message').innerHTML = `<div class="alert alert-danger">Error saving book: ${err.message}</div>`;
         }
     });
+
 
     fetchDropdownData();
     fetchBook();
