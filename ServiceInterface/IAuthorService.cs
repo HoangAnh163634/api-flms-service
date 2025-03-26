@@ -10,5 +10,7 @@ namespace api_flms_service.ServiceInterface
         Task<Author> AddAuthorAsync(Author author);
         Task<Author?> UpdateAuthorAsync(Author author);
         Task<bool> DeleteAuthorAsync(int id);
+
+
     }
 }
