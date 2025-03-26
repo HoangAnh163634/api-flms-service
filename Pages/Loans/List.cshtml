@@ -60,7 +60,7 @@
                     }
                     else
                     {
-                        <a class="btn btn-outline-secondary btn-lg mt-2" style="border-radius:30px" href="/BookReviews/EditBookReview?id=@(Model.BookReviews.FirstOrDefault(b => b.UserId == Model.user.UserId && b.BookId == item.BookId).ReviewId)" role="button">Edit Review</a>
+                        <a class="btn btn-outline-secondary btn-lg mt-2" style="border-radius:30px" href="/Books/ShowBook?id=@(item.BookId)" role="button">Edit Review</a>
                     }
 
 
