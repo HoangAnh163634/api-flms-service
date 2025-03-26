@@ -1,0 +1,147 @@
+﻿@page
+@model api_flms_service.Pages.ViewProfileModel
+@{
+    ViewData["Title"] = "View & Edit Profile";
+    Layout = "_Layout";
+}
+
+<div class="container mt-5">
+    <h1 class="display-4 fw-bold text-body text-center">View & Edit Profile</h1>
+    <hr class="featurette-divider">
+
+    <!-- Thông báo thành công hoặc lỗi -->
+    @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @Model.SuccessMessage
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">×</span>
+            </button>
+        </div>
+    }
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @Model.ErrorMessage
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">×</span>
+            </button>
+        </div>
+    }
+
+    <!-- Thông tin người dùng -->
+    <div class="card shadow-sm p-4 mb-4">
+        <h2 class="mb-4">User Information</h2>
+        <form method="post">
+            <div class="row">
+                <!-- Các trường không chỉnh sửa -->
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">User ID</label>
+                    <input type="text" class="form-control" value="@Model.User.UserId" readonly />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-control" value="@Model.User.Email" readonly />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Registration Date</label>
+                    <input type="text" class="form-control" value="@Model.User.RegistrationDate?.ToString("dd/MM/yyyy")" readonly />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Role</label>
+                    <input type="text" class="form-control" value="@Model.User.Role" readonly />
+                </div>
+
+                <!-- Các trường có thể chỉnh sửa -->
+                <div class="col-md-6 mb-3">
+                    <label asp-for="User.Name" class="form-label">Name</label>
+                    <input asp-for="User.Name" class="form-control" />
+                    <span asp-validation-for="User.Name" class="text-danger"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="User.PhoneNumber" class="form-label">Phone Number</label>
+                    <input asp-for="User.PhoneNumber" class="form-control" />
+                    <span asp-validation-for="User.PhoneNumber" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="text-center">
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+                <a href="@Url.Page("/Index")" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Danh sách mượn sách -->
+    <div class="card shadow-sm p-4 mb-4">
+        <h2 class="mb-4">Borrowed Books</h2>
+        @if (Model.User.BookLoans == null || !Model.User.BookLoans.Any())
+        {
+            <p class="text-muted">You have not borrowed any books yet.</p>
+        }
+        else
+        {
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Book Title</th>
+                        <th>Loan Date</th>
+                        <th>Return Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var loan in Model.User.BookLoans)
+                    {
+                        <tr>
+                            <td>@loan.Book?.Title</td>
+                            <td>@loan.LoanDate?.ToString("dd/MM/yyyy")</td>
+                            <td>@loan.ReturnDate?.ToString("dd/MM/yyyy")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+
+    <!-- Danh sách đánh giá -->
+    <div class="card shadow-sm p-4 mb-4">
+        <h2 class="mb-4">Your Reviews</h2>
+        @if (Model.User.BookReviews == null || !Model.User.BookReviews.Any())
+        {
+            <p class="text-muted">You have not written any reviews yet.</p>
+        }
+        else
+        {
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Book Title</th>
+                        <th>Rating</th>
+                        <th>Review Text</th>
+                        <th>Review Date</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var review in Model.User.BookReviews)
+                    {
+                        <tr>
+                            <td>@review.Book?.Title</td>
+                            <td>@review.Rating</td>
+                            <td>@review.ReviewText</td>
+                            <td>@review.ReviewDate?.ToString("dd/MM/yyyy")</td>
+                            <td>
+                                <a href="@Url.Page("/Books/ShowBook", new { bookId = review.BookId })" class="btn btn-primary btn-sm">Edit</a>
+                                
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -121,14 +121,9 @@
     </div>
     @if (Model.authors.Count > 3)
     {
-        <!-- Search Results Feedback -->
-        @if (!string.IsNullOrEmpty(Request.Query["searchTerm"]) ||
-       !string.IsNullOrEmpty(Request.Query["categoryName"]))
-        {
-            <div class="text-center mt-3">
-                <button type="button" class="toggle-authors btn btn-primary">Xem thêm</button>
-            </div>
-        }
+        <div class="text-center mt-3">
+            <button type="button" class="toggle-authors btn btn-primary">Xem thêm</button>
+        </div>
         <hr class="featurette-divider">
     }
 </div>
@@ -239,13 +234,13 @@
     }
 
     .description-text {
-        max-height: 80px; /* Giới hạn chiều cao ban đầu (khoảng 3-4 dòng) */
+        max-height: 80px;
         overflow: hidden;
-        transition: max-height 0.3s ease; /* Hiệu ứng mượt mà khi mở rộng/thu gọn */
+        transition: max-height 0.3s ease;
     }
 
         .description-text.expanded {
-            max-height: none; /* Bỏ giới hạn chiều cao để hiển thị toàn bộ nội dung */
+            max-height: none;
         }
 
     .read-more {
@@ -260,17 +255,16 @@
             text-decoration: underline;
         }
 
-    /* CSS cho danh sách tác giả */
     .author-item {
         opacity: 1;
-        transition: opacity 0.5s ease, max-height 0.5s ease; /* Hiệu ứng mượt mà cho opacity và max-height */
-        max-height: 1000px; /* Giá trị lớn để chứa nội dung ban đầu */
-        overflow: visible; /* Đảm bảo nội dung không bị cắt */
+        transition: opacity 0.5s ease, max-height 0.5s ease;
+        max-height: 1000px;
+        overflow: visible;
     }
 
         .author-item.hidden-author {
             opacity: 0;
-            max-height: 0; /* Ẩn hoàn toàn */
+            max-height: 0;
             margin-top: 0;
             margin-bottom: 0;
             padding-top: 0;
@@ -279,43 +273,40 @@
 
     .author-list.expanded .author-item {
         opacity: 1;
-        max-height: 1000px; /* Hiện lại với chiều cao tối đa */
-        margin-top: 0.5rem; /* Khôi phục margin */
+        max-height: 1000px;
+        margin-top: 0.5rem;
         margin-bottom: 0.5rem;
         padding-top: 0.5rem;
         padding-bottom: 0.5rem;
     }
 
-    /* CSS cho nút toggle-authors */
     .toggle-authors {
-        cursor: pointer !important; /* Hiển thị con trỏ "pointer" khi hover */
-        display: inline-block !important; /* Đảm bảo nút hiển thị đúng */
-        position: relative !important; /* Đảm bảo nút không bị che */
-        z-index: 10 !important; /* Tăng z-index để tránh bị che */
+        cursor: pointer !important;
+        display: inline-block !important;
+        position: relative !important;
+        z-index: 10 !important;
     }
 
         .toggle-authors:hover {
-            opacity: 0.8 !important; /* Hiệu ứng hover nhẹ */
+            opacity: 0.8 !important;
         }
 </style>
 
 <script>
-    console.log('Script started'); // Log để kiểm tra script có chạy không
+    console.log('Script started');
 
     document.addEventListener('DOMContentLoaded', function () {
-        console.log('DOMContentLoaded event fired'); // Log để kiểm tra sự kiện
+        console.log('DOMContentLoaded event fired');
 
         // Xử lý "Xem thêm" cho Biography
         const readMoreLinks = document.querySelectorAll('.read-more');
-        console.log('readMoreLinks:', readMoreLinks); // Log để kiểm tra
+        console.log('readMoreLinks:', readMoreLinks);
         readMoreLinks.forEach(link => {
             link.addEventListener('click', function (e) {
                 e.preventDefault();
-                const description = this.previousElementSibling.querySelector('.description-text'); // Lấy phần tử description-text
+                const description = this.previousElementSibling.querySelector('.description-text');
                 if (description) {
-                    description.classList.toggle('expanded'); // Thêm/xóa class expanded
-
-                    // Thay đổi nội dung nút
+                    description.classList.toggle('expanded');
                     if (description.classList.contains('expanded')) {
                         this.textContent = 'Thu gọn';
                     } else {
@@ -328,16 +319,14 @@
         // Xử lý "Xem thêm" cho danh sách tác giả
         const toggleAuthorsBtn = document.querySelector('.toggle-authors');
         const authorList = document.querySelector('.author-list');
-        console.log('toggleAuthorsBtn:', toggleAuthorsBtn); // Log để kiểm tra
-        console.log('authorList:', authorList); // Log để kiểm tra
+        console.log('toggleAuthorsBtn:', toggleAuthorsBtn);
+        console.log('authorList:', authorList);
         if (toggleAuthorsBtn && authorList) {
             toggleAuthorsBtn.addEventListener('click', function (e) {
                 e.preventDefault();
-                e.stopPropagation(); // Ngăn sự kiện lan truyền
-                console.log('Toggle authors button clicked'); // Log để kiểm tra
-                authorList.classList.toggle('expanded'); // Thêm/xóa class expanded để hiện/ẩn các tác giả
-
-                // Thay đổi nội dung nút
+                e.stopPropagation();
+                console.log('Toggle authors button clicked');
+                authorList.classList.toggle('expanded');
                 if (authorList.classList.contains('expanded')) {
                     this.textContent = 'Thu gọn';
                 } else {
@@ -345,7 +334,6 @@
                 }
             }, { capture: false });
 
-            // Thêm log khi hover
             toggleAuthorsBtn.addEventListener('mouseover', function () {
                 console.log('Hover on toggle-authors button');
             });
@@ -355,14 +343,14 @@
 
         // Xử lý phân trang
         const pageLinks = document.querySelectorAll('.page-link');
-        console.log('pageLinks:', pageLinks); // Log để kiểm tra
+        console.log('pageLinks:', pageLinks);
         pageLinks.forEach(link => {
             link.addEventListener('click', function (e) {
-                e.preventDefault(); // Ngăn hành vi mặc định
-                const url = this.getAttribute('href'); // Lấy URL từ href
-                console.log('Navigating to:', url); // Log URL để kiểm tra
+                e.preventDefault();
+                const url = this.getAttribute('href');
+                console.log('Navigating to:', url);
                 if (url && !this.parentElement.classList.contains('disabled')) {
-                    window.location.replace(url); // Chuyển hướng bằng window.location.replace
+                    window.location.replace(url);
                 }
             });
         });
