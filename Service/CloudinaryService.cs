@@ -20,16 +20,27 @@ namespace api_flms_service.Service
             _cloudinary = new Cloudinary(account);
         }
 
-        // Upload file
-        public async Task<UploadResult> UploadFileAsync(IFormFile file)
+        public async Task<string> UploadFileAsync(IFormFile file)
         {
-            var uploadParams = new ImageUploadParams()
-            {
-                File = new FileDescription(file.FileName, file.OpenReadStream())
-            };
+            var extension = Path.GetExtension(file.FileName).ToLower();
+            var isImage = extension is ".png" or ".jpg"; // Kiểm tra có phải hình ảnh không
+
+            // Chọn đúng loại UploadParams
+            var uploadParams = isImage
+                ? new ImageUploadParams() // Dùng ImageUploadParams cho ảnh
+                {
+                    File = new FileDescription(file.FileName, file.OpenReadStream())
+                }
+                : new RawUploadParams() // Dùng RawUploadParams cho các file khác
+                {
+                    File = new FileDescription(file.FileName, file.OpenReadStream())
+                };
+
             var uploadResult = await _cloudinary.UploadAsync(uploadParams);
-            return uploadResult;
+            return uploadResult.SecureUrl?.AbsoluteUri; // Trả về URL file đã upload
         }
+
+
 
         // Get file
         public async Task<GetResourceResult> GetFileAsync(string publicId)
