@@ -67,6 +67,7 @@ namespace api_flms_service.Pages.Books
                     .Where(bc => bc.BookId == book.BookId)
                     .ToListAsync();
                 Book = book;*/
+                Book = book;
                 await Console.Out.WriteLineAsync($"Book ID: {id}, AvailableCopies: {Book.AvailableCopies}");
                 await Console.Out.WriteLineAsync("Count: " + Book.Reviews.Count() + " Number");
                 // Thêm logging cho Categories
