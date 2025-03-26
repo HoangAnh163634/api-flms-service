@@ -15,5 +15,9 @@ namespace api_flms_service.Model
         public string BookDescription { get; set; } = string.Empty;
         public string CloudinaryImageId { get; set; } = string.Empty;
         public string ImageUrls { get; set; } = string.Empty;
+
+
+        // 🆕 Trường mới để lưu URL file sách trên Cloudinary
+        public string BookFileUrl { get; set; } = string.Empty;
     }
 }

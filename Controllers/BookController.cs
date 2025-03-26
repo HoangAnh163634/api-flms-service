@@ -14,12 +14,14 @@ namespace api_flms_service.Controllers
         private readonly IBookService _bookService;
         private readonly IUserService _userService;
         private readonly AuthService _authService;
+        private readonly ICloudinaryService _cloudinaryService;
 
-        public BookController(IBookService bookService, IUserService userService, AuthService authService)
+        public BookController(IBookService bookService, IUserService userService, AuthService authService, ICloudinaryService cloudinaryService)
         {
             _bookService = bookService;
             _userService = userService;
             _authService = authService;
+            _cloudinaryService = cloudinaryService;
         }
 
         [HttpGet]
@@ -88,15 +90,22 @@ namespace api_flms_service.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateBook([FromForm] BookDto bookDto, [FromForm] List<IFormFile> images, [FromForm] List<int> categoryIds)
+        public async Task<IActionResult> CreateBook([FromForm] BookDto bookDto, [FromForm] IFormFile bookFile, [FromForm] List<IFormFile> images, [FromForm] List<int> categoryIds)
         {
             if (!ModelState.IsValid)
-            {
                 return BadRequest(ModelState);
-            }
 
             try
             {
+                string bookFileUrl = null;
+
+                // Upload file sách lên Cloudinary nếu có
+                if (bookFile != null)
+                {
+                    var uploadResult = await _cloudinaryService.UploadFileAsync(bookFile);
+                    bookFileUrl = uploadResult.SecureUrl.ToString();
+                }
+
                 var book = new Book
                 {
                     Title = bookDto.BookName,
@@ -105,6 +114,7 @@ namespace api_flms_service.Controllers
                     PublicationYear = bookDto.BookPrice,
                     AvailableCopies = bookDto.AvailableCopies,
                     BookDescription = bookDto.BookDescription,
+                    BookFileUrl = bookFileUrl,
                     BookCategories = categoryIds.Select(id => new BookCategory { CategoryId = id }).ToList()
                 };
 
@@ -121,6 +131,7 @@ namespace api_flms_service.Controllers
                     BookPrice = createdBook.PublicationYear,
                     AvailableCopies = createdBook.AvailableCopies,
                     BookDescription = createdBook.BookDescription,
+                    BookFileUrl = createdBook.BookFileUrl,
                     CloudinaryImageId = createdBook.CloudinaryImageId,
                     ImageUrls = createdBook.ImageUrls
                 };
@@ -134,25 +145,33 @@ namespace api_flms_service.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateBook(int id, [FromForm] BookDto bookDto, [FromForm] List<IFormFile> images, [FromForm] List<int> categoryIds)
+        public async Task<IActionResult> UpdateBook(int id, [FromForm] BookDto bookDto, [FromForm] IFormFile bookFile, [FromForm] List<IFormFile> images, [FromForm] List<int> categoryIds)
         {
-            Console.WriteLine($"UpdateBook called with id: {id}, bookDto.BookId: {bookDto.BookId}"); // Debug: Kiểm tra request
             if (id != bookDto.BookId)
-            {
-                return BadRequest(new { message = "Book ID in URL does not match Book ID in form data" });
-            }
+                return BadRequest(new { message = "Book ID mismatch" });
 
             if (!ModelState.IsValid)
-            {
                 return BadRequest(ModelState);
-            }
 
             try
             {
                 var existingBook = await _bookService.GetBookByIdAsync(bookDto.BookId);
                 if (existingBook == null)
-                {
                     return NotFound(new { message = "Book not found" });
+
+                string bookFileUrl = existingBook.BookFileUrl;
+
+                // Nếu có file mới, upload lên Cloudinary và xóa file cũ
+                if (bookFile != null)
+                {
+                    if (!string.IsNullOrEmpty(existingBook.BookFileUrl))
+                    {
+                        var publicId = existingBook.BookFileUrl.Split('/').Last().Split('.')[0]; // Lấy publicId từ URL
+                        await _cloudinaryService.DeleteFileAsync(publicId);
+                    }
+
+                    var uploadResult = await _cloudinaryService.UploadFileAsync(bookFile);
+                    bookFileUrl = uploadResult.SecureUrl.ToString();
                 }
 
                 existingBook.Title = bookDto.BookName;
@@ -161,6 +180,7 @@ namespace api_flms_service.Controllers
                 existingBook.PublicationYear = bookDto.BookPrice;
                 existingBook.AvailableCopies = bookDto.AvailableCopies;
                 existingBook.BookDescription = bookDto.BookDescription;
+                existingBook.BookFileUrl = bookFileUrl;
 
                 existingBook.BookCategories.Clear();
                 existingBook.BookCategories = categoryIds.Select(cid => new BookCategory { BookId = bookDto.BookId, CategoryId = cid }).ToList();
@@ -178,6 +198,7 @@ namespace api_flms_service.Controllers
                     BookPrice = updatedBook.PublicationYear,
                     AvailableCopies = updatedBook.AvailableCopies,
                     BookDescription = updatedBook.BookDescription,
+                    BookFileUrl = updatedBook.BookFileUrl,
                     CloudinaryImageId = updatedBook.CloudinaryImageId,
                     ImageUrls = updatedBook.ImageUrls
                 };
@@ -186,8 +207,6 @@ namespace api_flms_service.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error in UpdateBook: {ex.Message}");
-                Console.WriteLine($"StackTrace: {ex.StackTrace}");
                 return StatusCode(500, new { message = "An error occurred while updating the book.", details = ex.Message });
             }
         }
@@ -266,7 +285,54 @@ namespace api_flms_service.Controllers
             return Ok(books);
         }
 
-        
+
+        private readonly List<string> _allowedExtensions = new() { ".pdf", ".epub", ".mobi" };
+
+        [HttpPost("upload")]
+        public async Task<IActionResult> UploadFile(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest("No file uploaded.");
+            }
+
+            var extension = Path.GetExtension(file.FileName).ToLower();
+            if (!_allowedExtensions.Contains(extension))
+            {
+                return BadRequest("Invalid file format. Allowed formats: PDF, EPUB, MOBI.");
+            }
+
+            var uploadResult = await _cloudinaryService.UploadFileAsync(file);
+            return Ok(uploadResult);
+        }
+
+
+
+
+        [HttpGet("get/{publicId}")]
+        public async Task<IActionResult> GetFile(string publicId)
+        {
+            var file = await _cloudinaryService.GetFileAsync(publicId);
+            if (file == null)
+            {
+                return NotFound("File not found.");
+            }
+            return Ok(file);
+        }
+
+
+
+        [HttpDelete("delete/{publicId}")]
+        public async Task<IActionResult> DeleteFile(string publicId)
+        {
+            var result = await _cloudinaryService.DeleteFileAsync(publicId);
+            if (result == null || result.Result != "ok")
+            {
+                return NotFound("File not found or could not be deleted.");
+            }
+            return Ok("File deleted successfully.");
+        }
+
 
     }
 }
