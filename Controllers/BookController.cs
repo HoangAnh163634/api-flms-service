@@ -4,7 +4,6 @@ using api_flms_service.Entity;
 using api_flms_service.Model;
 using api_flms_service.ServiceInterface;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
 
 namespace api_flms_service.Controllers
 {
@@ -89,9 +88,7 @@ namespace api_flms_service.Controllers
         }
 
         [HttpPost]
-
-        public async Task<IActionResult> CreateBook([FromBody] BookRequestDto bookDto)
-
+        public async Task<IActionResult> CreateBook([FromForm] BookDto bookDto, [FromForm] List<IFormFile> images, [FromForm] List<int> categoryIds)
         {
             if (!ModelState.IsValid)
             {
@@ -105,34 +102,27 @@ namespace api_flms_service.Controllers
                     Title = bookDto.BookName,
                     AuthorId = bookDto.AuthorId,
                     ISBN = bookDto.BookNo,
-                    PublicationYear = (int)bookDto.BookPrice,
+                    PublicationYear = bookDto.BookPrice,
                     AvailableCopies = bookDto.AvailableCopies,
                     BookDescription = bookDto.BookDescription,
                     BookCategories = categoryIds.Select(id => new BookCategory { CategoryId = id }).ToList()
-
-                    BookFileUrl = bookDto.BookFileUrl,
-                    ImageUrls = bookDto.ImageUrls != null ? string.Join(", ", bookDto.ImageUrls) : null,
-                    BookCategories = bookDto.CategoryIds?.Select(id => new BookCategory { CategoryId = id }).ToList()
-
                 };
 
-                var createdBook = await _bookService.CreateBookAsync(book);
+                var createdBook = await _bookService.CreateBookAsync(book, images);
 
-                var createdBookDto = new BookRequestDto
+                var createdBookDto = new BookDto
                 {
                     BookId = createdBook.BookId,
                     BookName = createdBook.Title,
                     AuthorId = createdBook.AuthorId,
                     AuthorName = createdBook.Author?.Name ?? "No Author",
-                    CategoryIds = createdBook.BookCategories?.Select(bc => bc.CategoryId).ToList(),
+                    Category = createdBook.BookCategories?.Select(bc => bc.Category).ToList() ?? new List<Category>(),
                     BookNo = createdBook.ISBN,
                     BookPrice = createdBook.PublicationYear,
                     AvailableCopies = createdBook.AvailableCopies,
                     BookDescription = createdBook.BookDescription,
                     CloudinaryImageId = createdBook.CloudinaryImageId,
-                    BookFileUrl = createdBook.BookFileUrl,
-                    ImageUrls = createdBook.ImageUrls?.Split(", ").ToList() // Tách lại thành danh sách khi trả về
-
+                    ImageUrls = createdBook.ImageUrls
                 };
 
                 return CreatedAtAction(nameof(GetBookById), new { id = createdBook.BookId }, createdBookDto);
@@ -143,12 +133,8 @@ namespace api_flms_service.Controllers
             }
         }
 
-
-
         [HttpPut("{id}")]
-
-        public async Task<IActionResult> UpdateBook(int id, [FromForm] BookRequestDto bookDto, IFormFile? bookFile)
-
+        public async Task<IActionResult> UpdateBook(int id, [FromForm] BookDto bookDto, [FromForm] List<IFormFile> images, [FromForm] List<int> categoryIds)
         {
             Console.WriteLine($"UpdateBook called with id: {id}, bookDto.BookId: {bookDto.BookId}"); // Debug: Kiểm tra request
             if (id != bookDto.BookId)
@@ -157,34 +143,32 @@ namespace api_flms_service.Controllers
             }
 
             if (!ModelState.IsValid)
-
             {
                 return BadRequest(ModelState);
             }
-
 
             try
             {
                 var existingBook = await _bookService.GetBookByIdAsync(bookDto.BookId);
                 if (existingBook == null)
-
                 {
                     return NotFound(new { message = "Book not found" });
                 }
 
-
                 existingBook.Title = bookDto.BookName;
                 existingBook.AuthorId = bookDto.AuthorId;
                 existingBook.ISBN = bookDto.BookNo;
-                existingBook.PublicationYear = (int)bookDto.BookPrice; // Giả sử model Book có Price
+                existingBook.PublicationYear = bookDto.BookPrice;
                 existingBook.AvailableCopies = bookDto.AvailableCopies;
-                existingBook.BookDescription = bookDto.BookDescription ?? existingBook.BookDescription;
+                existingBook.BookDescription = bookDto.BookDescription;
 
+                existingBook.BookCategories.Clear();
+                existingBook.BookCategories = categoryIds.Select(cid => new BookCategory { BookId = bookDto.BookId, CategoryId = cid }).ToList();
 
-                // Upload file nếu có
-                if (bookFile != null)
+                var updatedBook = await _bookService.UpdateBookAsync(existingBook, images);
+
+                var updatedBookDto = new BookDto
                 {
-
                     BookId = updatedBook.BookId,
                     BookName = updatedBook.Title,
                     AuthorId = updatedBook.AuthorId,
@@ -198,65 +182,15 @@ namespace api_flms_service.Controllers
                     ImageUrls = updatedBook.ImageUrls
                 };
 
-                    try
-                    {
-                        existingBook.BookFileUrl = await _cloudinaryService.UploadFileAsync(bookFile);
-                    }
-                    catch (Exception uploadEx)
-                    {
-                        return StatusCode(500, new { message = "Error uploading file to Cloudinary", details = uploadEx.Message });
-                    }
-                }
-                else if (!string.IsNullOrEmpty(bookDto.BookFileUrl))
-                {
-                    existingBook.BookFileUrl = bookDto.BookFileUrl;
-                }
-
-
-                // Cập nhật danh sách ảnh
-                if (bookDto.ImageUrls != null && bookDto.ImageUrls.Any())
-                {
-                    existingBook.ImageUrls = string.Join(", ", bookDto.ImageUrls);
-                }
-
-                // Cập nhật danh mục sách
-                if (bookDto.CategoryIds != null && bookDto.CategoryIds.Any())
-                {
-                    var existingCategories = existingBook.BookCategories.Select(c => c.CategoryId).ToHashSet();
-                    var newCategories = bookDto.CategoryIds.ToHashSet();
-
-                    var categoriesToRemove = existingCategories.Except(newCategories).ToList();
-                    var categoriesToAdd = newCategories.Except(existingCategories).ToList();
-                    // Xóa categories cũ
-                    var itemsToRemove = existingBook.BookCategories
-                    .Where(c => categoriesToRemove.Contains(c.CategoryId))
-                 .ToList(); // Chuyển về List để tránh lỗi khi xóa trong vòng lặp
-
-                    foreach (var categoryId in categoriesToAdd)
-                    {
-                        existingBook.BookCategories.Add(new BookCategory
-                        {
-                            BookId = bookDto.BookId,
-                            CategoryId = categoryId
-                        });
-                    }
-                }
-
-                await _bookService.UpdateBookAsync(existingBook);
-                return Ok(new { message = "Book updated successfully", bookId = existingBook.BookId });
+                return Ok(updatedBookDto);
             }
             catch (Exception ex)
             {
-
                 Console.WriteLine($"Error in UpdateBook: {ex.Message}");
                 Console.WriteLine($"StackTrace: {ex.StackTrace}");
                 return StatusCode(500, new { message = "An error occurred while updating the book.", details = ex.Message });
-
             }
         }
-
-//       
-
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteBook(int id)
@@ -332,56 +266,7 @@ namespace api_flms_service.Controllers
             return Ok(books);
         }
 
-
-
-        private readonly List<string> _allowedExtensions = new() { ".pdf", ".epub", ".mobi",".png",".jpg" };
-
-        [HttpPost("upload")]
-        public async Task<IActionResult> UploadFile(IFormFile file)
-        {
-            if (file == null || file.Length == 0)
-            {
-                return BadRequest(new { message = "No file uploaded." });
-            }
-
-            var extension = Path.GetExtension(file.FileName).ToLower();
-            if (!_allowedExtensions.Contains(extension))
-            {
-                return BadRequest(new { message = "Invalid file format. Allowed formats: PDF, EPUB, MOBI, PNG, JPG." });
-            }
-
-            var uploadResult = await _cloudinaryService.UploadFileAsync(file);
-            return Ok(new { fileUrl = uploadResult });
-        }
-
-
-
-
-        [HttpGet("get/{publicId}")]
-        public async Task<IActionResult> GetFile(string publicId)
-        {
-            var file = await _cloudinaryService.GetFileAsync(publicId);
-            if (file == null)
-            {
-                return NotFound("File not found.");
-            }
-            return Ok(file);
-        }
-
-
-
-        [HttpDelete("delete/{publicId}")]
-        public async Task<IActionResult> DeleteFile(string publicId)
-        {
-            var result = await _cloudinaryService.DeleteFileAsync(publicId);
-            if (result == null || result.Result != "ok")
-            {
-                return NotFound("File not found or could not be deleted.");
-            }
-            return Ok("File deleted successfully.");
-        }
-
-
+        
 
     }
 }

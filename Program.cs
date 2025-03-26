@@ -38,8 +38,7 @@ WebApplicationBuilder BuildApp()
     builder.Services.AddScoped<IIssuedBookService, IssuedBookService>();
     builder.Services.AddScoped<ILoanService, LoanService>();
     builder.Services.AddControllers();
-    builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
-    builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
+
     // Add controllers and Razor Pages
     builder.Services.AddControllers();
     builder.Services.AddRazorPages().AddViewOptions(options =>
@@ -52,25 +51,15 @@ WebApplicationBuilder BuildApp()
     // Configure Swagger
     builder.Services.AddHttpClient();
     builder.Services.AddEndpointsApiExplorer();
-    //builder.Services.AddSwaggerGen();
-    builder.Services.AddSwaggerGen(options =>
-    {
-     
-
-        // Hỗ trợ upload file (IFormFile) trong Swagger
-        options.OperationFilter<SwaggerFileUploadOperationFilter>();
-    });
+    builder.Services.AddSwaggerGen();
 
     builder.Services.AddLogging(logging =>
     {
         logging.AddConsole();
     });
 
-
     return builder;
 }
-
-
 
 WebApplication RunApp()
 {
