@@ -70,24 +70,28 @@ namespace api_flms_service.ServiceInterface
 
             public async Task<User> GetUserByEmail(string email)
             {
+                Console.WriteLine($"GetUserByEmail called with email: {email}");
+
                 var user = await _dbContext.Users
-                                .Include(e => e.BookLoans)
-                                .ThenInclude(e => e.Book)
-                                .ThenInclude(b => b.Reviews)
-                                .Include(e => e.BookLoans)
-                                .ThenInclude(e => e.Book)
-                                .ThenInclude(e => e.Author)
-                                .FirstOrDefaultAsync(x => x.Email == email);
+                    .Include(e => e.BookLoans)
+                        .ThenInclude(e => e.Book)
+                            .ThenInclude(b => b.Reviews)
+                    .Include(e => e.BookLoans)
+                        .ThenInclude(e => e.Book)
+                            .ThenInclude(e => e.Author)
+                    .Include(e => e.BookReviews)
+                        .ThenInclude(r => r.Book)
+                    .FirstOrDefaultAsync(x => x.Email == email);
 
                 if (user == null)
                 {
-                    // Tạo user mới nếu chưa tồn tại
+                    Console.WriteLine($"User with email {email} not found. Creating new user...");
                     user = new User
                     {
                         Email = email,
-                        Name = email.Split('@')[0] ?? "Unknown", // Tạm lấy phần trước @ làm Name
+                        Name = email.Split('@')[0] ?? "Unknown",
                         PhoneNumber = "",
-                        Role = "User", // Gán mặc định là "User"
+                        Role = "User",
                         RegistrationDate = DateTime.Now
                     };
                     _dbContext.Users.Add(user);
@@ -99,7 +103,18 @@ namespace api_flms_service.ServiceInterface
                     catch (Exception ex)
                     {
                         Console.WriteLine($"Error creating user: {ex.Message}");
-                        throw; // Ném lỗi để debug
+                        throw;
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"User found: {user.Email}, UserId: {user.UserId}, Reviews count: {user.BookReviews?.Count ?? 0}");
+                    if (user.BookReviews != null)
+                    {
+                        foreach (var review in user.BookReviews)
+                        {
+                            Console.WriteLine($"Review: ReviewId={review.ReviewId}, BookId={review.BookId}, UserId={review.UserId}, ReviewText={review.ReviewText}");
+                        }
                     }
                 }
 

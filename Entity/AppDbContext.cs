@@ -56,11 +56,36 @@ public class AppDbContext : DbContext
             .HasForeignKey(br => br.BookId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        // SỬA: Chỉ định rõ navigation property User.BookReviews và ánh xạ với cột userid
         modelBuilder.Entity<Review>()
             .HasOne(br => br.User)
-            .WithMany()
+            .WithMany(u => u.BookReviews) // Chỉ định rõ User.BookReviews
             .HasForeignKey(br => br.UserId)
+            .HasConstraintName("fk_reviews_users_userid") // Đặt tên constraint để rõ ràng
             .OnDelete(DeleteBehavior.Cascade);
+
+        // THÊM: Bỏ qua cột userid1 để tránh EF tạo shadow property
+        modelBuilder.Entity<Review>()
+            .Property(r => r.UserId)
+            .HasColumnName("userid");
+
+        modelBuilder.Entity<Review>()
+            .Ignore("UserId1");
+
+        // THÊM: Bỏ qua cột bookid1 và categoryid1 trong BookCategory (vì có cảnh báo tương tự)
+        modelBuilder.Entity<BookCategory>()
+            .Property(bc => bc.BookId)
+            .HasColumnName("bookid");
+
+        modelBuilder.Entity<BookCategory>()
+            .Property(bc => bc.CategoryId)
+            .HasColumnName("categoryid");
+
+        modelBuilder.Entity<BookCategory>()
+            .Ignore("BookId1");
+
+        modelBuilder.Entity<BookCategory>()
+            .Ignore("CategoryId1");
 
         // ✅ Giữ nguyên các cấu hình DateTime và lowercase tên bảng
         var dateTimeConverter = new ValueConverter<DateTime, DateTime>(
