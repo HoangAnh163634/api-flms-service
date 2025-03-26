@@ -19,8 +19,41 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>@ViewData["Title"] - Library Management System</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" />
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+    <style>
+        /* Làm cho navbar cố định */
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000; /* Đảm bảo navbar nằm trên các phần tử khác */
+        }
+
+        /* Thêm padding-top cho nội dung chính để tránh bị che bởi navbar */
+        body {
+            padding-top: 70px; /* Điều chỉnh giá trị này dựa trên chiều cao của navbar */
+        }
+
+        /* CSS cho footer */
+        footer {
+            background-color: #343a40; /* Màu nền tối giống navbar */
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+            position: relative;
+            bottom: 0;
+            width: 100%;
+            margin-top: 50px; /* Khoảng cách giữa nội dung và footer */
+        }
+
+            footer a {
+                color: #007bff;
+                text-decoration: none;
+            }
+
+                footer a:hover {
+                    text-decoration: underline;
+                }
+    </style>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -76,7 +109,23 @@
         @RenderBody()
     </div>
 
-    <!-- Scripts for validation and tooltip -->
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>&copy; @DateTime.Now.Year - Library Management System (LMS)</p>
+            <p>
+                <a href="/About">About Us</a> |
+                <a href="/Contact">Contact Us</a> |
+                <a href="/Privacy">Privacy Policy</a>
+            </p>
+            <p>Email: support@lms.com | Phone: (123) 456-7890</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.3/jquery.validate.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
     <script>

@@ -80,8 +80,11 @@ WebApplication RunApp()
     app.UseAuthorization();
 
     // Map Controllers and Razor Pages
-    app.MapRazorPages();
-    app.MapControllers();
+    app.UseEndpoints(endpoints =>
+    {
+        endpoints.MapRazorPages();
+        endpoints.MapControllers();
+    });
     return app;
 }
 
