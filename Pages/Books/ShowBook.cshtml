@@ -118,13 +118,57 @@ else
                 <br />
                 <p class="small">@review.ReviewDate?.ToString("yyyy-MM-dd HH:mm:ss")</p>
                 <p>@review.ReviewText</p>
+                @if (Model.role == "User" && Model.User != null && review.UserId == Model.User.UserId)
+                {
+                    <form method="post" style="display:inline;" class="edit-review-form">
+                        <input type="hidden" name="reviewId" value="@review.ReviewId" />
+                        <input type="hidden" name="someValue" value="@Model.SomeValue" />
+                        <button type="submit" name="handler" value="editReview" class="btn btn-sm btn-outline-primary">Edit</button>
+                    </form>
+                }
             </div>
         </div>
+
+        @* Form chỉnh sửa review *@
+        @if (Model.EditReview != null && Model.EditReview.ReviewId == review.ReviewId)
+        {
+            <hr class="featurette-divider">
+            <h3 class="text-center">Edit Your Review</h3>
+            <form method="post" class="mt-4">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <input type="hidden" asp-for="EditReview.ReviewId" />
+                <input type="hidden" asp-for="EditReview.BookId" />
+                <input type="hidden" asp-for="EditReview.UserId" />
+                <div class="form-group">
+                    <label asp-for="EditReview.Rating">Rating (1-5)</label>
+                    <div class="star-rating" id="edit-star-rating-@review.ReviewId">
+                        @for (int i = 1; i <= 5; i++)
+                        {
+                            <input type="radio" name="EditReview.Rating" value="@i" id="edit-star-@review.ReviewId-@i" class="star-input" required @(i == Model.EditReview.Rating ? "checked" : "")>
+                            <label for="edit-star-@review.ReviewId-@i" class="star">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi @(i <= Model.EditReview.Rating ? "bi-star-fill" : "bi-star")" viewBox="0 0 16 16">
+                                    <path d="M2.866 14.85c-.078.444.36.791.746.593l4.39-2.256 4.389 2.256c.386.198.824-.149.746-.592l-.83-4.73 3.522-3.356c.33-.314.16-.888-.282-.95l-4.898-.696L8.465.792a.513.513 0 0 0-.927 0L5.354 5.12l-4.898.696c-.441.062-.612.636-.283.95l3.523 3.356-.83 4.73zm4.905-2.767-3.686 1.894.694-3.957a.565.565 0 0 0-.163-.505L1.71 6.745l4.052-.576a.525.525 0 0 0 .393-.288L8 2.223l1.847 3.658a.525.525 0 0 0 .393.288l4.052.575-2.906 2.77a.565.565 0 0 0-.163.506l.694 3.957-3.686-1.894a.503.503 0 0 0-.461 0z" />
+                                </svg>
+                            </label>
+                        }
+                    </div>
+                    <span asp-validation-for="EditReview.Rating" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="EditReview.ReviewText">Review Text</label>
+                    <textarea class="form-control" asp-for="EditReview.ReviewText" rows="3" required></textarea>
+                    <span asp-validation-for="EditReview.ReviewText" class="text-danger"></span>
+                </div>
+                <button type="submit" name="handler" value="updateReview" class="btn btn-primary">Update Review</button>
+                <a href="/Books/ShowBook?id=@Model.SomeValue" class="btn btn-secondary">Cancel</a>
+                <input type="hidden" name="someValue" value="@Model.SomeValue" />
+            </form>
+        }
     }
 }
 
 <!-- Form thêm review -->
-@if (Model.role == "User" && Model.wasLoaned && !Model.wasReviewed)
+@if (Model.role == "User" && Model.wasLoaned && !Model.wasReviewed && Model.EditReview == null)
 {
     var loan = Model.User.BookLoans.FirstOrDefault(l => l.BookId == Model.Book.BookId && (l.ReturnDate == null || l.ReturnDate > DateTime.UtcNow));
     if (loan != null)
@@ -134,7 +178,7 @@ else
     <hr class="featurette-divider">
     <h3 class="text-center">Add Your Review</h3>
     <form method="post" class="mt-4">
-        <div asp-validation-summary="All" class="text-danger"></div>
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
         <input type="hidden" asp-for="NewReview.BookId" />
         <input type="hidden" asp-for="NewReview.UserId" />
         <div class="form-group">
@@ -183,8 +227,9 @@ else
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const stars = document.querySelectorAll('.star-input');
-            const labels = document.querySelectorAll('.star');
+            // Xử lý star rating cho form thêm review
+            const stars = document.querySelectorAll('#star-rating .star-input');
+            const labels = document.querySelectorAll('#star-rating .star');
 
             stars.forEach((star, index) => {
                 star.addEventListener('change', function () {
@@ -213,7 +258,7 @@ else
                 });
 
                 star.addEventListener('mouseout', function () {
-                    const checkedRating = document.querySelector('.star-input:checked');
+                    const checkedRating = document.querySelector('#star-rating .star-input:checked');
                     labels.forEach((label, i) => {
                         const starSvg = label.querySelector('svg');
                         if (checkedRating && i < parseInt(checkedRating.value)) {
@@ -223,6 +268,53 @@ else
                             starSvg.classList.remove('bi-star-fill');
                             starSvg.classList.add('bi-star');
                         }
+                    });
+                });
+            });
+
+            // Xử lý star rating cho form chỉnh sửa review
+            document.querySelectorAll('[id^="edit-star-rating-"]').forEach(ratingContainer => {
+                const editStars = ratingContainer.querySelectorAll('.star-input');
+                const editLabels = ratingContainer.querySelectorAll('.star');
+
+                editStars.forEach((star, index) => {
+                    star.addEventListener('change', function () {
+                        const rating = parseInt(this.value);
+                        editLabels.forEach((label, i) => {
+                            const starSvg = label.querySelector('svg');
+                            if (i < rating) {
+                                starSvg.classList.add('bi-star-fill');
+                                starSvg.classList.remove('bi-star');
+                            } else {
+                                starSvg.classList.remove('bi-star-fill');
+                                starSvg.classList.add('bi-star');
+                            }
+                        });
+                    });
+
+                    star.addEventListener('mouseover', function () {
+                        const rating = parseInt(this.value);
+                        editLabels.forEach((label, i) => {
+                            const starSvg = label.querySelector('svg');
+                            if (i < rating) {
+                                starSvg.classList.add('bi-star-fill');
+                                starSvg.classList.remove('bi-star');
+                            }
+                        });
+                    });
+
+                    star.addEventListener('mouseout', function () {
+                        const checkedRating = ratingContainer.querySelector('.star-input:checked');
+                        editLabels.forEach((label, i) => {
+                            const starSvg = label.querySelector('svg');
+                            if (checkedRating && i < parseInt(checkedRating.value)) {
+                                starSvg.classList.add('bi-star-fill');
+                                starSvg.classList.remove('bi-star');
+                            } else {
+                                starSvg.classList.remove('bi-star-fill');
+                                starSvg.classList.add('bi-star');
+                            }
+                        });
                     });
                 });
             });

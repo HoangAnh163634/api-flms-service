@@ -1,7 +1,5 @@
-using api_flms_service.ServiceInterface;
+﻿using api_flms_service.ServiceInterface;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using System.Net.Http;
-using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace api_flms_service.Pages
@@ -14,25 +12,29 @@ namespace api_flms_service.Pages
         private readonly IBookService _bookService;
         private readonly ICategoryService _categoryService;
         private readonly IIssuedBookService _issuedBookService;
+        private readonly IReviewService _reviewService; // Thêm IReviewService
 
         public int TotalUsers { get; set; }
         public int TotalBooks { get; set; }
         public int TotalCategories { get; set; }
         public int TotalAuthors { get; set; }
         public int TotalIssuedBooks { get; set; }
+        public int TotalReviews { get; set; } // Thêm thuộc tính TotalReviews
 
         public DashboardModel(
             IAuthorService authorService,
             IUserService userService,
             IBookService bookService,
             ICategoryService categoryService,
-            IIssuedBookService issuedBookService)
+            IIssuedBookService issuedBookService,
+            IReviewService reviewService) // Constructor duy nhất
         {
             _authorService = authorService;
             _userService = userService;
             _bookService = bookService;
             _categoryService = categoryService;
             _issuedBookService = issuedBookService;
+            _reviewService = reviewService; // Khởi tạo IReviewService
         }
 
         public async Task OnGetAsync()
@@ -56,7 +58,10 @@ namespace api_flms_service.Pages
             // Fetch issued books count
             var issuedBooks = await _issuedBookService.GetAllIssuedBooksAsync();
             TotalIssuedBooks = issuedBooks.Count();
+
+            // Fetch reviews count
+            var reviews = await _reviewService.GetAllReviewsAsync(); // Lấy danh sách reviews
+            TotalReviews = reviews.Count(); // Đếm số lượng reviews
         }
     }
-   
 }

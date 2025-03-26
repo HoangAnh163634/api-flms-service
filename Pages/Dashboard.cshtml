@@ -5,56 +5,65 @@
     Layout = "_Layout";
 }
 
-    <div class="container">
-        <h2>Dashboard</h2>
-        <div class="row">
-            <div class="col-md-3">
-                <div class="card bg-light">
-                    <div class="card-header">Registered Users</div>
-                    <div class="card-body">
-                        <p class="card-text">No. total Users: @Model.TotalUsers</p>
-                        <a href="/Users" class="btn btn-danger">View Registered Users</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card bg-light">
-                    <div class="card-header">Total Books</div>
-                    <div class="card-body">
-                        <p class="card-text">No. of books available: @Model.TotalBooks</p>
-                        <a href="/Books" class="btn btn-success">View All Books</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card bg-light">
-                    <div class="card-header">Book Categories</div>
-                    <div class="card-body">
-                        <p class="card-text">No. of Book Categories: @Model.TotalCategories</p>
-                        <a href="/Categories/" class="btn btn-warning">View Categories</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card bg-light">
-                    <div class="card-header">Authors</div>
-                    <div class="card-body">
-                        <p class="card-text">No. of Authors: @Model.TotalAuthors</p>
-                        <a href="/Authors" class="btn btn-primary">View Authors</a>
-                    </div>
+<div class="container">
+    <h2>Dashboard</h2>
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card bg-light">
+                <div class="card-header">Registered Users</div>
+                <div class="card-body">
+                    <p class="card-text">No. total Users: @Model.TotalUsers</p>
+                    <a href="/Users" class="btn btn-danger">View Registered Users</a>
                 </div>
             </div>
         </div>
-        <br>
-        <div class="row">
-            <div class="col-md-3">
-                <div class="card bg-light">
-                    <div class="card-header">Books Issued</div>
-                    <div class="card-body">
-                        <p class="card-text">No. of books issued: @Model.TotalIssuedBooks</p>
-                        <a href="/IssuedBooks" class="btn btn-success">View Issued Books</a>
-                    </div>
+        <div class="col-md-3">
+            <div class="card bg-light">
+                <div class="card-header">Total Books</div>
+                <div class="card-body">
+                    <p class="card-text">No. of books available: @Model.TotalBooks</p>
+                    <a href="/Books" class="btn btn-success">View All Books</a>
                 </div>
             </div>
         </div>
+        <div class="col-md-3">
+            <div class="card bg-light">
+                <div class="card-header">Book Categories</div>
+                <div class="card-body">
+                    <p class="card-text">No. of Book Categories: @Model.TotalCategories</p>
+                    <a href="/Categories/" class="btn btn-warning">View Categories</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light">
+                <div class="card-header">Authors</div>
+                <div class="card-body">
+                    <p class="card-text">No. of Authors: @Model.TotalAuthors</p>
+                    <a href="/Authors" class="btn btn-primary">View Authors</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <br>
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card bg-light">
+                <div class="card-header">Books Issued</div>
+                <div class="card-body">
+                    <p class="card-text">No. of books issued: @Model.TotalIssuedBooks</p>
+                    <a href="/IssuedBooks" class="btn btn-success">View Issued Books</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light">
+                <div class="card-header">List Of Reviews</div>
+                <div class="card-body">
+                    <p class="card-text">No. of reviews: @Model.TotalReviews</p>
+                    <a href="/Reviews/ListOfReview" class="btn btn-info">View Reviews</a>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
