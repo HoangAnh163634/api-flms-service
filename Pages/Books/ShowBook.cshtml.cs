@@ -63,10 +63,21 @@ namespace api_flms_service.Pages.Books
             }
             else
             {
+
                 Book = book;
                 await Console.Out.WriteLineAsync($"OnGet - Book ID: {id}, AvailableCopies: {Book.AvailableCopies}");
                 await Console.Out.WriteLineAsync($"OnGet - Reviews Count: {Book.Reviews.Count()}");
                 await Console.Out.WriteLineAsync($"OnGet - Categories Count: {Book.Categories.Count()}");
+
+
+   
+                Book = book;
+
+                await Console.Out.WriteLineAsync($"Book ID: {id}, AvailableCopies: {Book.AvailableCopies}");
+                await Console.Out.WriteLineAsync("Count: " + Book.Reviews.Count() + " Number");
+                // Thêm logging cho Categories
+                await Console.Out.WriteLineAsync("Categories Count: " + Book.Categories.Count());
+
                 foreach (var category in Book.Categories)
                 {
                     await Console.Out.WriteLineAsync($"OnGet - Category: {category.CategoryName}");

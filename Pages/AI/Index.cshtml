@@ -1,0 +1,120 @@
+﻿@page
+@model api_flms_service.Pages.AI.IndexModel
+
+
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Chat AI";
+}
+
+
+
+<!-- Bootstrap & jQuery CDN -->
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<style>
+    .chat-wrapper {
+        max-width: 600px;
+        margin: 0 auto;
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding: 20px;
+        background-color: #f9f9f9;
+        display: flex;
+        flex-direction: column;
+        height: 80vh;
+    }
+
+    #chat-box {
+        flex: 1;
+        overflow-y: auto;
+        margin-bottom: 15px;
+        padding-right: 5px;
+    }
+
+    .message {
+        margin: 5px 0;
+        padding: 10px;
+        border-radius: 10px;
+        max-width: 80%;
+        word-wrap: break-word;
+    }
+
+    .user-message {
+        background-color: #007bff;
+        color: white;
+        align-self: flex-end;
+    }
+
+    .ai-message {
+        background-color: #e4e6eb;
+        color: black;
+        align-self: flex-start;
+    }
+
+    #input-area {
+        display: flex;
+        gap: 10px;
+    }
+
+    #userInput {
+        flex: 1;
+    }
+</style>
+
+<div class="container mt-5">
+    <div class="chat-wrapper">
+        <h3 class="text-center mb-3">AI Chat</h3>
+        <div id="chat-box" class="border rounded p-2"></div>
+        <div id="input-area">
+            <textarea id="userInput" class="form-control" rows="1" placeholder="Type your message..."></textarea>
+            <button id="sendBtn" class="btn btn-primary">Send</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        function appendMessage(message, sender) {
+            const msgDiv = $('<div>').addClass(`message ${sender}-message`).text(message);
+            $('#chat-box').append(msgDiv);
+            $('#chat-box').scrollTop($('#chat-box')[0].scrollHeight);
+        }
+
+        $('#sendBtn').click(sendMessage);
+        $('#userInput').keypress(function (e) {
+            if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        function sendMessage() {
+            const text = $('#userInput').val().trim();
+            if (text === "") return;
+
+            appendMessage(text, "user");
+            $('#userInput').val("");
+
+            appendMessage("AI is typing...", "ai");
+
+            $.ajax({
+                url: '/api/AIChat/SendMessage',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ message: text }),
+                success: function (data) {
+                    $('.ai-message:last').remove();
+                    appendMessage(data.reply || "No response from AI", "ai");
+                },
+                error: function () {
+                    $('.ai-message:last').remove();
+                    appendMessage("Error connecting to AI service", "ai");
+                }
+            });
+        }
+    });
+</script>
+
