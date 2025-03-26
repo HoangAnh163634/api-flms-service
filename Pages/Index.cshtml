@@ -79,6 +79,7 @@
     </div>
 </form>
 
+
 <!-- Search Results Feedback -->
 @if (!string.IsNullOrEmpty(Request.Query["searchTerm"]) || !string.IsNullOrEmpty(Request.Query["categoryName"]))
 {
@@ -120,6 +121,12 @@
         }
     </div>
     @if (Model.authors.Count > 3)
+
+    <!-- Search Results Feedback -->
+    @if (!string.IsNullOrEmpty(Request.Query["searchTerm"]) ||
+    !string.IsNullOrEmpty(Request.Query["categoryName"]))
+    
+
     {
         <div class="text-center mt-3">
             <button type="button" class="toggle-authors btn btn-primary">Xem thêm</button>
