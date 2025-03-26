@@ -25,10 +25,6 @@ namespace api_flms_service.Entity
         public int UserId { get; set; } = 0; // Khởi tạo mặc định
         public string ImageUrls { get; set; } = string.Empty; // Khởi tạo mặc định
 
-
-        // 🆕 Trường mới để lưu URL file sách
-        public string BookFileUrl { get; set; } = string.Empty;
-
         public ICollection<Loan> BookLoans { get; set; } = new List<Loan>();
         public ICollection<Review> Reviews { get; set; } = new List<Review>();
     }

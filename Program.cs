@@ -58,10 +58,6 @@ WebApplicationBuilder BuildApp()
         logging.AddConsole();
     });
 
-    builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
-    builder.Services.AddScoped<ICloudinaryService,CloudinaryService>();
-
-
     return builder;
 }
 
