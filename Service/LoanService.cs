@@ -90,5 +90,19 @@ namespace api_flms_service.Service
             return true;
         }
 
+        public async Task<bool> UpdateLoanAsync(Loan loan)
+        {
+            var existingLoan = await _context.Loans.FindAsync(loan.BookLoanId);
+            if (existingLoan == null) return false;
+
+            // Chỉ cập nhật LoanDate và ReturnDate
+            existingLoan.LoanDate = loan.LoanDate;
+            existingLoan.ReturnDate = loan.ReturnDate;
+
+            _context.Loans.Update(existingLoan);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
     }
 }

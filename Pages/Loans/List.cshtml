@@ -153,11 +153,11 @@
                             <div class="mt-3">
                                 @if (Model.BookReviews.FirstOrDefault(b => b.UserId == Model.user.UserId && b.BookId == item.BookId) == null)
                                 {
-                                    <a class="btn btn-primary" href="/Books/ShowBook?id=@(item.BookId))" role="button"><i class="fas fa-star me-2"></i>Add Review</a>
+                                    <a class="btn btn-primary" href="/Books/ShowBook?id=@(item.BookId)" role="button"><i class="fas fa-star me-2"></i>Add Review</a>
                                 }
                                 else
                                 {
-                                    <a class="btn btn-primary" href="/Books/ShowBook?id=@(item.BookId))" role="button"><i class="fas fa-star me-2"></i>Edit Review</a>
+                                    <a class="btn btn-primary" href="/Books/ShowBook?id=@(item.BookId)" role="button"><i class="fas fa-star me-2"></i>Edit Review</a>
                                 }
                                 <form method="post" asp-route-id="@item.BookLoanId" style="display:inline;">
                                     <button type="submit" name="handler" value="handler" class="btn btn-secondary"><i class="fas fa-undo me-2"></i>Return the Book</button>

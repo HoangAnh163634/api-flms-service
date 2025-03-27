@@ -1,0 +1,162 @@
+﻿@page
+@model api_flms_service.Pages.Loans.EditModel
+@{
+    ViewData["Title"] = "Edit Loan";
+}
+
+<style>
+    body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        font-family: 'Poppins', sans-serif;
+    }
+
+    /* Tiêu đề */
+    .section-title {
+        color: #2c3e50;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        animation: fadeInDown 1s ease-in-out;
+    }
+
+    /* Form */
+    .edit-form {
+        background: #ffffff;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .form-group label {
+        color: #2c3e50;
+        font-weight: bold;
+    }
+
+    .form-control {
+        border-radius: 10px;
+        box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.05);
+        transition: border 0.3s ease;
+    }
+
+        .form-control:focus {
+            border-color: #ff6b6b;
+            box-shadow: 0 0 5px rgba(255, 107, 107, 0.3);
+        }
+
+    /* Nút */
+    .btn-primary {
+        background: linear-gradient(90deg, #ff6b6b 0%, #4ecdc4 100%);
+        border: none;
+        border-radius: 20px;
+        padding: 10px 20px;
+        font-weight: bold;
+        transition: transform 0.3s ease, background 0.3s ease;
+    }
+
+        .btn-primary:hover {
+            transform: scale(1.05);
+            background: linear-gradient(90deg, #e65b5b 0%, #45b7b0 100%);
+        }
+
+    .btn-secondary {
+        border-radius: 20px;
+        transition: background 0.3s ease, transform 0.3s ease;
+    }
+
+        .btn-secondary:hover {
+            background: #4ecdc4;
+            color: white;
+            transform: scale(1.05);
+        }
+
+    /* Alert */
+    .alert {
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Animation */
+    @@keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .fade-in-up {
+        animation: fadeInUp 1s ease-in-out;
+    }
+</style>
+
+<div class="container mt-5">
+    <h1 class="display-2 text-center section-title">Edit Loan</h1>
+    <hr class="featurette-divider mb-4" style="border-color: #ff6b6b;">
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success text-center fade-in-up">@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger text-center fade-in-up">@TempData["ErrorMessage"]</div>
+    }
+
+    @if (Model.Loan == null)
+    {
+        <p class="text-center text-muted fade-in-up"><i class="fas fa-exclamation-circle me-2"></i>Loan not found.</p>
+    }
+    else
+    {
+        <div class="edit-form fade-in-up">
+            <form method="post">
+                <!-- Thêm trường ẩn để gửi BookLoanId -->
+                <input type="hidden" asp-for="Loan.BookLoanId" />
+
+                <div class="form-group mb-3">
+                    <label class="form-label">Book Title</label>
+                    <input type="text" class="form-control" value="@Model.Loan.Book?.Title" readonly />
+                </div>
+                <div class="form-group mb-3">
+                    <label class="form-label">User</label>
+                    <input type="text" class="form-control" value="@Model.Loan.User?.Name" readonly />
+                </div>
+                <div class="form-group mb-3">
+                    <label asp-for="Loan.LoanDate" class="form-label">Loan Date</label>
+                    <input asp-for="Loan.LoanDate" class="form-control" type="datetime-local" />
+                    <span asp-validation-for="Loan.LoanDate" class="text-danger"></span>
+                </div>
+                <div class="form-group mb-3">
+                    <label asp-for="Loan.ReturnDate" class="form-label">Return Date</label>
+                    <input asp-for="Loan.ReturnDate" class="form-control" type="datetime-local" />
+                    <span asp-validation-for="Loan.ReturnDate" class="text-danger"></span>
+                </div>
+                <div class="text-center">
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save me-2"></i>Save</button>
+                    <a asp-page="./Index" class="btn btn-secondary"><i class="fas fa-arrow-left me-2"></i>Back to List</a>
+                </div>
+            </form>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <partial name="_ValidationScriptsPartial" />
+}

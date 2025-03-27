@@ -1,0 +1,151 @@
+﻿@page
+@model api_flms_service.Pages.Loans.IndexModel
+@{
+    ViewData["Title"] = "Loan Management";
+}
+
+<style>
+    body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        font-family: 'Poppins', sans-serif;
+    }
+
+    /* Tiêu đề */
+    .section-title {
+        color: #2c3e50;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        animation: fadeInDown 1s ease-in-out;
+    }
+
+    /* Bảng */
+    .table {
+        background: #ffffff;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+
+        .table thead {
+            background: linear-gradient(90deg, #ff6b6b 0%, #4ecdc4 100%);
+            color: white;
+        }
+
+        .table th, .table td {
+            vertical-align: middle;
+            text-align: center;
+        }
+
+        .table tbody tr {
+            transition: background 0.3s ease;
+        }
+
+            .table tbody tr:hover {
+                background: #f8f9fa;
+            }
+
+    /* Nút */
+    .btn-primary {
+        background: linear-gradient(90deg, #ff6b6b 0%, #4ecdc4 100%);
+        border: none;
+        border-radius: 20px;
+        padding: 8px 16px;
+        font-weight: bold;
+        transition: transform 0.3s ease, background 0.3s ease;
+    }
+
+        .btn-primary:hover {
+            transform: scale(1.05);
+            background: linear-gradient(90deg, #e65b5b 0%, #45b7b0 100%);
+        }
+
+    /* Alert */
+    .alert {
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Animation */
+    @@keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .fade-in-up {
+        animation: fadeInUp 1s ease-in-out;
+    }
+</style>
+
+<div class="container mt-5">
+    <h1 class="display-2 text-center section-title">Loan Management</h1>
+    <hr class="featurette-divider mb-4" style="border-color: #ff6b6b;">
+
+    <!-- Hiển thị thông báo thành công -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success text-center fade-in-up">
+            <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger text-center fade-in-up">
+            <i class="fas fa-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
+        </div>
+    }
+
+    @if (Model.Loans == null || !Model.Loans.Any())
+    {
+        <p class="text-center text-muted fade-in-up"><i class="fas fa-book me-2"></i>No loans found.</p>
+    }
+    else
+    {
+        <table class="table table-bordered fade-in-up">
+            <thead>
+                <tr>
+                    <th>Book Title</th>
+                    <th>User</th>
+                    <th>Loan Date</th>
+                    <th>Return Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var loan in Model.Loans)
+                {
+                    <tr>
+                        <td>@loan.Book?.Title</td>
+                        <td>@loan.User?.Name</td>
+                        <td>@loan.LoanDate?.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                        <td>@(loan.ReturnDate.HasValue ? loan.ReturnDate.Value.ToString("yyyy-MM-dd HH:mm:ss") : "Not Returned")</td>
+                        <td>
+                            <a class="btn btn-primary" asp-page="./Edit" asp-route-id="@loan.BookLoanId"><i class="fas fa-edit me-2"></i>Edit</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+@section Scripts {
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+}
