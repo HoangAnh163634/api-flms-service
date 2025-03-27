@@ -5,19 +5,102 @@
     Layout = "_Layout";
 }
 
-<!-- Thêm phần Bootstrap -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+    /* Tiêu đề */
+    .page-title {
+        color: #2c3e50;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        animation: fadeInDown 1s ease-in-out;
+        background: linear-gradient(90deg, #ff6b6b 0%, #4ecdc4 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
 
-<h2 class="my-4">Your Borrowed Books</h2>
+    /* Bảng */
+    .borrowed-table {
+        background: #ffffff;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        animation: fadeInUp 1s ease-in-out;
+    }
 
-<div class="container">
-    <table id="borrowedBooksTable" class="table table-striped">
-        <thead class="thead-dark">
+        .borrowed-table thead {
+            background: linear-gradient(90deg, #ff6b6b 0%, #4ecdc4 100%);
+            color: white;
+        }
+
+        .borrowed-table th, .borrowed-table td {
+            vertical-align: middle;
+            text-align: center;
+            padding: 15px;
+        }
+
+        .borrowed-table th {
+            font-weight: bold;
+        }
+
+        .borrowed-table td img {
+            max-width: 50px;
+            height: auto;
+            border-radius: 5px;
+            object-fit: cover;
+        }
+
+    /* Nút Renew */
+    .btn-renew {
+        background: linear-gradient(90deg, #ff6b6b 0%, #4ecdc4 100%);
+        border: none;
+        border-radius: 20px;
+        padding: 8px 20px;
+        font-weight: bold;
+        color: white;
+        transition: transform 0.3s ease, background 0.3s ease;
+    }
+
+        .btn-renew:hover {
+            transform: scale(1.05);
+            background: linear-gradient(90deg, #e65b5b 0%, #45b7b0 100%);
+        }
+
+    /* Animation */
+    @@keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+
+<div class="container mt-3">
+    <!-- Tiêu đề -->
+    <h2 class="page-title text-center mb-5">Your Borrowed Books</h2>
+
+    <!-- Bảng -->
+    <table id="borrowedBooksTable" class="table borrowed-table">
+        <thead>
             <tr>
-                <th>Book Name</th>
-                <th>Due Date</th>
-                <th>Image</th> <!-- Column to display image -->
-                <th>Action</th>
+                <th style="width: 30%;">Book Name</th>
+                <th style="width: 20%;">Due Date</th>
+                <th style="width: 20%;">Image</th>
+                <th style="width: 30%;">Action</th>
             </tr>
         </thead>
         <tbody>
@@ -26,9 +109,8 @@
     </table>
 </div>
 
-<!-- Thêm phần jQuery và Bootstrap JS -->
+<!-- Thêm phần jQuery -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
     $(document).ready(async function () {
@@ -50,21 +132,21 @@
             if (data.length > 0) {
                 data.forEach(book => {
                     const row = `
-                            <tr>
-                                <td>${book.title}</td>
-                                <td>${new Date(book.borrowedUntil).toLocaleDateString()}</td>
-                                <td>
-                                    ${book.imageUrls ? `<img src="${book.imageUrls.split(',')[0]}" alt="Book Image" class="img-fluid" style="max-width: 50px; height: auto; object-fit: cover;" />` : 'No image'}
-                                </td>
-                                <td>
-                                    <button class="btn btn-primary btn-sm" onclick="renewBook(${book.bookId})">Renew</button>
-                                </td>
-                            </tr>
-                        `;
+                        <tr>
+                            <td>${book.title}</td>
+                            <td>${new Date(book.borrowedUntil).toLocaleDateString()}</td>
+                            <td>
+                                ${book.imageUrls ? `<img src="${book.imageUrls.split(',')[0]}" alt="Book Image" />` : 'No image'}
+                            </td>
+                            <td>
+                                <button class="btn btn-renew btn-sm" onclick="renewBook(${book.bookId})"><i class="fas fa-sync-alt me-2"></i>Renew</button>
+                            </td>
+                        </tr>
+                    `;
                     tableBody.append(row);
                 });
             } else {
-                const row = `<tr><td colspan="4" class="text-center">No borrowed books found.</td></tr>`;
+                const row = `<tr><td colspan="4" class="text-center text-muted"><i class="fas fa-book me-2"></i>No borrowed books found.</td></tr>`;
                 tableBody.append(row);
             }
         } catch (error) {
@@ -96,3 +178,7 @@
         }
     }
 </script>
+
+@section Scripts {
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+}

@@ -4,72 +4,214 @@
 @{
     ViewData["Title"] = "My Book Loans";
 }
-<h1 class="display-2" style="text-align:center;margin: 0 auto">Current Loans</h1>
-<hr class="featurette-divider">
 
-@foreach(var item in Model.BookLoanCurrent)
-{
-    <div class="card mb-3" style="max-width: 810px;text-align:center;margin: 0 auto;">
-      <div class="row g-0">
-        <div class="col-md-4">
-          <img src="@item.Book.CloudinaryImageId" class="img-fluid rounded-start" alt="...">
-        </div>
-        <div class="col-md-8">
-          <div class="card-body">
-                <ul class="list-group list-group-flush">
-                    <h3 class="card-title">@item.Book.Title</h3>
-                        <li class="card-text list-group-item">Book Author: @item.Book.Author.Name</li>
-                    <li class="card-text list-group-item">Loan date: @item.LoanDate</li>
-                        
+<style>
+    body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        font-family: 'Poppins', sans-serif;
+    }
 
-                </ul>
-                <br/>
-                <form method="post" name="value" asp-route-id="@item.BookLoanId">
-                        <button type="submit" name="handler" value="handler" style="border-radius:30px" class="btn btn-outline-secondary btn-lg mt-2" style="bottom:auto">Return the book</button>
-                </form>
+    /* Card sách */
+    .loan-card {
+        border: none;
+        border-radius: 15px;
+        background: #ffffff;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        max-width: 810px;
+        margin: 0 auto 20px;
+    }
 
-          </div>
-        </div>
-      </div>
-    </div>
-}
-<hr class="featurette-divider">
-<h1 class="display-2" style="text-align:center;margin: 0 auto;">Past Loans</h1>
-<hr class="featurette-divider">
+        .loan-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
 
-@foreach (var item in Model.BookLoanPast)
-{
-    <div class="card mb-3" style="max-width: 810px;text-align:center;margin: 0 auto;">
-        <div class="row g-0">
-            <div class="col-md-4">
-                <img src="@item.Book.CloudinaryImageId" class="img-fluid rounded-start" alt="...">
-            </div>
-            <div class="col-md-8">
-                <div class="card-body">
-                    <ul class="list-group list-group-flush">
-                        <h3 class="card-title">@item.Book.Title</h3>
-                        <li class="card-text list-group-item">Book Author: @item.Book.Author.Name</li>
-                        <li class="card-text list-group-item">Loan date: @item.LoanDate</li>
-                        <li class="card-text list-group-item">Return date: @item.ReturnDate</li>
+        .loan-card img {
+            border-radius: 15px 0 0 15px;
+            max-height: 200px;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
 
+        .loan-card:hover img {
+            transform: scale(1.05);
+        }
 
-                    </ul>
-                    @if (Model.BookReviews.FirstOrDefault(b => b.UserId == Model.user.UserId && b.BookId == item.BookId) == null)
-                    {
-                        <a class="btn btn-outline-secondary btn-lg mt-2" style="border-radius:30px" href="/BookReviews/AddBookReview?id=@(item.BookLoanId)" role="button">Add Review</a>
-                    }
-                    else
-                    {
-                        <a class="btn btn-outline-secondary btn-lg mt-2" style="border-radius:30px" href="/Books/ShowBook?id=@(item.BookId)" role="button">Edit Review</a>
-                    }
+        .loan-card h3 {
+            color: #ff6b6b;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
 
+    .list-group-item {
+        border: none;
+        padding: 5px 0;
+        font-size: 1rem;
+        color: #2c3e50;
+    }
 
-                    
+    /* Nút */
+    .btn-primary {
+        background: linear-gradient(90deg, #ff6b6b 0%, #4ecdc4 100%);
+        border: none;
+        border-radius: 20px;
+        padding: 10px 20px;
+        font-weight: bold;
+        transition: transform 0.3s ease, background 0.3s ease;
+    }
+
+        .btn-primary:hover {
+            transform: scale(1.05);
+            background: linear-gradient(90deg, #e65b5b 0%, #45b7b0 100%);
+        }
+
+    .btn-secondary {
+        border-radius: 20px;
+        transition: background 0.3s ease, transform 0.3s ease;
+    }
+
+        .btn-secondary:hover {
+            background: #4ecdc4;
+            color: white;
+            transform: scale(1.05);
+        }
+
+    /* Tiêu đề section */
+    .section-title {
+        color: #2c3e50;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        animation: fadeInDown 1s ease-in-out;
+    }
+
+    /* Alert */
+    .alert {
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Animation */
+    @@keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .fade-in-up {
+        animation: fadeInUp 1s ease-in-out;
+    }
+</style>
+
+<div class="container mt-5">
+    <!-- Success Message -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success text-center fade-in-up">@TempData["SuccessMessage"]</div>
+    }
+
+    <!-- Current Loans -->
+    <h1 class="display-2 text-center section-title">Current Loans</h1>
+    <hr class="featurette-divider mb-4" style="border-color: #ff6b6b;">
+    @if (Model.BookLoanCurrent == null || !Model.BookLoanCurrent.Any())
+    {
+        <p class="text-center text-muted fade-in-up"><i class="fas fa-book me-2"></i>You have no current loans.</p>
+    }
+    else
+    {
+        @foreach (var item in Model.BookLoanCurrent)
+        {
+            <div class="loan-card fade-in-up">
+                <div class="row g-0">
+                    <div class="col-md-4">
+                        <img src="@item.Book.CloudinaryImageId" class="img-fluid" alt="@item.Book.Title">
+                    </div>
+                    <div class="col-md-8">
+                        <div class="card-body text-center">
+                            <h3 class="card-title">@item.Book.Title</h3>
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item"><strong>Book Author:</strong> @item.Book.Author.Name</li>
+                                <li class="list-group-item"><strong>Loan Date:</strong> @item.LoanDate?.ToString("yyyy-MM-dd HH:mm:ss")</li>
+                                <li class="list-group-item"><strong>Return Date:</strong> @item.ReturnDate?.ToString("yyyy-MM-dd")</li>
+                            </ul>
+                            <div class="mt-3">
+                                @if (Model.BookReviews.FirstOrDefault(b => b.UserId == Model.user.UserId && b.BookId == item.BookId) == null)
+                                {
+                                    <a class="btn btn-primary me-2" href="/BookReviews/AddBookReview?id=@(item.BookLoanId)" role="button"><i class="fas fa-star me-2"></i>Add Review</a>
+                                }
+                                else
+                                {
+                                    <a class="btn btn-primary me-2" href="/Books/ShowBook?id=@(item.BookId)" role="button"><i class="fas fa-edit me-2"></i>Edit Review</a>
+                                }
+                                <form method="post" asp-route-id="@item.BookLoanId" style="display:inline;">
+                                    <button type="submit" name="handler" value="handler" class="btn btn-secondary"><i class="fas fa-undo me-2"></i>Return the Book</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
+        }
+    }
+
+    <!-- Past Loans -->
+    <h1 class="display-2 text-center section-title mt-5">Past Loans</h1>
+    <hr class="featurette-divider mb-4" style="border-color: #ff6b6b;">
+    @if (Model.BookLoanPast == null || !Model.BookLoanPast.Any())
+    {
+        <p class="text-center text-muted fade-in-up"><i class="fas fa-history me-2"></i>You have no past loans.</p>
+    }
+    else
+    {
+        @foreach (var item in Model.BookLoanPast)
+        {
+            <div class="loan-card fade-in-up">
+                <div class="row g-0">
+                    <div class="col-md-4">
+                        <img src="@item.Book.CloudinaryImageId" class="img-fluid" alt="@item.Book.Title">
+                    </div>
+                    <div class="col-md-8">
+                        <div class="card-body text-center">
+                            <h3 class="card-title">@item.Book.Title</h3>
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item"><strong>Book Author:</strong> @item.Book.Author.Name</li>
+                                <li class="list-group-item"><strong>Loan Date:</strong> @item.LoanDate?.ToString("yyyy-MM-dd HH:mm:ss")</li>
+                                <li class="list-group-item"><strong>Returned On:</strong> @item.ReturnDate?.ToString("yyyy-MM-dd HH:mm:ss")</li>
+                            </ul>
+                            <div class="mt-3">
+                                @if (Model.BookReviews.FirstOrDefault(b => b.UserId == Model.user.UserId && b.BookId == item.BookId) == null)
+                                {
+                                    <a class="btn btn-primary" href="/BookReviews/AddBookReview?id=@(item.BookLoanId)" role="button"><i class="fas fa-star me-2"></i>Add Review</a>
+                                }
+                                else
+                                {
+                                    <a class="btn btn-primary" href="/Books/ShowBook?id=@(item.BookId)" role="button"><i class="fas fa-edit me-2"></i>Edit Review</a>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@section Scripts {
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 }
-
-
-

@@ -1,0 +1,102 @@
+﻿@page
+@model api_flms_service.Pages.AboutUsModel
+@{
+    ViewData["Title"] = "About Us";
+}
+
+<style>
+    .about-section {
+        background: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 100%);
+        color: white;
+        padding: 60px 0;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        animation: fadeInDown 1s ease-in-out;
+    }
+
+    .about-card {
+        background: #ffffff;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+        .about-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        }
+
+    .team-member img {
+        border-radius: 50%;
+        width: 150px;
+        height: 150px;
+        object-fit: cover;
+        border: 4px solid #ff6b6b;
+    }
+
+    .team-member h5 {
+        color: #ff6b6b;
+        margin-top: 15px;
+    }
+</style>
+
+<div class="container mt-5">
+    <!-- Header -->
+    <section class="about-section text-center mb-5">
+        <h1 class="display-4 fw-bold">About Us</h1>
+        <p class="lead">Discover the story behind Library Management System (LMS) - Where Knowledge Meets Innovation</p>
+    </section>
+
+    <!-- Our Mission -->
+    <div class="row mb-5">
+        <div class="col-md-6 mb-4">
+            <div class="about-card fade-in-up">
+                <h2 class="fw-bold text-primary">Our Mission</h2>
+                <p>
+                    At LMS, we aim to revolutionize the way libraries operate by providing cutting-edge technology and user-friendly solutions. Our mission is to empower readers, librarians, and communities with seamless access to knowledge.
+                </p>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="about-card fade-in-up">
+                <h2 class="fw-bold text-primary">Our Vision</h2>
+                <p>
+                    We envision a world where every book finds its reader and every reader finds their story. By blending innovation with tradition, we strive to create a vibrant ecosystem for learning and discovery.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Team Section -->
+    <section class="text-center mb-5">
+        <h2 class="fw-bold mb-4" style="color: #2c3e50;">Meet Our Team</h2>
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="team-member fade-in-up">
+                    <img src="https://via.placeholder.com/150" alt="Team Member">
+                    <h5>Trần Vinh</h5>
+                    <p>Founder & CEO</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="team-member fade-in-up">
+                    <img src="https://via.placeholder.com/150" alt="Team Member">
+                    <h5>Lê Dũng</h5>
+                    <p>Lead Developer</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="team-member fade-in-up">
+                    <img src="https://via.placeholder.com/150" alt="Team Member">
+                    <h5>Nguyễn Anh</h5>
+                    <p>UX Designer</p>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+}

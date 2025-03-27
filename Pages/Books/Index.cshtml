@@ -89,16 +89,19 @@
                 }
                 row.appendChild(imageCell);
 
-                // Description
+                // Description (Giới hạn số ký tự)
                 const descriptionCell = document.createElement('td');
-                descriptionCell.textContent = book.bookDescription || 'N/A';
+                const maxLength = 50; // Giới hạn 50 ký tự
+                const description = book.bookDescription || 'N/A';
+                descriptionCell.textContent = description.length > maxLength
+                    ? description.substring(0, maxLength) + '...'
+                    : description;
                 row.appendChild(descriptionCell);
 
                 // Image URLs
                 const urlsCell = document.createElement('td');
                 urlsCell.textContent = book.imageUrls || 'N/A';
                 row.appendChild(urlsCell);
-
 
                 // Book File URL
                 const fileCell = document.createElement('td');
@@ -112,7 +115,6 @@
                     fileCell.textContent = 'No File';
                 }
                 row.appendChild(fileCell);
-
 
                 // Actions
                 const actionsCell = document.createElement('td');
