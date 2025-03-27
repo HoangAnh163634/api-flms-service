@@ -142,15 +142,33 @@
                     <li class="nav-item">
                         <a class="nav-link" href="@Url.Page("/Index")" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Home">Home</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="@Url.Page("/Loans/List")" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Gallery">Gallery</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="@Url.Page("/Dashboard")" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Librarian">Librarian</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="@Url.Page("/Books/ManagerRenewedBook")" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Book Renewed">Book Renewed</a>
-                    </li>
+                    @if (user != null) // Kiểm tra nếu đã đăng nhập
+                    {
+                        @if (user.Role == "Admin" || user.Role == "Member" || user.Role == "User")
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" href="@Url.Page("/Loans/List")" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Gallery">Gallery</a>
+                            </li>
+                        }
+
+                        @if (user.Role == "Admin")
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" href="@Url.Page("/Dashboard")" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Librarian">Librarian</a>
+                            </li>
+                        }
+
+                        @if (user.Role == "Admin" || user.Role == "Member" || user.Role == "User")
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" href="@Url.Page("/Books/ManagerRenewedBook")" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Book Renewed">Book Renewed</a>
+                            </li>
+                        }
+
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Page("/AI/Index")" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Chat Box">Chat Box</a>
+                        </li>
+                    }
                 </ul>
 
                 <!-- User profile, notification, and logout -->

@@ -284,6 +284,42 @@
     </a>
 </div>
 
+<!-- Best Authors -->
+<div class="container fade-in-up" id="best-author">
+    @if (string.IsNullOrEmpty(Request.Query["searchTerm"]) && string.IsNullOrEmpty(Request.Query["categoryName"]))
+    {
+        <div class="container fade-in-up" id="best-author">
+            <h1 class="display-4 fw-bold text-center section-title">Best Authors</h1>
+            <hr class="featurette-divider mb-4" style="border-color: #ff6b6b;">
+
+            <div class="row author-list">
+                @for (int i = 0; i < Model.authors.Count; i++)
+                {
+                    var item = Model.authors[i];
+                    <div class="col-lg-4 text-center mb-4 author-item @(i >= 3 ? "hidden-author" : "")">
+                        <div class="author-card">
+                            <img src="@item.CloudinaryId" alt="@item.Name" width="200" height="200" class="rounded-circle">
+                            <h2 class="fw-bold mt-3" style="color: #ff6b6b;">@item.Name</h2>
+                            <div class="description-container">
+                                <p class="description-text">@item.Biography</p>
+                            </div>
+                            <a href="#" class="read-more">Xem thêm</a>
+                            <p><a class="btn btn-primary mt-2" href="/Authors/SeeAuthor?id=@(item.AuthorId)">View Author</a></p>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            @if (Model.authors.Count > 3)
+            {
+                <div class="text-center mt-3">
+                    <button type="button" class="toggle-authors">Xem thêm</button>
+                </div>
+            }
+        </div>
+    }
+</div>
+
 <!-- Search & Filter Section -->
 <div class="container search-section fade-in-up">
     <h1 class="display-4 fw-bold text-center section-title">Search & Filter Books</h1>
@@ -314,48 +350,21 @@
     <!-- Search Results Feedback -->
     @if (!string.IsNullOrEmpty(Request.Query["searchTerm"]) || !string.IsNullOrEmpty(Request.Query["categoryName"]))
     {
-        <div class="alert alert-info mt-3" role="alert">
-            <h4>Kết quả tìm kiếm</h4>
-            <p>
-                @if (!string.IsNullOrEmpty(Request.Query["searchTerm"]))
-                {
-                    <span>Từ khóa: "@Request.Query["searchTerm"]" </span>
-                }
-                @if (!string.IsNullOrEmpty(Request.Query["categoryName"]))
-                {
-                    <span>Thể loại: "@Request.Query["categoryName"]" </span>
-                }
-            </p>
-            <p>Tìm thấy @Model.books.Count sách phù hợp</p>
-        </div>
-    }
-</div>
-
-<!-- Best Authors -->
-<div class="container fade-in-up">
-    <h1 class="display-4 fw-bold text-center section-title">Best Authors</h1>
-    <hr class="featurette-divider mb-4" style="border-color: #ff6b6b;">
-    <div class="row author-list">
-        @for (int i = 0; i < Model.authors.Count; i++)
-        {
-            var item = Model.authors[i];
-            <div class="col-lg-4 text-center mb-4 author-item @(i >= 3 ? "hidden-author" : "")">
-                <div class="author-card">
-                    <img src="@item.CloudinaryId" alt="@item.Name" width="200" height="200" class="rounded-circle">
-                    <h2 class="fw-bold mt-3" style="color: #ff6b6b;">@item.Name</h2>
-                    <div class="description-container">
-                        <p class="description-text">@item.Biography</p>
-                    </div>
-                    <a href="#" class="read-more">Xem thêm</a>
-                    <p><a class="btn btn-primary mt-2" href="/Authors/SeeAuthor?id=@(item.AuthorId)">View Author</a></p>
-                </div>
+        <div class="d-flex justify-content-center mt-3">
+            <div class="alert alert-info text-center w-50" role="alert">
+                <h4 class="fw-bold">Kết quả tìm kiếm</h4>
+                <p>
+                    @if (!string.IsNullOrEmpty(Request.Query["searchTerm"]))
+                    {
+                        <span><strong>Từ khóa:</strong> "@Request.Query["searchTerm"]" </span>
+                    }
+                    @if (!string.IsNullOrEmpty(Request.Query["categoryName"]))
+                    {
+                        <span> | <strong>Thể loại:</strong> "@Request.Query["categoryName"]" </span>
+                    }
+                </p>
+                <p><strong>@Model.books.Count</strong> sách phù hợp</p>
             </div>
-        }
-    </div>
-    @if (Model.authors.Count > 3)
-    {
-        <div class="text-center mt-3">
-            <button type="button" class="toggle-authors">Xem thêm</button>
         </div>
     }
 </div>
@@ -373,12 +382,13 @@
         }
     </h1>
     <hr class="featurette-divider mb-4" style="border-color: #ff6b6b;">
-    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 justify-content-center align-items-center" style="min-height: 50vh; display: flex;">
         @if (Model.books.Count == 0 && (!string.IsNullOrEmpty(Request.Query["searchTerm"]) || !string.IsNullOrEmpty(Request.Query["categoryName"])))
         {
-            <div class="col-12 text-center">
-                <div class="alert alert-warning">
-                    <h4>Không tìm thấy sách phù hợp</h4>
+            <div class="d-flex justify-content-center align-items-center w-100">
+                <div class="alert alert-warning text-center w-50">
+                    <h4 class="fw-bold">Không tìm thấy sách phù hợp</h4>
                     <p>Vui lòng thử lại với các tiêu chí khác</p>
                 </div>
             </div>
@@ -387,7 +397,7 @@
         {
             @foreach (var item in Model.PagedBooks)
             {
-                <div class="col">
+                <div class="col d-flex justify-content-center">
                     <div class="book-card text-center">
                         <a href="/Books/ShowBook?id=@(item.BookId)" style="text-decoration: none;">
                             <img src="@item.CloudinaryImageId" class="card-img-top" alt="@item.Title">
@@ -413,7 +423,9 @@
                         if (!string.IsNullOrEmpty(Request.Query["searchTerm"])) { prevUrl += $"&searchTerm={Request.Query["searchTerm"]}"; }
                         if (!string.IsNullOrEmpty(Request.Query["categoryName"])) { prevUrl += $"&categoryName={Request.Query["categoryName"]}"; }
                     }
-                    <a class="page-link" href="@prevUrl" aria-label="Previous"><span aria-hidden="true">«</span></a>
+                    <a class="page-link" href="@prevUrl" aria-label="Previous">
+                        <span aria-hidden="true">«</span>
+                    </a>
                 </li>
                 @for (int i = 1; i <= Model.TotalPages; i++)
                 {
@@ -430,7 +442,9 @@
                         if (!string.IsNullOrEmpty(Request.Query["searchTerm"])) { nextUrl += $"&searchTerm={Request.Query["searchTerm"]}"; }
                         if (!string.IsNullOrEmpty(Request.Query["categoryName"])) { nextUrl += $"&categoryName={Request.Query["categoryName"]}"; }
                     }
-                    <a class="page-link" href="@nextUrl" aria-label="Next"><span aria-hidden="true">»</span></a>
+                    <a class="page-link" href="@nextUrl" aria-label="Next">
+                        <span aria-hidden="true">»</span>
+                    </a>
                 </li>
             </ul>
         </nav>
@@ -442,7 +456,7 @@
     <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // Xử lý "Xem thêm" cho Biography
+            // Handle "Read More" for Biography
             const readMoreLinks = document.querySelectorAll('.read-more');
             readMoreLinks.forEach(link => {
                 link.addEventListener('click', function (e) {
@@ -456,7 +470,7 @@
                 });
             });
 
-            // Xử lý "Xem thêm" cho danh sách tác giả
+            // Handle "Toggle Authors" button
             const toggleAuthorsBtn = document.querySelector('.toggle-authors');
             const authorList = document.querySelector('.author-list');
             if (toggleAuthorsBtn && authorList) {
@@ -467,7 +481,7 @@
                 });
             }
 
-            // Xử lý phân trang
+            // Handle pagination
             const pageLinks = document.querySelectorAll('.page-link');
             pageLinks.forEach(link => {
                 link.addEventListener('click', function (e) {

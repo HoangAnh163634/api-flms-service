@@ -45,7 +45,16 @@ namespace api_auth_service.Services
             
             var userInfo = JsonSerializer.Deserialize<ApiResponseDto>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions { PropertyNameCaseInsensitive = true })?.UserInfo;
 
-            var user = await _user.GetUserByEmail(userInfo.Email, _httpClient, userInfo.Picture);
+
+            if (userInfo == null) return null;
+
+          var user = await _user.GetUserByEmail(userInfo.Email, _httpClient, userInfo.Picture);
+
+            if (user != null)
+            {
+                userInfo.Role = user.Role; // Cập nhật Role
+            }
+           
 
 
             return userInfo;
@@ -127,5 +136,8 @@ namespace api_auth_service.Services
         public string Email { get; set; }
         public string Issuer { get; set; } // Example extra claim
         public DateTime Expiration { get; set; }
+
+
+        public string Role { get; set; } // ➡️ Thêm thông tin Role
     }
 }
