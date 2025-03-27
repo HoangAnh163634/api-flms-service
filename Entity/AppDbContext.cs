@@ -1,7 +1,6 @@
 ﻿using api_flms_service.Entity;
-using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 
 public class AppDbContext : DbContext
 {
@@ -10,17 +9,17 @@ public class AppDbContext : DbContext
     public DbSet<Author> Authors { get; set; }
     public DbSet<Book> Books { get; set; }
     public DbSet<Category> Categories { get; set; }
-
     public DbSet<Loan> Loans { get; set; }
     public DbSet<Review> Reviews { get; set; }
     public DbSet<User> Users { get; set; }
     public DbSet<IssuedBook> IssuedBooks { get; set; }
+    public DbSet<Notification> Notifications { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
-        // Cấu hình quan hệ N-N sử dụng BookCategory nhưng không tạo bảng riêng
+        // Cấu hình quan hệ N-N sử dụng BookCategory
         modelBuilder.Entity<Book>()
             .HasMany(b => b.Categories)
             .WithMany(c => c.Books)
@@ -33,8 +32,8 @@ public class AppDbContext : DbContext
                       .HasForeignKey(bc => bc.BookId),
                 j =>
                 {
-                    j.HasKey(bc => new { bc.BookId, bc.CategoryId }); // Composite key
-                    j.ToTable("bookcategory"); // Đặt tên bảng mong muốn
+                    j.HasKey(bc => new { bc.BookId, bc.CategoryId });
+                    j.ToTable("bookcategory");
                 });
 
         // Cấu hình các quan hệ khác
@@ -56,15 +55,13 @@ public class AppDbContext : DbContext
             .HasForeignKey(br => br.BookId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // SỬA: Chỉ định rõ navigation property User.BookReviews và ánh xạ với cột userid
         modelBuilder.Entity<Review>()
             .HasOne(br => br.User)
-            .WithMany(u => u.BookReviews) // Chỉ định rõ User.BookReviews
+            .WithMany(u => u.BookReviews)
             .HasForeignKey(br => br.UserId)
-            .HasConstraintName("fk_reviews_users_userid") // Đặt tên constraint để rõ ràng
+            .HasConstraintName("fk_reviews_users_userid")
             .OnDelete(DeleteBehavior.Cascade);
 
-        // THÊM: Bỏ qua cột userid1 để tránh EF tạo shadow property
         modelBuilder.Entity<Review>()
             .Property(r => r.UserId)
             .HasColumnName("userid");
@@ -72,7 +69,6 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Review>()
             .Ignore("UserId1");
 
-        // THÊM: Bỏ qua cột bookid1 và categoryid1 trong BookCategory (vì có cảnh báo tương tự)
         modelBuilder.Entity<BookCategory>()
             .Property(bc => bc.BookId)
             .HasColumnName("bookid");
@@ -87,15 +83,43 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<BookCategory>()
             .Ignore("CategoryId1");
 
-        // ✅ Giữ nguyên các cấu hình DateTime và lowercase tên bảng
-        var dateTimeConverter = new ValueConverter<DateTime, DateTime>(
-            v => v.ToUniversalTime(),
-            v => DateTime.SpecifyKind(v, DateTimeKind.Utc));
+        // Cấu hình ánh xạ cho bảng notifications
+        modelBuilder.Entity<Notification>()
+            .ToTable("notifications")
+            .HasKey(n => n.Id);
 
-        var nullableDateTimeConverter = new ValueConverter<DateTime?, DateTime?>(
-            v => v.HasValue ? v.Value.ToUniversalTime() : v,
-            v => v.HasValue ? DateTime.SpecifyKind(v.Value, DateTimeKind.Utc) : v);
+        modelBuilder.Entity<Notification>()
+            .Property(n => n.Id)
+            .HasColumnName("id");
 
+        modelBuilder.Entity<Notification>()
+            .Property(n => n.Title)
+            .HasColumnName("title")
+            .HasMaxLength(255)
+            .IsRequired();
+
+        modelBuilder.Entity<Notification>()
+            .Property(n => n.Content)
+            .HasColumnName("content")
+            .HasMaxLength(1000);
+
+        modelBuilder.Entity<Notification>()
+            .Property(n => n.CreatedAt)
+            .HasColumnName("created_at")
+            .HasColumnType("timestamp with time zone"); // Sửa thành timestamp with time zone
+
+        modelBuilder.Entity<Notification>()
+            .Property(n => n.Type)
+            .HasColumnName("type")
+            .HasMaxLength(50)
+            .IsRequired();
+
+        modelBuilder.Entity<Notification>()
+            .Property(n => n.IsRead)
+            .HasColumnName("is_read")
+            .HasDefaultValue(false);
+
+        // Cấu hình lowercase tên bảng và cột
         foreach (var entity in modelBuilder.Model.GetEntityTypes())
         {
             entity.SetTableName(entity.GetTableName()!.ToLower());
@@ -103,15 +127,6 @@ public class AppDbContext : DbContext
             foreach (var property in entity.GetProperties())
             {
                 property.SetColumnName(property.GetColumnName(StoreObjectIdentifier.Table(entity.GetTableName()!.ToLower(), null))!.ToLower());
-
-                if (property.ClrType == typeof(DateTime))
-                {
-                    property.SetValueConverter(dateTimeConverter);
-                }
-                else if (property.ClrType == typeof(DateTime?))
-                {
-                    property.SetValueConverter(nullableDateTimeConverter);
-                }
             }
 
             foreach (var key in entity.GetKeys())

@@ -40,6 +40,7 @@ WebApplicationBuilder BuildApp()
     builder.Services.AddControllers();
     builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
     builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
+    builder.Services.AddScoped<INotificationService, NotificationService>();
     // Add controllers and Razor Pages
     builder.Services.AddControllers();
     builder.Services.AddRazorPages().AddViewOptions(options =>

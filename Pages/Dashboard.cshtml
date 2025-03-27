@@ -81,6 +81,10 @@
         background: linear-gradient(90deg, #00cec9 0%, #00b7b3 100%);
     }
 
+    .card-notifications .card-header { /* Thêm style cho card Notifications */
+        background: linear-gradient(90deg, #9b59b6 0%, #8e44ad 100%);
+    }
+
     /* Nút */
     .btn-view {
         background: linear-gradient(90deg, #ff6b6b 0%, #4ecdc4 100%);
@@ -198,6 +202,17 @@
                 <div class="card-body">
                     <p class="card-text"><i class="fas fa-star me-2"></i>No. of reviews: @Model.TotalReviews</p>
                     <a href="/Reviews/ListOfReview" class="btn btn-view">View Reviews</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Notifications -->
+        <div class="col-md-3">
+            <div class="stat-card card-notifications fade-in-up">
+                <div class="card-header">Total Notifications</div>
+                <div class="card-body">
+                    <p class="card-text"><i class="fas fa-bell me-2"></i>No. of notifications: @Model.TotalNotifications</p>
+                    <a href="/Notifications/Manage" class="btn btn-view">View Notifications</a>
                 </div>
             </div>
         </div>
