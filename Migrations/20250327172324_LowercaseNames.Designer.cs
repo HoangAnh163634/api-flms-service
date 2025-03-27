@@ -11,8 +11,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace api_flms_service.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250327010426_UpdateDB1")]
-    partial class UpdateDB1
+    [Migration("20250327172324_LowercaseNames")]
+    partial class LowercaseNames
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -246,6 +246,48 @@ namespace api_flms_service.Migrations
                     b.ToTable("loans");
                 });
 
+            modelBuilder.Entity("api_flms_service.Entity.Notification", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Content")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("content");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<bool>("IsRead")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_read");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("title");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("type");
+
+                    b.HasKey("Id")
+                        .HasName("pk_notifications");
+
+                    b.ToTable("notifications", (string)null);
+                });
+
             modelBuilder.Entity("api_flms_service.Entity.Review", b =>
                 {
                     b.Property<int>("ReviewId")
@@ -299,6 +341,14 @@ namespace api_flms_service.Migrations
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("email");
+
+                    b.Property<string>("GoogleImage")
+                        .HasColumnType("text")
+                        .HasColumnName("googleimage");
+
+                    b.Property<string>("LocalImage")
+                        .HasColumnType("text")
+                        .HasColumnName("localimage");
 
                     b.Property<string>("Name")
                         .IsRequired()

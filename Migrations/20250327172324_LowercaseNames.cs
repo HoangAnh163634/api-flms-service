@@ -34,7 +34,7 @@ namespace api_flms_service.Migrations
                 {
                     categoryid = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    categoryname = table.Column<string>(type: "text", nullable: true)
+                    categoryname = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -60,6 +60,23 @@ namespace api_flms_service.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "notifications",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    title = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    content = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    type = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    is_read = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_notifications", x => x.id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "users",
                 columns: table => new
                 {
@@ -69,7 +86,9 @@ namespace api_flms_service.Migrations
                     name = table.Column<string>(type: "text", nullable: false),
                     phonenumber = table.Column<string>(type: "text", nullable: false),
                     registrationdate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    role = table.Column<string>(type: "text", nullable: false)
+                    role = table.Column<string>(type: "text", nullable: false),
+                    googleimage = table.Column<string>(type: "text", nullable: true),
+                    localimage = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -84,14 +103,15 @@ namespace api_flms_service.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     authorid = table.Column<int>(type: "integer", nullable: false),
                     availablecopies = table.Column<int>(type: "integer", nullable: false),
-                    bookdescription = table.Column<string>(type: "text", nullable: true),
+                    bookdescription = table.Column<string>(type: "text", nullable: false),
                     cloudinaryimageid = table.Column<string>(type: "text", nullable: false),
-                    isbn = table.Column<string>(type: "text", nullable: true),
+                    isbn = table.Column<string>(type: "text", nullable: false),
                     publicationyear = table.Column<int>(type: "integer", nullable: false),
-                    title = table.Column<string>(type: "text", nullable: true),
+                    title = table.Column<string>(type: "text", nullable: false),
                     borroweduntil = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     userid = table.Column<int>(type: "integer", nullable: false),
-                    imageurls = table.Column<string>(type: "text", nullable: false)
+                    imageurls = table.Column<string>(type: "text", nullable: false),
+                    bookfileurl = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -110,8 +130,8 @@ namespace api_flms_service.Migrations
                 {
                     bookid = table.Column<int>(type: "integer", nullable: false),
                     categoryid = table.Column<int>(type: "integer", nullable: false),
-                    bookid1 = table.Column<int>(type: "integer", nullable: true),
-                    categoryid1 = table.Column<int>(type: "integer", nullable: true)
+                    bookid2 = table.Column<int>(type: "integer", nullable: true),
+                    categoryid2 = table.Column<int>(type: "integer", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -123,8 +143,8 @@ namespace api_flms_service.Migrations
                         principalColumn: "bookid",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_bookcategory_books_bookid1",
-                        column: x => x.bookid1,
+                        name: "FK_bookcategory_books_bookid2",
+                        column: x => x.bookid2,
                         principalTable: "books",
                         principalColumn: "bookid");
                     table.ForeignKey(
@@ -134,8 +154,8 @@ namespace api_flms_service.Migrations
                         principalColumn: "categoryid",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_bookcategory_categories_categoryid1",
-                        column: x => x.categoryid1,
+                        name: "FK_bookcategory_categories_categoryid2",
+                        column: x => x.categoryid2,
                         principalTable: "categories",
                         principalColumn: "categoryid");
                 });
@@ -178,8 +198,7 @@ namespace api_flms_service.Migrations
                     rating = table.Column<int>(type: "integer", nullable: false),
                     reviewdate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     reviewtext = table.Column<string>(type: "text", nullable: false),
-                    userid = table.Column<int>(type: "integer", nullable: false),
-                    userid1 = table.Column<int>(type: "integer", nullable: true)
+                    userid = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -191,22 +210,17 @@ namespace api_flms_service.Migrations
                         principalColumn: "bookid",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_reviews_users_userid",
+                        name: "fk_reviews_users_userid",
                         column: x => x.userid,
                         principalTable: "users",
                         principalColumn: "userid",
                         onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_reviews_users_userid1",
-                        column: x => x.userid1,
-                        principalTable: "users",
-                        principalColumn: "userid");
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_bookcategory_bookid1",
+                name: "IX_bookcategory_bookid2",
                 table: "bookcategory",
-                column: "bookid1");
+                column: "bookid2");
 
             migrationBuilder.CreateIndex(
                 name: "IX_bookcategory_categoryid",
@@ -214,9 +228,9 @@ namespace api_flms_service.Migrations
                 column: "categoryid");
 
             migrationBuilder.CreateIndex(
-                name: "IX_bookcategory_categoryid1",
+                name: "IX_bookcategory_categoryid2",
                 table: "bookcategory",
-                column: "categoryid1");
+                column: "categoryid2");
 
             migrationBuilder.CreateIndex(
                 name: "IX_books_authorid",
@@ -242,11 +256,6 @@ namespace api_flms_service.Migrations
                 name: "IX_reviews_userid",
                 table: "reviews",
                 column: "userid");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_reviews_userid1",
-                table: "reviews",
-                column: "userid1");
         }
 
         /// <inheritdoc />
@@ -260,6 +269,9 @@ namespace api_flms_service.Migrations
 
             migrationBuilder.DropTable(
                 name: "loans");
+
+            migrationBuilder.DropTable(
+                name: "notifications");
 
             migrationBuilder.DropTable(
                 name: "reviews");

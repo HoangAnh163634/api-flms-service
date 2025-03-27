@@ -8,7 +8,8 @@
 @inject IHttpContextAccessor HttpContextAccessor
 
 @{
-    var userInfo = await AuthService.GetCurrentUserAsync();
+    var users = await AuthService.GetCurrentUserAsync();
+    var user = users == null ? null : await UserService.GetUserByEmail(users.Email);
     var LoginUrl = await AuthService.GetLoginUrl();
 }
 
@@ -183,11 +184,11 @@
                         </ul>
                     </li>
 
-                    @if (userInfo != null)
+                    @if (user != null)
                     {
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <img src="@userInfo.Picture" class="rounded-circle me-2" width="30" height="30" alt="User Image"> @userInfo.Name
+                                <img src="@user.LocalImage" class="rounded-circle me-2" width="30" height="30" alt="User Image"> @user.Name
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
                                 <li><a class="dropdown-item" href="/ViewProfile">View & Edit Profile</a></li>

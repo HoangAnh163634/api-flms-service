@@ -6,12 +6,39 @@
 
 <h2>VNPay Payment</h2>
 
-<form method="post">
-    <label>Book Loan ID:</label>
-    <input type="number" name="BookLoanId" required />
-
-    <label>Amount (VND):</label>
-    <input type="number" name="Amount" required />
-
-    <button type="submit">Pay with VNPay</button>
+<form id="paymentForm">
+    <button type="submit">Thanh toán qua VNPAY</button>
 </form>
+
+<script>
+    async function getClientIp() {
+        try {
+            const response = await fetch('https://api64.ipify.org?format=json');
+            const data = await response.json();
+            return data.ip;
+        } catch (error) {
+            console.error('Error fetching IP address:', error);
+            return '8.8.8.8'; // Default fallback IP
+        }
+    }
+
+    document.getElementById("paymentForm").addEventListener("submit", async function(event) {
+        event.preventDefault();
+
+        const clientIp = await getClientIp(); // Lấy IP đúng cách
+            const urlParams = new URLSearchParams(window.location.search);
+        const loanId = urlParams.get('Id');
+
+
+        const response = await fetch(`/api/v0/Loan/pay?loanId=${loanId}&clientip=${clientIp}`, {
+            method: "POST"
+        });
+
+        const data = await response.json();
+        if (data.url) {
+            window.location.href = data.url; // Điều hướng đến trang thanh toán
+        } else {
+            alert("Lỗi khi tạo thanh toán!");
+        }
+    });
+</script>

@@ -48,12 +48,14 @@ namespace api_auth_service.Services
 
             if (userInfo == null) return null;
 
-            var user = await _user.GetUserByEmail(userInfo.Email);
+          var user = await _user.GetUserByEmail(userInfo.Email, _httpClient, userInfo.Picture);
 
             if (user != null)
             {
                 userInfo.Role = user.Role; // Cập nhật Role
             }
+           
+
 
             return userInfo;
         }

@@ -1,7 +1,9 @@
 ﻿using api_flms_service.Entity;
+using api_flms_service.Model;
 using api_flms_service.Service;
 using api_flms_service.ServiceInterface;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace api_flms_service.Controllers
 {
@@ -11,12 +13,14 @@ namespace api_flms_service.Controllers
     {
         private readonly ILoanService _loanService;
 
-        private readonly VNPayService _vnPayService;
+        private readonly VnPayService _vnPayService;
+        private readonly LoanSettings _loanSettings;
 
-        public LoanController(ILoanService loanService, VNPayService vnPayService)
+        public LoanController(ILoanService loanService, VnPayService vnPayService, IOptions<LoanSettings> loanSettings)
         {
             _loanService = loanService;
             _vnPayService = vnPayService;
+            _loanSettings = loanSettings.Value;
         }
 
 
@@ -65,33 +69,68 @@ namespace api_flms_service.Controllers
             return NoContent();
         }
 
-        [HttpPost("pay")]
-        public IActionResult CreatePayment([FromBody] Loan loan)
+        [HttpGet("config")]
+        public IActionResult GetLoanSettings()
         {
-            var paymentUrl = _vnPayService.CreatePaymentUrl(loan, HttpContext);
-            return Ok(new { url = paymentUrl });
+            return Ok(_loanSettings);
         }
+
+        [HttpPost("pay")]
+        public IActionResult CreatePayment(int loanId, string clientip)
+        {
+            try
+            {
+                if (loanId <= 0)
+                    return BadRequest("Invalid Loan ID");
+
+                var paymentUrl = _vnPayService.CreatePaymentUrl(HttpContext, loanId, clientip);
+                if (string.IsNullOrEmpty(paymentUrl))
+                    return BadRequest("Failed to create payment URL");
+
+                return Ok(new { url = paymentUrl });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal Server Error: {ex.Message}");
+            }
+        }
+
 
         [HttpGet("payment-callback")]
         public async Task<IActionResult> PaymentCallback()
         {
             var queryParams = Request.Query;
-            var transactionId = queryParams["vnp_TxnRef"];
-            var responseCode = queryParams["vnp_ResponseCode"];
-            var secureHash = queryParams["vnp_SecureHash"];
 
-            if (!_vnPayService.ValidateResponse(queryParams, secureHash))
+            // Log toàn bộ dữ liệu nhận được từ VNPAY
+            foreach (var param in queryParams)
             {
-                return BadRequest("Invalid signature");
+                Console.WriteLine($"{param.Key}: {param.Value}");
             }
 
-            if (responseCode == "00") // Payment successful
+            var transactionId = queryParams["vnp_TxnRef"];
+            var responseCode = queryParams["vnp_ResponseCode"];
+
+            // Validate mandatory parameters
+            if (string.IsNullOrEmpty(transactionId) || string.IsNullOrEmpty(responseCode))
+            {
+                return BadRequest("Missing transaction data");
+            }
+
+            // Validate response signature
+            var validationResult =  _vnPayService.ValidateResponse(queryParams);
+            if (!validationResult.Success)
+            {
+                return BadRequest(validationResult.Message);
+            }
+
+            // Process the payment based on response code
+            if (responseCode == "00") // Thanh toán thành công
             {
                 await _loanService.MarkAsPaidAsync(int.Parse(transactionId));
                 return Ok("Payment successful");
             }
 
-            return BadRequest("Payment failed");
+            return BadRequest($"Payment failed: {validationResult.Message}");
         }
 
     }
