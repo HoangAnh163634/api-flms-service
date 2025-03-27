@@ -284,7 +284,6 @@
     </a>
 </div>
 
-
 <!-- Best Authors -->
 <div class="container fade-in-up" id="best-author">
     @if (string.IsNullOrEmpty(Request.Query["searchTerm"]) && string.IsNullOrEmpty(Request.Query["categoryName"]))
@@ -292,6 +291,7 @@
         <div class="container fade-in-up" id="best-author">
             <h1 class="display-4 fw-bold text-center section-title">Best Authors</h1>
             <hr class="featurette-divider mb-4" style="border-color: #ff6b6b;">
+
             <div class="row author-list">
                 @for (int i = 0; i < Model.authors.Count; i++)
                 {
@@ -309,6 +309,7 @@
                     </div>
                 }
             </div>
+
             @if (Model.authors.Count > 3)
             {
                 <div class="text-center mt-3">
@@ -318,7 +319,6 @@
         </div>
     }
 </div>
-
 
 <!-- Search & Filter Section -->
 <div class="container search-section fade-in-up">
@@ -367,9 +367,7 @@
             </div>
         </div>
     }
-
 </div>
-
 
 <!-- Best Books / Search Results -->
 <div class="container fade-in-up">
@@ -385,8 +383,7 @@
     </h1>
     <hr class="featurette-divider mb-4" style="border-color: #ff6b6b;">
 
-    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 justify-content-center align-items-center"
-         style="min-height: 50vh; display: flex;">
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 justify-content-center align-items-center" style="min-height: 50vh; display: flex;">
         @if (Model.books.Count == 0 && (!string.IsNullOrEmpty(Request.Query["searchTerm"]) || !string.IsNullOrEmpty(Request.Query["categoryName"])))
         {
             <div class="d-flex justify-content-center align-items-center w-100">
@@ -414,8 +411,6 @@
             }
         }
     </div>
-</div>
-
 
     <!-- Pagination -->
     @if (Model.TotalPages > 1)
@@ -428,7 +423,9 @@
                         if (!string.IsNullOrEmpty(Request.Query["searchTerm"])) { prevUrl += $"&searchTerm={Request.Query["searchTerm"]}"; }
                         if (!string.IsNullOrEmpty(Request.Query["categoryName"])) { prevUrl += $"&categoryName={Request.Query["categoryName"]}"; }
                     }
-                    <a class="page-link" href="@prevUrl" aria-label="Previous"><span aria-hidden="true">«</span></a>
+                    <a class="page-link" href="@prevUrl" aria-label="Previous">
+                        <span aria-hidden="true">«</span>
+                    </a>
                 </li>
                 @for (int i = 1; i <= Model.TotalPages; i++)
                 {
@@ -445,7 +442,9 @@
                         if (!string.IsNullOrEmpty(Request.Query["searchTerm"])) { nextUrl += $"&searchTerm={Request.Query["searchTerm"]}"; }
                         if (!string.IsNullOrEmpty(Request.Query["categoryName"])) { nextUrl += $"&categoryName={Request.Query["categoryName"]}"; }
                     }
-                    <a class="page-link" href="@nextUrl" aria-label="Next"><span aria-hidden="true">»</span></a>
+                    <a class="page-link" href="@nextUrl" aria-label="Next">
+                        <span aria-hidden="true">»</span>
+                    </a>
                 </li>
             </ul>
         </nav>
@@ -457,7 +456,7 @@
     <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // Xử lý "Xem thêm" cho Biography
+            // Handle "Read More" for Biography
             const readMoreLinks = document.querySelectorAll('.read-more');
             readMoreLinks.forEach(link => {
                 link.addEventListener('click', function (e) {
@@ -471,7 +470,7 @@
                 });
             });
 
-            // Xử lý "Xem thêm" cho danh sách tác giả
+            // Handle "Toggle Authors" button
             const toggleAuthorsBtn = document.querySelector('.toggle-authors');
             const authorList = document.querySelector('.author-list');
             if (toggleAuthorsBtn && authorList) {
@@ -480,20 +479,19 @@
                     authorList.classList.toggle('expanded');
                     this.textContent = authorList.classList.contains('expanded') ? 'Thu gọn' : 'Xem thêm';
                 });
-            });
+            }
 
-        // Xử lý phân trang
-        const pageLinks = document.querySelectorAll('.page-link');
-        pageLinks.forEach(link => {
-            link.addEventListener('click', function (e) {
-                e.preventDefault();
-                const url = this.getAttribute('href');
-                if (url && !this.parentElement.classList.contains('disabled')) {
-                    window.location.href = url;
-                }
+            // Handle pagination
+            const pageLinks = document.querySelectorAll('.page-link');
+            pageLinks.forEach(link => {
+                link.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const url = this.getAttribute('href');
+                    if (url && !this.parentElement.classList.contains('disabled')) {
+                        window.location.href = url;
+                    }
+                });
             });
         });
-
-
     </script>
 }
