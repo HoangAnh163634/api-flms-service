@@ -258,7 +258,7 @@ namespace api_flms_service.Migrations
                         .HasColumnName("content");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp without time zone")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
                     b.Property<bool>("IsRead")
@@ -338,6 +338,14 @@ namespace api_flms_service.Migrations
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("email");
+
+                    b.Property<string>("GoogleImage")
+                        .HasColumnType("text")
+                        .HasColumnName("googleimage");
+
+                    b.Property<string>("LocalImage")
+                        .HasColumnType("text")
+                        .HasColumnName("localimage");
 
                     b.Property<string>("Name")
                         .IsRequired()

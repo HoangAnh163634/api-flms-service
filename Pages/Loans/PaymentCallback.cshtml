@@ -6,11 +6,16 @@
 
 <h2>VNPay Payment Status</h2>
 
-@if (Model.PaymentSuccess)
-{
-    <p style="color: green;">Payment successful! Transaction ID: @Model.TransactionId</p>
-}
-else
-{
-    <p style="color: red;">Payment failed.</p>
-}
+<div id="paymentResult"></div>
+
+<script>
+    async function checkPaymentStatus() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const response = await fetch(`/api/v0/Loan/payment-callback?${urlParams}`);
+        const text = await response.text();
+
+        document.getElementById("paymentResult").innerText = text;
+    }
+
+    checkPaymentStatus();
+</script>

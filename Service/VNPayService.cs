@@ -1,64 +1,161 @@
-﻿using System.Security.Cryptography;
-using System.Text;
-using System.Web;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Http;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using api_flms_service.Entity;
+using System.Security.Cryptography;
+using System.Text;
+using Microsoft.AspNetCore.WebUtilities;
 using api_flms_service.Model;
+using api_flms_service.Entity;
+using System.Threading.Tasks;
+using api_flms_service.ServiceInterface;
+using VNPAY_CS_ASPX;
 
-public class VNPayService
+public class VnPayService
 {
-    private readonly VNPaySettings _settings;
+    private readonly ILoanService _loanService;
+    private readonly IConfiguration _configuration;
+    private readonly LoanSettings _loanSettings;
+    private readonly IUserService _user;
 
-    public VNPayService(IOptions<VNPaySettings> settings)
+    public VnPayService(IConfiguration config, IOptions<LoanSettings> loanSettings, ILoanService loanService, IUserService user)
     {
-        _settings = settings.Value;
+        _configuration = config;
+        _loanSettings = loanSettings.Value;
+        _loanService = loanService;
+        _user = user;
     }
 
-    // ✅ **Generate VNPay Payment URL**
-    public string CreatePaymentUrl(Loan loan, HttpContext context)
+    public string CreatePaymentUrl(HttpContext httpContext, int loanId, string clientIp)
     {
-        var vnpayData = new SortedDictionary<string, string>
+        string vnp_Returnurl = _configuration["Vnpay:ReturnUrl"];
+        string vnp_Url = _configuration["Vnpay:Url"];
+        string vnp_TmnCode = _configuration["Vnpay:TmnCode"];
+        string vnp_HashSecret = _configuration["Vnpay:HashSecret"];
+
+        //Get payment input
+        OrderInfo order = new OrderInfo();
+        order.OrderId = DateTime.Now.Ticks; // Giả lập mã giao dịch hệ thống merchant gửi sang VNPAY
+        order.Amount = 100000; // Giả lập số tiền thanh toán hệ thống merchant gửi sang VNPAY 100,000 VND
+        order.Status = "0"; //0: Trạng thái thanh toán "chờ thanh toán" hoặc "Pending" khởi tạo giao dịch chưa có IPN
+        order.CreatedDate = DateTime.Now;
+
+        VnPayLibrary vnpay = new VnPayLibrary();
+
+        vnpay.AddRequestData("vnp_Version", VnPayLibrary.VERSION);
+        vnpay.AddRequestData("vnp_Command", "pay");
+        vnpay.AddRequestData("vnp_TmnCode", vnp_TmnCode);
+        vnpay.AddRequestData("vnp_Amount", (order.Amount * 100).ToString()); //Số tiền thanh toán. Số tiền không mang các ký tự phân tách thập phân, phần nghìn, ký tự tiền tệ. Để gửi số tiền thanh toán là 100,000 VND (một trăm nghìn VNĐ) thì merchant cần nhân thêm 100 lần (khử phần thập phân), sau đó gửi sang VNPAY là: 10000000
+        //if (bankcode_Vnpayqr.Checked == true)
+        //{
+        //   vnpay.AddRequestData("vnp_BankCode", "VNPAYQR");
+        //}
+        //else if (bankcode_Vnbank.Checked == true)
+        //{
+        //    vnpay.AddRequestData("vnp_BankCode", "VNBANK");
+        //}
+        //else if (bankcode_Intcard.Checked == true)
+        //{
+        //    vnpay.AddRequestData("vnp_BankCode", "INTCARD");
+        //}
+
+        vnpay.AddRequestData("vnp_CreateDate", order.CreatedDate.ToString("yyyyMMddHHmmss"));
+        vnpay.AddRequestData("vnp_CurrCode", "VND");
+        vnpay.AddRequestData("vnp_IpAddr", clientIp);
+
+        //if (locale_Vn.Checked == true)
+        //{
+           vnpay.AddRequestData("vnp_Locale", "vn");
+        //}
+        //else if (locale_En.Checked == true)
+        //{
+        //    vnpay.AddRequestData("vnp_Locale", "en");
+        //}
+        vnpay.AddRequestData("vnp_OrderInfo", "Thanh toan don hang:" + order.OrderId);
+        vnpay.AddRequestData("vnp_OrderType", "other"); //default value: other
+
+        vnpay.AddRequestData("vnp_ReturnUrl", vnp_Returnurl);
+        vnpay.AddRequestData("vnp_TxnRef", order.OrderId.ToString()); // Mã tham chiếu của giao dịch tại hệ thống của merchant. Mã này là duy nhất dùng để phân biệt các đơn hàng gửi sang VNPAY. Không được trùng lặp trong ngày
+
+        //Add Params of 2.1.0 Version
+        //Billing
+
+        string paymentUrl = vnpay.CreateRequestUrl(vnp_Url, vnp_HashSecret);
+
+        return vnpay.CreateRequestUrl(vnp_Url, vnp_HashSecret);
+    }
+
+    public LoanRespondDTO ValidateResponse(IQueryCollection query)
+    {
+        if (query.Count == 0)
         {
-            { "vnp_Version", "2.1.0" },
-            { "vnp_Command", "pay" },
-            { "vnp_TmnCode", _settings.TmnCode },
-            { "vnp_Amount", (loan.BookId * 100000).ToString() }, // Example: Price based on BookId
-            { "vnp_CurrCode", "VND" },
-            { "vnp_TxnRef", loan.BookLoanId.ToString() },
-            { "vnp_OrderInfo", $"Payment for Loan {loan.BookLoanId}" },
-            { "vnp_OrderType", "billpayment" },
-            { "vnp_Locale", "vn" },
-            { "vnp_ReturnUrl", _settings.ReturnUrl },
-            { "vnp_IpAddr", context.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1" },
-            { "vnp_CreateDate", DateTime.Now.ToString("yyyyMMddHHmmss") }
+            return new LoanRespondDTO
+            {
+                Success = false,
+                Message = "Không có dữ liệu phản hồi từ VNPAY."
+            };
+        }
+
+        string vnp_HashSecret = _configuration["Vnpay:HashSecret"];
+        VnPayLibrary vnpay = new VnPayLibrary();
+
+        foreach (var key in query.Keys)
+        {
+            if (!string.IsNullOrEmpty(key) && key.StartsWith("vnp_"))
+            {
+                vnpay.AddResponseData(key, query[key]);
+            }
+        }
+
+        // Lấy thông tin giao dịch
+        bool isValidOrderId = long.TryParse(vnpay.GetResponseData("vnp_TxnRef"), out long orderId);
+        bool isValidVnpayTranId = long.TryParse(vnpay.GetResponseData("vnp_TransactionNo"), out long vnpayTranId);
+        bool isValidAmount = long.TryParse(vnpay.GetResponseData("vnp_Amount"), out long vnp_Amount);
+
+        string vnp_ResponseCode = vnpay.GetResponseData("vnp_ResponseCode");
+        string vnp_TransactionStatus = vnpay.GetResponseData("vnp_TransactionStatus");
+        string vnp_SecureHash = query["vnp_SecureHash"];
+        string terminalID = query["vnp_TmnCode"];
+        string bankCode = query["vnp_BankCode"];
+
+        vnp_Amount /= 100; // VNPAY trả về giá trị nhân 100, cần chia lại
+
+        if (!isValidOrderId || !isValidVnpayTranId || !isValidAmount)
+        {
+            return new LoanRespondDTO
+            {
+                Success = false,
+                Message = "Dữ liệu phản hồi không hợp lệ."
+            };
+        }
+
+        // Kiểm tra chữ ký bảo mật
+        bool checkSignature = vnpay.ValidateSignature(vnp_SecureHash, vnp_HashSecret);
+        if (!checkSignature)
+        {
+            return new LoanRespondDTO
+            {
+                Success = false,
+                Message = "Chữ ký bảo mật không hợp lệ."
+            };
+        }
+
+        // Kiểm tra trạng thái giao dịch
+        bool isSuccess = vnp_ResponseCode == "00" && vnp_TransactionStatus == "00";
+        string message = isSuccess ? "Giao dịch thành công." : $"Giao dịch thất bại. Mã lỗi: {vnp_ResponseCode}";
+
+        return new LoanRespondDTO
+        {
+            Success = isSuccess,
+            Message = message,
+            OrderId = orderId,
+            VnpayTransactionId = vnpayTranId,
+            Amount = vnp_Amount,
+            TerminalId = terminalID,
+            BankCode = bankCode
         };
-
-        string queryString = string.Join("&", vnpayData.Select(kvp => $"{kvp.Key}={HttpUtility.UrlEncode(kvp.Value)}"));
-        string secureHash = CreateSignature(queryString);
-        return $"{_settings.Url}?{queryString}&vnp_SecureHash={secureHash}";
     }
 
-    // ✅ **Create Signature for Secure Transactions**
-    private string CreateSignature(string data)
-    {
-        using var hmac = new HMACSHA512(Encoding.UTF8.GetBytes(_settings.HashSecret));
-        return BitConverter.ToString(hmac.ComputeHash(Encoding.UTF8.GetBytes(data))).Replace("-", "").ToLower();
-    }
 
-    // ✅ **Validate VNPay Response Signature**
-    public bool ValidateResponse(IQueryCollection queryParams, string receivedHash)
-    {
-        var vnpayData = queryParams
-            .Where(kvp => kvp.Key.StartsWith("vnp_") && kvp.Key != "vnp_SecureHash")
-            .OrderBy(kvp => kvp.Key)
-            .ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToString());
-
-        string queryString = string.Join("&", vnpayData.Select(kvp => $"{kvp.Key}={HttpUtility.UrlEncode(kvp.Value)}"));
-        string calculatedHash = CreateSignature(queryString);
-
-        return calculatedHash == receivedHash;
-    }
 }

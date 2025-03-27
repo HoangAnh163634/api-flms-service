@@ -1,6 +1,7 @@
 ﻿using api_flms_service.Entity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 public class AppDbContext : DbContext
 {
@@ -132,6 +133,20 @@ public class AppDbContext : DbContext
             foreach (var key in entity.GetKeys())
             {
                 key.SetName(key.GetName()!.ToLower());
+            }
+        }
+
+        //Fix timestamp
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            foreach (var property in entityType.GetProperties())
+            {
+                if (property.ClrType == typeof(DateTime) || property.ClrType == typeof(DateTime?))
+                {
+                    property.SetValueConverter(new ValueConverter<DateTime, DateTime>(
+                        v => v.ToUniversalTime(),
+                        v => DateTime.SpecifyKind(v, DateTimeKind.Utc)));
+                }
             }
         }
     }

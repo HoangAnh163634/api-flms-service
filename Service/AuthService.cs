@@ -45,7 +45,9 @@ namespace api_auth_service.Services
             
             var userInfo = JsonSerializer.Deserialize<ApiResponseDto>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions { PropertyNameCaseInsensitive = true })?.UserInfo;
 
-            var user = await _user.GetUserByEmail(userInfo.Email);
+            var user = await _user.GetUserByEmail(userInfo.Email, _httpClient, userInfo.Picture);
+
+
             return userInfo;
         }
 

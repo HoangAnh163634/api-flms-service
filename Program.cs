@@ -26,9 +26,9 @@ WebApplicationBuilder BuildApp()
             options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
         });
 
-    builder.Services.Configure<VNPaySettings>(builder.Configuration.GetSection("VNPay"));
-    
-    builder.Services.AddScoped<VNPayService>();
+    builder.Services.Configure<LoanSettings>(builder.Configuration.GetSection("LoanSettings"));
+
+    builder.Services.AddScoped<VnPayService>();
     builder.Services.AddScoped<IReserveBookService, ReserveBookService>();
     builder.Services.AddScoped<IUserService, UserService>();
     builder.Services.AddScoped<IBookService, BookService>();
