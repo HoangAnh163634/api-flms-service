@@ -20,11 +20,13 @@
 
 <script>
     const urlParams = new URLSearchParams(window.location.search);
-    const authorId = urlParams.get('id'); // Get author ID from query string
+    const authorId = urlParams.get('id');
 
-    // Fetch author if editing
+    // Kiểm tra authorId có hợp lệ không
+    const isValidId = authorId && !isNaN(authorId) && authorId.trim() !== "";
+
     async function fetchAuthor() {
-        if (authorId) {
+        if (isValidId) {
             document.getElementById('pageTitle').innerText = "Edit Author";
             document.getElementById('submitButton').innerText = "Update Author";
 
@@ -32,29 +34,31 @@
                 const response = await fetch(`/api/v0/authors/${authorId}`);
                 if (response.ok) {
                     const author = await response.json();
-                    document.getElementById('authorName').value = author.authorName;
+
+                    // Kiểm tra nếu trường `name` tồn tại thì gán vào input
+                    document.getElementById('authorName').value = author.name || author.authorName || "";
                 } else {
                     document.getElementById('message').innerHTML = `<div class="alert alert-danger">Author not found.</div>`;
                 }
             } catch (err) {
-                document.getElementById('message').innerHTML = `<div class="alert alert-danger">An error occurred while fetching the author.</div>`;
+                document.getElementById('message').innerHTML = `<div class="alert alert-danger">An error occurred while fetching the author: ${err.message}</div>`;
             }
         }
     }
 
     fetchAuthor();
 
-    // Handle form submission
     document.getElementById('manageAuthorForm').addEventListener('submit', async function (e) {
         e.preventDefault();
-        const authorName = document.getElementById('authorName').value;
+        const authorName = document.getElementById('authorName').value.trim();
 
         try {
-            const method = authorId ? 'PUT' : 'POST';
-            const url = authorId ? `/api/v0/authors` : `/api/v0/authors`;
-            const body = authorId
-                ? JSON.stringify({ authorId: parseInt(authorId), authorName: authorName })
-                : JSON.stringify({ authorName: authorName });
+            const method = isValidId ? 'PUT' : 'POST';
+            const url = isValidId ? `/api/v0/authors/${authorId}` : `/api/v0/authors`;
+            const body = JSON.stringify({
+                authorId: isValidId ? parseInt(authorId) : undefined,
+                name: authorName // Thay vì `authorName`, API có thể dùng `name`
+            });
 
             const response = await fetch(url, {
                 method: method,
@@ -63,18 +67,21 @@
             });
 
             if (response.ok) {
-                const successMessage = authorId
+                const successMessage = isValidId
                     ? "Author updated successfully!"
                     : "Author added successfully!";
                 document.getElementById('message').innerHTML = `<div class="alert alert-success">${successMessage}</div>`;
                 document.getElementById('manageAuthorForm').reset();
-                    window.location.href = "/authors"; // Redirect to author list after add
+
+                setTimeout(() => {
+                    window.location.href = "/authors";
+                }, 1000);
             } else {
                 const error = await response.json();
-                document.getElementById('message').innerHTML = `<div class="alert alert-danger">${error.message}</div>`;
+                document.getElementById('message').innerHTML = `<div class="alert alert-danger">${error.message || "An error occurred while saving the author."}</div>`;
             }
         } catch (err) {
-            document.getElementById('message').innerHTML = `<div class="alert alert-danger">An error occurred while saving the author.</div>`;
+            document.getElementById('message').innerHTML = `<div class="alert alert-danger">An error occurred while saving the author: ${err.message}</div>`;
         }
     });
 </script>

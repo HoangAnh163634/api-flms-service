@@ -57,7 +57,7 @@ namespace api_flms_service.Controllers
         /// </summary>
         /// <param name="author">Updated author object</param>
         /// <returns>Updated author</returns>
-        [HttpPut]
+        [HttpPut("{id}")]
         public async Task<IActionResult> UpdateAuthor([FromBody] Author author)
         {
             if (!ModelState.IsValid) return BadRequest("Invalid data.");

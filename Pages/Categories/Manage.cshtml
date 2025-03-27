@@ -20,11 +20,11 @@
 
 <script>
     const urlParams = new URLSearchParams(window.location.search);
-    const categoryId = urlParams.get('id'); // Get category ID from query string
+    const categoryId = urlParams.get('id'); // Lấy categoryId từ query string
 
-    // Fetch category if editing
+    // Fetch category nếu đang Edit
     async function fetchCategory() {
-        if (categoryId) {
+        if (categoryId && !isNaN(categoryId) && categoryId.trim() !== "") {
             document.getElementById('pageTitle').innerText = "Edit Category";
             document.getElementById('submitButton').innerText = "Update Category";
 
@@ -32,29 +32,34 @@
                 const response = await fetch(`/api/v0/category/${categoryId}`);
                 if (response.ok) {
                     const category = await response.json();
-                    document.getElementById('categoryName').value = category.catName;
+                    document.getElementById('categoryName').value = category.categoryName; // Đúng tên thuộc tính
                 } else {
                     document.getElementById('message').innerHTML = `<div class="alert alert-danger">Category not found.</div>`;
                 }
             } catch (err) {
-                document.getElementById('message').innerHTML = `<div class="alert alert-danger">An error occurred while fetching the category.</div>`;
+                document.getElementById('message').innerHTML = `<div class="alert alert-danger">An error occurred while fetching the category: ${err.message}</div>`;
             }
+        } else {
+            // Nếu không có categoryId hợp lệ -> Add mode
+            document.getElementById('pageTitle').innerText = "Add Category";
+            document.getElementById('submitButton').innerText = "Add Category";
         }
     }
 
+    // Gọi fetchCategory khi trang load
     fetchCategory();
 
-    // Handle form submission
+    // Xử lý form submit
     document.getElementById('manageCategoryForm').addEventListener('submit', async function (e) {
         e.preventDefault();
         const categoryName = document.getElementById('categoryName').value;
 
         try {
-            const method = categoryId ? 'PUT' : 'POST';
-            const url = categoryId ? `/api/v0/category/${categoryId}` : `/api/v0/category`;
-            const body = categoryId
-                ? JSON.stringify({ catId: parseInt(categoryId), catName: categoryName })
-                : JSON.stringify({ catName: categoryName });
+            const method = categoryId && !isNaN(categoryId) ? 'PUT' : 'POST';
+            const url = categoryId && !isNaN(categoryId) ? `/api/v0/category/${categoryId}` : `/api/v0/category`;
+            const body = categoryId && !isNaN(categoryId)
+                ? JSON.stringify({ categoryId: parseInt(categoryId), categoryName: categoryName }) // Đổi catId -> categoryId, catName -> categoryName
+                : JSON.stringify({ categoryName: categoryName });
 
             const response = await fetch(url, {
                 method: method,
@@ -63,18 +68,21 @@
             });
 
             if (response.ok) {
-                const successMessage = categoryId
+                const successMessage = categoryId && !isNaN(categoryId)
                     ? "Category updated successfully!"
                     : "Category added successfully!";
                 document.getElementById('message').innerHTML = `<div class="alert alert-success">${successMessage}</div>`;
                 document.getElementById('manageCategoryForm').reset();
-                window.location.href = "/categories"; // Redirect to category list after add
+                setTimeout(() => {
+                    window.location.href = "/Categories"; // Redirect về danh sách Categories
+                }, 1000);
             } else {
                 const error = await response.json();
-                document.getElementById('message').innerHTML = `<div class="alert alert-danger">${error.message}</div>`;
+                document.getElementById('message').innerHTML = `<div class="alert alert-danger">${error.message || "An error occurred while saving the category."}</div>`;
             }
         } catch (err) {
-            document.getElementById('message').innerHTML = `<div class="alert alert-danger">An error occurred while saving the category.</div>`;
+            document.getElementById('message').innerHTML = `<div class="alert alert-danger">An error occurred while saving the category: ${err.message}</div>`;
         }
     });
+
 </script>
