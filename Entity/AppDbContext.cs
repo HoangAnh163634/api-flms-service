@@ -120,6 +120,13 @@ public class AppDbContext : DbContext
             .HasColumnName("is_read")
             .HasDefaultValue(false);
 
+        // Thiết lập quan hệ 1-nhiều giữa Author và Book
+        modelBuilder.Entity<Author>()
+            .HasMany(a => a.Books)
+            .WithOne(b => b.Author)
+            .HasForeignKey(b => b.AuthorId)
+            .OnDelete(DeleteBehavior.Cascade); // Xóa tác giả sẽ xóa luôn sách
+
         // Cấu hình lowercase tên bảng và cột
         foreach (var entity in modelBuilder.Model.GetEntityTypes())
         {

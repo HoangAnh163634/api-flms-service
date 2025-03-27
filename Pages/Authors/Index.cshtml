@@ -2,18 +2,151 @@
 @model api_flms_service.Pages.Authors.IndexModel
 @{
     ViewData["Title"] = "Authors";
-    Layout = "~/Pages/Shared/_Layout.cshtml"; // Path to your layout file
+    Layout = "~/Pages/Shared/_Layout.cshtml";
 }
 
-<div class="container">
-    <h4 class="text-center">Authors</h4>
-    <div class="text-right mb-3">
-        <a href="/Authors/Manage" class="btn btn-success">Add New Author</a>
+<style>
+    body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        font-family: 'Poppins', sans-serif;
+    }
+
+    /* Tiêu đề */
+    .section-title {
+        color: #2c3e50;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        animation: fadeInDown 1s ease-in-out;
+    }
+
+    /* Bảng */
+    .table {
+        background: #ffffff;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+
+        .table thead {
+            background: linear-gradient(90deg, #ff6b6b 0%, #4ecdc4 100%);
+            color: white;
+        }
+
+        .table th, .table td {
+            vertical-align: middle;
+            text-align: center;
+        }
+
+        .table tbody tr {
+            transition: background 0.3s ease;
+        }
+
+            .table tbody tr:hover {
+                background: #f8f9fa;
+            }
+
+    /* Ảnh tác giả */
+    .author-image {
+        width: 50px;
+        height: 50px;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 2px solid #ff6b6b;
+    }
+
+    /* Nút */
+    .btn-success {
+        background: linear-gradient(90deg, #2ecc71 0%, #27ae60 100%);
+        border: none;
+        border-radius: 20px;
+        padding: 8px 16px;
+        font-weight: bold;
+        transition: transform 0.3s ease, background 0.3s ease;
+    }
+
+        .btn-success:hover {
+            transform: scale(1.05);
+            background: linear-gradient(90deg, #27ae60 0%, #2ecc71 100%);
+        }
+
+    .btn-primary {
+        background: linear-gradient(90deg, #1e90ff 0%, #187bcd 100%);
+        border: none;
+        border-radius: 20px;
+        padding: 8px 16px;
+        font-weight: bold;
+        transition: transform 0.3s ease, background 0.3s ease;
+    }
+
+        .btn-primary:hover {
+            transform: scale(1.05);
+            background: linear-gradient(90deg, #187bcd 0%, #1e90ff 100%);
+        }
+
+    .btn-danger {
+        background: linear-gradient(90deg, #ff6b6b 0%, #e65b5b 100%);
+        border: none;
+        border-radius: 20px;
+        padding: 8px 16px;
+        font-weight: bold;
+        transition: transform 0.3s ease, background 0.3s ease;
+    }
+
+        .btn-danger:hover {
+            transform: scale(1.05);
+            background: linear-gradient(90deg, #e65b5b 0%, #ff6b6b 100%);
+        }
+
+    /* Alert */
+    .alert {
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Animation */
+    @@keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .fade-in-up {
+        animation: fadeInUp 1s ease-in-out;
+    }
+</style>
+
+<div class="container mt-5">
+    <h4 class="text-center section-title">Authors</h4>
+    <div class="text-end mb-3">
+        <a href="/Authors/Manage" class="btn btn-success"><i class="fas fa-plus me-2"></i>Add New Author</a>
     </div>
-    <table class="table table-bordered table-hover text-center" id="authorsTable">
+    <div id="message" class="mb-3"></div>
+    <table class="table table-bordered table-hover text-center fade-in-up" id="authorsTable">
         <thead>
             <tr>
+                <th>STT</th>
                 <th>Author Name</th>
+                <th>Biography</th>
+                <th>Country of Origin</th>
+                <th>Books</th> <!-- Thêm cột Books -->
+                <th>Image</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -23,33 +156,91 @@
     </table>
 </div>
 
-<script>
-    async function fetchAuthors() {
-        const response = await fetch('/api/v0/authors');
-        const authors = await response.json();
-        const tableBody = document.querySelector('#authorsTable tbody');
-        tableBody.innerHTML = '';
+@section Scripts {
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <script>
+        async function fetchAuthors() {
+            const tableBody = document.querySelector('#authorsTable tbody');
+            const messageDiv = document.getElementById('message');
+            tableBody.innerHTML = ''; // Xóa nội dung cũ
 
-        authors.forEach(author => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${author.name}</td>
-                <td>
-                    <a href="/Authors/Manage?id=${author.authorId}" class="btn btn-primary">Edit</a>
-                    <button class="btn btn-danger" onclick="deleteAuthor(${author.authorId})">Delete</button>
-                </td>
-            `;
-            tableBody.appendChild(row);
-        });
-    }
+            try {
+                const response = await fetch('http://localhost:8080/api/v0/authors', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
 
-    async function deleteAuthor(id) {
-        if (confirm("Are you sure you want to delete this author?")) {
-            await fetch(`/api/v0/authors/${id}`, { method: 'DELETE' });
-            fetchAuthors();
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch authors: ${response.status} ${response.statusText}`);
+                }
+
+                const authors = await response.json();
+                if (authors.length === 0) {
+                    messageDiv.innerHTML = `<div class="alert alert-info">No authors found.</div>`;
+                    return;
+                }
+
+                let stt = 1;
+
+                authors.forEach(author => {
+                    // Tạo chuỗi danh sách sách
+                    const booksList = author.books && author.books.length > 0
+                        ? author.books.map(book => book.title).join(', ')
+                        : '-';
+
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${stt++}</td>
+                        <td>${author.name || '-'}</td>
+                        <td>${author.biography || '-'}</td>
+                        <td>${author.countryOfOrigin || '-'}</td>
+                        <td>${booksList}</td> <!-- Hiển thị danh sách sách -->
+                        <td>
+                            ${author.cloudinaryId ?
+                                `<img src="https://res.cloudinary.com/dtlmurwxe/image/upload/${author.cloudinaryId}" alt="${author.name}" class="author-image" />` :
+                                '<span>No Image</span>'
+                            }
+                        </td>
+                        <td>
+                            <a href="/Authors/Manage?id=${author.authorId}" class="btn btn-primary"><i class="fas fa-edit me-2"></i>Edit</a>
+                            <button class="btn btn-danger" onclick="deleteAuthor(${author.authorId})"><i class="fas fa-trash me-2"></i>Delete</button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Error fetching authors:', error);
+                messageDiv.innerHTML = `<div class="alert alert-danger">Error fetching authors: ${error.message}</div>`;
+            }
         }
-    }
 
-    // Fetch authors on page load
-    fetchAuthors();
-</script>
+        async function deleteAuthor(id) {
+            const messageDiv = document.getElementById('message');
+            if (confirm("Are you sure you want to delete this author? This will also delete all associated books.")) {
+                try {
+                    const response = await fetch(`http://localhost:8080/api/v0/authors/${id}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Failed to delete author: ${response.status} ${response.statusText}`);
+                    }
+
+                    messageDiv.innerHTML = `<div class="alert alert-success">Author and associated books deleted successfully!</div>`;
+                    fetchAuthors(); // Tải lại danh sách
+                } catch (error) {
+                    console.error('Error deleting author:', error);
+                    messageDiv.innerHTML = `<div class="alert alert-danger">Error deleting author: ${error.message}</div>`;
+                }
+            }
+        }
+
+        // Fetch authors on page load
+        fetchAuthors();
+    </script>
+}

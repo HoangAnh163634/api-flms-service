@@ -298,7 +298,14 @@
                     var item = Model.authors[i];
                     <div class="col-lg-4 text-center mb-4 author-item @(i >= 3 ? "hidden-author" : "")">
                         <div class="author-card">
-                            <img src="@item.CloudinaryId" alt="@item.Name" width="200" height="200" class="rounded-circle">
+                            @if (!string.IsNullOrEmpty(item.CloudinaryId))
+                            {
+                                <img src="https://res.cloudinary.com/dtlmurwxe/image/upload/@item.CloudinaryId" alt="@item.Name" width="200" height="200" class="rounded-circle">
+                            }
+                            else
+                            {
+                                <img src="https://via.placeholder.com/200" alt="No Image" width="200" height="200" class="rounded-circle">
+                            }
                             <h2 class="fw-bold mt-3" style="color: #ff6b6b;">@item.Name</h2>
                             <div class="description-container">
                                 <p class="description-text">@item.Biography</p>

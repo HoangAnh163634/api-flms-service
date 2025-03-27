@@ -11,6 +11,17 @@ WebApplicationBuilder BuildApp()
 {
     var builder = WebApplication.CreateBuilder(args);
 
+    // Thêm CORS
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy("AllowFrontend", builder =>
+        {
+            builder.WithOrigins("http://localhost:8800") // Cho phép origin của frontend
+                   .AllowAnyHeader()
+                   .AllowAnyMethod();
+        });
+    });
+
     // Add services to the 
     builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
     builder.Services.AddHttpClient<AuthService>();

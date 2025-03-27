@@ -1,56 +1,77 @@
 ﻿using api_flms_service.Entity;
-using api_flms_service.Model;
 using api_flms_service.ServiceInterface;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace api_flms_service.Service
 {
     public class AuthorService : IAuthorService
     {
-        private readonly AppDbContext _dbContext;
+        private readonly AppDbContext _context;
 
-        public AuthorService(AppDbContext dbContext)
+        public AuthorService(AppDbContext context)
         {
-            _dbContext = dbContext;
+            _context = context;
         }
 
         public async Task<List<Author>> GetAllAuthorsAsync()
         {
-            return await _dbContext.Authors.ToListAsync();
+            return await _context.Authors
+                .Include(a => a.Books) // Bao gồm danh sách sách
+                .ToListAsync();
         }
 
-        public async Task<Author?> GetAuthorByIdAsync(int id)
+        public async Task<Author> GetAuthorByIdAsync(int id)
         {
-            return await _dbContext.Authors
-                                   .Include(e => e.Books)
-                                   .FirstOrDefaultAsync(e => e.AuthorId == id);  // Use FirstOrDefaultAsync for non-primary key queries
+            return await _context.Authors
+                .Include(a => a.Books) // Bao gồm danh sách sách
+                .FirstOrDefaultAsync(a => a.AuthorId == id);
         }
-
 
         public async Task<Author> AddAuthorAsync(Author author)
         {
-            _dbContext.Authors.Add(author);
-            await _dbContext.SaveChangesAsync();
+            _context.Authors.Add(author);
+            await _context.SaveChangesAsync();
             return author;
         }
 
-        public async Task<Author?> UpdateAuthorAsync(Author author)
+        public async Task<Author> UpdateAuthorAsync(Author author)
         {
-            var existingAuthor = await _dbContext.Authors.FindAsync(author.AuthorId);
+            var existingAuthor = await _context.Authors
+                .Include(a => a.Books) // Bao gồm danh sách sách để cập nhật
+                .FirstOrDefaultAsync(a => a.AuthorId == author.AuthorId);
+
             if (existingAuthor == null) return null;
 
+            // Cập nhật thông tin cơ bản
             existingAuthor.Name = author.Name;
-            await _dbContext.SaveChangesAsync();
+            existingAuthor.Biography = author.Biography;
+            existingAuthor.CountryOfOrigin = author.CountryOfOrigin;
+            existingAuthor.CloudinaryId = author.CloudinaryId;
+
+            // Cập nhật danh sách sách
+            existingAuthor.Books.Clear(); // Xóa sách cũ
+            if (author.Books != null)
+            {
+                foreach (var book in author.Books)
+                {
+                    book.AuthorId = existingAuthor.AuthorId;
+                    existingAuthor.Books.Add(book);
+                }
+            }
+
+            await _context.SaveChangesAsync();
             return existingAuthor;
         }
 
         public async Task<bool> DeleteAuthorAsync(int id)
         {
-            var author = await _dbContext.Authors.FindAsync(id);
+            var author = await _context.Authors.FindAsync(id);
             if (author == null) return false;
 
-            _dbContext.Authors.Remove(author);
-            await _dbContext.SaveChangesAsync();
+            _context.Authors.Remove(author);
+            await _context.SaveChangesAsync();
             return true;
         }
     }

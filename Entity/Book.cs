@@ -9,7 +9,7 @@ namespace api_flms_service.Entity
         [Key]
         public int BookId { get; set; }
         public int AuthorId { get; set; }
-        public Author Author { get; set; }
+        public Author? Author { get; set; }
         public int AvailableCopies { get; set; }
         public string BookDescription { get; set; } = string.Empty; // Khởi tạo mặc định
         public string CloudinaryImageId { get; set; } = string.Empty; // Khởi tạo mặc định

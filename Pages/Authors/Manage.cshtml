@@ -1,87 +1,245 @@
 ﻿@page
 @model api_flms_service.Pages.Authors.ManageModel
 @{
-    ViewData["Title"] = "Manage Author";
-    Layout = "~/Pages/Shared/_Layout.cshtml"; // Path to your layout file
+    ViewData["Title"] = Model.Author.AuthorId == 0 ? "Add Author" : "Edit Author";
+    Layout = "~/Pages/Shared/_Layout.cshtml";
 }
 
-<div class="container">
-    <h4 class="text-center" id="pageTitle">Add or Edit an Author</h4>
-    <br>
-    <form id="manageAuthorForm">
-        <div class="form-group">
-            <label for="authorName">Author Name:</label>
-            <input type="text" id="authorName" class="form-control" required>
-        </div>
-        <button type="submit" class="btn btn-primary" id="submitButton">Add Author</button>
-    </form>
-    <div id="message" class="mt-3"></div>
-</div>
+<style>
+    body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        font-family: 'Poppins', sans-serif;
+    }
 
-<script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const authorId = urlParams.get('id');
+    .form-container {
+        background: #ffffff;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+        max-width: 800px;
+        margin: 0 auto;
+    }
 
-    // Kiểm tra authorId có hợp lệ không
-    const isValidId = authorId && !isNaN(authorId) && authorId.trim() !== "";
+    .section-title {
+        color: #2c3e50;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        animation: fadeInDown 1s ease-in-out;
+    }
 
-    async function fetchAuthor() {
-        if (isValidId) {
-            document.getElementById('pageTitle').innerText = "Edit Author";
-            document.getElementById('submitButton').innerText = "Update Author";
+    .form-label {
+        font-weight: bold;
+        color: #34495e;
+    }
 
-            try {
-                const response = await fetch(`/api/v0/authors/${authorId}`);
-                if (response.ok) {
-                    const author = await response.json();
+    .form-control, .form-select {
+        border-radius: 10px;
+        border: 1px solid #dcdcdc;
+        transition: border-color 0.3s ease;
+    }
 
-                    // Kiểm tra nếu trường `name` tồn tại thì gán vào input
-                    document.getElementById('authorName').value = author.name || author.authorName || "";
-                } else {
-                    document.getElementById('message').innerHTML = `<div class="alert alert-danger">Author not found.</div>`;
-                }
-            } catch (err) {
-                document.getElementById('message').innerHTML = `<div class="alert alert-danger">An error occurred while fetching the author: ${err.message}</div>`;
-            }
+        .form-control:focus, .form-select:focus {
+            border-color: #ff6b6b;
+            box-shadow: 0 0 5px rgba(255, 107, 107, 0.3);
+        }
+
+    .btn-primary {
+        background: linear-gradient(90deg, #1e90ff 0%, #187bcd 100%);
+        border: none;
+        border-radius: 20px;
+        padding: 10px 20px;
+        font-weight: bold;
+        transition: transform 0.3s ease, background 0.3s ease;
+    }
+
+        .btn-primary:hover {
+            transform: scale(1.05);
+            background: linear-gradient(90deg, #187bcd 0%, #1e90ff 100%);
+        }
+
+    .btn-secondary {
+        background: linear-gradient(90deg, #95a5a6 0%, #7f8c8d 100%);
+        border: none;
+        border-radius: 20px;
+        padding: 10px 20px;
+        font-weight: bold;
+        transition: transform 0.3s ease, background 0.3s ease;
+    }
+
+        .btn-secondary:hover {
+            transform: scale(1.05);
+            background: linear-gradient(90deg, #7f8c8d 0%, #95a5a6 100%);
+        }
+
+    .image-preview {
+        width: 150px;
+        height: 150px;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 3px solid #ff6b6b;
+        margin-top: 10px;
+        display: none;
+    }
+
+    .alert {
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    @@keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
         }
     }
 
-    fetchAuthor();
-
-    document.getElementById('manageAuthorForm').addEventListener('submit', async function (e) {
-        e.preventDefault();
-        const authorName = document.getElementById('authorName').value.trim();
-
-        try {
-            const method = isValidId ? 'PUT' : 'POST';
-            const url = isValidId ? `/api/v0/authors/${authorId}` : `/api/v0/authors`;
-            const body = JSON.stringify({
-                authorId: isValidId ? parseInt(authorId) : undefined,
-                name: authorName // Thay vì `authorName`, API có thể dùng `name`
-            });
-
-            const response = await fetch(url, {
-                method: method,
-                headers: { 'Content-Type': 'application/json' },
-                body: body
-            });
-
-            if (response.ok) {
-                const successMessage = isValidId
-                    ? "Author updated successfully!"
-                    : "Author added successfully!";
-                document.getElementById('message').innerHTML = `<div class="alert alert-success">${successMessage}</div>`;
-                document.getElementById('manageAuthorForm').reset();
-
-                setTimeout(() => {
-                    window.location.href = "/authors";
-                }, 1000);
-            } else {
-                const error = await response.json();
-                document.getElementById('message').innerHTML = `<div class="alert alert-danger">${error.message || "An error occurred while saving the author."}</div>`;
-            }
-        } catch (err) {
-            document.getElementById('message').innerHTML = `<div class="alert alert-danger">An error occurred while saving the author: ${err.message}</div>`;
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
         }
-    });
-</script>
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .fade-in-up {
+        animation: fadeInUp 1s ease-in-out;
+    }
+</style>
+
+<div class="container mt-5">
+    <div class="form-container fade-in-up">
+        <h4 class="text-center section-title">@(Model.Author.AuthorId == 0 ? "Add New Author" : "Edit Author")</h4>
+        <div id="message" class="mb-3"></div>
+        <form id="authorForm">
+            <input type="hidden" id="authorId" value="@Model.Author.AuthorId" />
+            <input type="hidden" id="cloudinaryId" value="@Model.Author.CloudinaryId" />
+
+            <div class="mb-3">
+                <label for="name" class="form-label">Author Name</label>
+                <input type="text" class="form-control" id="name" value="@Model.Author.Name" required />
+            </div>
+
+            <div class="mb-3">
+                <label for="biography" class="form-label">Biography</label>
+                <textarea class="form-control" id="biography" rows="4">@Model.Author.Biography</textarea>
+            </div>
+
+            <div class="mb-3">
+                <label for="countryOfOrigin" class="form-label">Country of Origin</label>
+                <input type="text" class="form-control" id="countryOfOrigin" value="@Model.Author.CountryOfOrigin" />
+            </div>
+
+            <div class="mb-3">
+                <label for="books" class="form-label">Books (separate by commas)</label>
+                <input type="text" class="form-control" id="books" value="@(Model.Author.Books != null && Model.Author.Books.Any() ? string.Join(", ", Model.Author.Books.Select(b => b.Title)) : "")" placeholder="E.g., Book 1, Book 2, Book 3" />
+            </div>
+
+            <div class="mb-3">
+                <label for="image" class="form-label">Author Image</label>
+                <input type="file" class="form-control" id="image" accept="image/*" />
+                <img id="imagePreview" class="image-preview" @(Model.Author.CloudinaryId != null ? $"src=\"https://res.cloudinary.com/dtlmurwxe/image/upload/{Model.Author.CloudinaryId}\"" : "") style="@(Model.Author.CloudinaryId != null ? "display: block;" : "display: none;")" />
+            </div>
+
+            <div class="text-center">
+                <button type="button" class="btn btn-primary" onclick="saveAuthor()"><i class="fas fa-save me-2"></i>Save</button>
+                <a href="/Authors" class="btn btn-secondary"><i class="fas fa-arrow-left me-2"></i>Back</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <script>
+        // Hiển thị preview ảnh khi chọn file
+        document.getElementById('image').addEventListener('change', function (event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const imagePreview = document.getElementById('imagePreview');
+                    imagePreview.src = e.target.result;
+                    imagePreview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        async function uploadImage(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const response = await fetch('http://localhost:8080/api/v0/authors/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to upload image');
+            }
+
+            const result = await response.json();
+            return result.fileUrl;
+        }
+
+        async function saveAuthor() {
+            const messageDiv = document.getElementById('message');
+            const fileInput = document.getElementById('image');
+            let cloudinaryId = document.getElementById('cloudinaryId').value;
+
+            // Upload ảnh nếu có file được chọn
+            if (fileInput.files.length > 0) {
+                try {
+                    cloudinaryId = await uploadImage(fileInput.files[0]);
+                } catch (error) {
+                    messageDiv.innerHTML = `<div class="alert alert-danger">Error uploading image: ${error.message}</div>`;
+                    return;
+                }
+            }
+
+            // Lấy danh sách sách từ input
+            const booksInput = document.getElementById('books').value;
+            const booksArray = booksInput.split(',').map(title => title.trim()).filter(title => title !== '');
+            const books = booksArray.map(title => ({ title: title }));
+
+            const author = {
+                authorId: parseInt(document.getElementById('authorId').value) || 0,
+                name: document.getElementById('name').value,
+                biography: document.getElementById('biography').value,
+                countryOfOrigin: document.getElementById('countryOfOrigin').value,
+                cloudinaryId: cloudinaryId,
+                books: books // Gửi danh sách sách dưới dạng mảng
+            };
+
+            const method = author.authorId === 0 ? 'POST' : 'PUT';
+            const url = author.authorId === 0 ? 'http://localhost:8080/api/v0/authors' : `http://localhost:8080/api/v0/authors/${author.authorId}`;
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(author)
+                });
+
+                if (response.ok) {
+                    window.location.href = '/Authors';
+                } else {
+                    const errorText = await response.text();
+                    messageDiv.innerHTML = `<div class="alert alert-danger">Error saving author: ${errorText}</div>`;
+                }
+            } catch (error) {
+                messageDiv.innerHTML = `<div class="alert alert-danger">Error saving author: ${error.message}</div>`;
+            }
+        }
+    </script>
+}
