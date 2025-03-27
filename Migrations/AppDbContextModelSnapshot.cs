@@ -70,6 +70,7 @@ namespace api_flms_service.Migrations
                         .HasColumnName("availablecopies");
 
                     b.Property<string>("BookDescription")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("bookdescription");
 
@@ -83,6 +84,7 @@ namespace api_flms_service.Migrations
                         .HasColumnName("cloudinaryimageid");
 
                     b.Property<string>("ISBN")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("isbn");
 
@@ -96,6 +98,7 @@ namespace api_flms_service.Migrations
                         .HasColumnName("publicationyear");
 
                     b.Property<string>("Title")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("title");
 
@@ -151,6 +154,7 @@ namespace api_flms_service.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CategoryId"));
 
                     b.Property<string>("CategoryName")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("categoryname");
 

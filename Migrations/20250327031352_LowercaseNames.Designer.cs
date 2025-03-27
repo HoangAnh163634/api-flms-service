@@ -11,7 +11,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace api_flms_service.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250320165447_LowercaseNames")]
+    [Migration("20250327031352_LowercaseNames")]
     partial class LowercaseNames
     {
         /// <inheritdoc />
@@ -73,6 +73,7 @@ namespace api_flms_service.Migrations
                         .HasColumnName("availablecopies");
 
                     b.Property<string>("BookDescription")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("bookdescription");
 
@@ -86,6 +87,7 @@ namespace api_flms_service.Migrations
                         .HasColumnName("cloudinaryimageid");
 
                     b.Property<string>("ISBN")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("isbn");
 
@@ -99,6 +101,7 @@ namespace api_flms_service.Migrations
                         .HasColumnName("publicationyear");
 
                     b.Property<string>("Title")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("title");
 
@@ -154,6 +157,7 @@ namespace api_flms_service.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CategoryId"));
 
                     b.Property<string>("CategoryName")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("categoryname");
 

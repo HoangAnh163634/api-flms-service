@@ -34,7 +34,7 @@ namespace api_flms_service.Migrations
                 {
                     categoryid = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    categoryname = table.Column<string>(type: "text", nullable: true)
+                    categoryname = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -84,11 +84,11 @@ namespace api_flms_service.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     authorid = table.Column<int>(type: "integer", nullable: false),
                     availablecopies = table.Column<int>(type: "integer", nullable: false),
-                    bookdescription = table.Column<string>(type: "text", nullable: true),
+                    bookdescription = table.Column<string>(type: "text", nullable: false),
                     cloudinaryimageid = table.Column<string>(type: "text", nullable: false),
-                    isbn = table.Column<string>(type: "text", nullable: true),
+                    isbn = table.Column<string>(type: "text", nullable: false),
                     publicationyear = table.Column<int>(type: "integer", nullable: false),
-                    title = table.Column<string>(type: "text", nullable: true),
+                    title = table.Column<string>(type: "text", nullable: false),
                     borroweduntil = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     userid = table.Column<int>(type: "integer", nullable: false),
                     imageurls = table.Column<string>(type: "text", nullable: false)
