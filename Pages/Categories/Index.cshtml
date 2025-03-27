@@ -34,8 +34,8 @@
             row.innerHTML = `
                 <td>${category.categoryName}</td>
                 <td>
-                    <a href="/Categories/Manage?id=${category.catId}" class="btn btn-primary">Edit</a>
-                    <button class="btn btn-danger" onclick="deleteCategory(${category.catId})">Delete</button>
+                        <a href="/Categories/Manage?id=${category.categoryId}" class="btn btn-primary">Edit</a>
+                        <button class="btn btn-danger" onclick="deleteCategory(${category.categoryId})">Delete</button>
                 </td>
             `;
             tableBody.appendChild(row);
