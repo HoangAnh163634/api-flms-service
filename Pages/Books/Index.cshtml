@@ -23,6 +23,7 @@
             <th>Image</th>
             <th>Description</th>
             <th>Image URLs</th>
+            <th>Book File</th>
             <th>Actions</th>
         </tr>
     </thead>
@@ -97,6 +98,21 @@
                 const urlsCell = document.createElement('td');
                 urlsCell.textContent = book.imageUrls || 'N/A';
                 row.appendChild(urlsCell);
+
+
+                // Book File URL
+                const fileCell = document.createElement('td');
+                if (book.bookFileUrl) {
+                    const fileLink = document.createElement('a');
+                    fileLink.href = book.bookFileUrl;
+                    fileLink.textContent = 'Download';
+                    fileLink.target = '_blank';
+                    fileCell.appendChild(fileLink);
+                } else {
+                    fileCell.textContent = 'No File';
+                }
+                row.appendChild(fileCell);
+
 
                 // Actions
                 const actionsCell = document.createElement('td');

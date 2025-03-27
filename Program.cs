@@ -52,14 +52,8 @@ WebApplicationBuilder BuildApp()
     // Configure Swagger
     builder.Services.AddHttpClient();
     builder.Services.AddEndpointsApiExplorer();
-    //builder.Services.AddSwaggerGen();
-    builder.Services.AddSwaggerGen(options =>
-    {
-     
-
-        // Hỗ trợ upload file (IFormFile) trong Swagger
-        options.OperationFilter<SwaggerFileUploadOperationFilter>();
-    });
+    builder.Services.AddSwaggerGen();
+   
 
     builder.Services.AddLogging(logging =>
     {

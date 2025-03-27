@@ -27,5 +27,7 @@ namespace api_flms_service.Entity
 
         public ICollection<Loan> BookLoans { get; set; } = new List<Loan>();
         public ICollection<Review> Reviews { get; set; } = new List<Review>();
+
+        public string BookFileUrl { get; set; } = string.Empty;
     }
 }

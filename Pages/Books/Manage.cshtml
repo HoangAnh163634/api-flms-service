@@ -75,6 +75,13 @@
                 </div>
             }
         </div>
+        
+        @*// upload file *@
+        <input type="file" id="fileInput">
+        <button onclick="uploadFile()">Upload</button>
+        <p id="fileUrl" style="margin-top: 10px; font-weight: bold;"></p>
+        <br />
+
         <button type="submit" class="btn btn-primary" id="submitButton">@(Model.BookId.HasValue ? "Update Book" : "Add Book")</button>
         <a href="/Books" class="btn btn-secondary">Cancel</a>
     </form>
@@ -200,6 +207,7 @@
             }
         }
 
+
         // Đưa URL ảnh vào form data
         uploadedImageUrls.forEach(url => formData.append('imageUrls', url));
 
@@ -226,6 +234,40 @@
         }
     });
 
+
+    //xử lý upload file 
+    async function uploadFile() {
+        const fileInput = document.getElementById("fileInput");
+        const fileUrlText = document.getElementById("fileUrl");
+
+        if (!fileInput.files.length) {
+            alert("Vui lòng chọn một file.");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("file", fileInput.files[0]);
+
+        try {
+            const response = await fetch("https://localhost:5000/api/v0/books/upload", {
+                method: "POST",
+                body: formData
+            });
+
+            const result = await response.json();
+            if (response.ok) {
+                fileUrlText.textContent = "File URL: " + result.fileUrl;
+                fileUrlText.style.color = "green";
+            } else {
+                fileUrlText.textContent = "Lỗi: " + (result.message || "Không thể tải lên.");
+                fileUrlText.style.color = "red";
+            }
+        } catch (error) {
+            console.error("Lỗi upload:", error);
+            fileUrlText.textContent = "Lỗi khi tải lên.";
+            fileUrlText.style.color = "red";
+        }
+    }
 
     fetchDropdownData();
     fetchBook();

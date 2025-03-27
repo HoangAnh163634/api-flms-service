@@ -2,6 +2,7 @@
 using api_auth_service.Services;
 using api_flms_service.Entity;
 using api_flms_service.Model;
+using api_flms_service.Service;
 using api_flms_service.ServiceInterface;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
@@ -15,12 +16,14 @@ namespace api_flms_service.Controllers
         private readonly IBookService _bookService;
         private readonly IUserService _userService;
         private readonly AuthService _authService;
+        private readonly ICloudinaryService _cloudinaryService;
 
-        public BookController(IBookService bookService, IUserService userService, AuthService authService)
+        public BookController(IBookService bookService, IUserService userService, AuthService authService, ICloudinaryService cloudinaryService)
         {
             _bookService = bookService;
             _userService = userService;
             _authService = authService;
+            _cloudinaryService = cloudinaryService;
         }
 
         [HttpGet]
@@ -108,8 +111,6 @@ namespace api_flms_service.Controllers
                     PublicationYear = (int)bookDto.BookPrice,
                     AvailableCopies = bookDto.AvailableCopies,
                     BookDescription = bookDto.BookDescription,
-                    BookCategories = categoryIds.Select(id => new BookCategory { CategoryId = id }).ToList()
-
                     BookFileUrl = bookDto.BookFileUrl,
                     ImageUrls = bookDto.ImageUrls != null ? string.Join(", ", bookDto.ImageUrls) : null,
                     BookCategories = bookDto.CategoryIds?.Select(id => new BookCategory { CategoryId = id }).ToList()
@@ -129,7 +130,7 @@ namespace api_flms_service.Controllers
                     BookPrice = createdBook.PublicationYear,
                     AvailableCopies = createdBook.AvailableCopies,
                     BookDescription = createdBook.BookDescription,
-                    CloudinaryImageId = createdBook.CloudinaryImageId,
+             
                     BookFileUrl = createdBook.BookFileUrl,
                     ImageUrls = createdBook.ImageUrls?.Split(", ").ToList() // Tách lại thành danh sách khi trả về
 
@@ -184,20 +185,7 @@ namespace api_flms_service.Controllers
                 // Upload file nếu có
                 if (bookFile != null)
                 {
-
-                    BookId = updatedBook.BookId,
-                    BookName = updatedBook.Title,
-                    AuthorId = updatedBook.AuthorId,
-                    AuthorName = updatedBook.Author?.Name ?? "No Author",
-                    Category = updatedBook.BookCategories?.Select(bc => bc.Category).ToList() ?? new List<Category>(),
-                    BookNo = updatedBook.ISBN,
-                    BookPrice = updatedBook.PublicationYear,
-                    AvailableCopies = updatedBook.AvailableCopies,
-                    BookDescription = updatedBook.BookDescription,
-                    CloudinaryImageId = updatedBook.CloudinaryImageId,
-                    ImageUrls = updatedBook.ImageUrls
-                };
-
+                 
                     try
                     {
                         existingBook.BookFileUrl = await _cloudinaryService.UploadFileAsync(bookFile);
