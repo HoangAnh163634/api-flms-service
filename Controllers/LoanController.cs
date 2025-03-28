@@ -4,6 +4,7 @@ using api_flms_service.Service;
 using api_flms_service.ServiceInterface;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using System.Threading.Tasks;
 
 namespace api_flms_service.Controllers
 {
@@ -76,14 +77,14 @@ namespace api_flms_service.Controllers
         }
 
         [HttpPost("pay")]
-        public IActionResult CreatePayment(int loanId, string clientip)
+        public async Task<IActionResult> CreatePayment(int loanId, string clientip)
         {
             try
             {
                 if (loanId <= 0)
                     return BadRequest("Invalid Loan ID");
 
-                var paymentUrl = _vnPayService.CreatePaymentUrl(HttpContext, loanId, clientip);
+                var paymentUrl = await _vnPayService.CreatePaymentUrl(HttpContext, loanId, clientip);
                 if (string.IsNullOrEmpty(paymentUrl))
                     return BadRequest("Failed to create payment URL");
 

@@ -9,12 +9,14 @@ namespace api_flms_service.Service
     public class LoanService : ILoanService
     {
         private readonly AppDbContext _context;
-        private readonly LoanSettings _loan;
+        private readonly IConfiguration _config;
+        private readonly int Days;
 
-        public LoanService(AppDbContext context, IOptions<LoanSettings> loanSettings)
+        public LoanService(AppDbContext context, IConfiguration loanSettings)
         {
             _context = context;
-            _loan = loanSettings.Value;
+            _config = loanSettings;
+            Days = int.Parse(_config["LoanSettings:LoanDeferredTime"]);
         }
 
         public async Task<IEnumerable<Loan>> GetAllLoansAsync()
@@ -50,16 +52,9 @@ namespace api_flms_service.Service
         {
             var loan = await _context.Loans.FindAsync(id);
             if (loan == null) return false;
-            if (loan.ReturnDate != null) return false;
+            if (loan.ReturnDate == null && DateTime.Now > loan.LoanDate.Value.AddDays(Days)) return false;
 
             var book = await _context.Books.FindAsync(loan.BookId);
-
-            //Check if outdated
-            if (DateTime.Now > loan.ReturnDate)
-            {
-                return false;
-            }
-
 
             if (book != null)
                 book.AvailableCopies++;
