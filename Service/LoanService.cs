@@ -2,6 +2,7 @@
 using api_flms_service.Model;
 using api_flms_service.ServiceInterface;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace api_flms_service.Service
 {
@@ -10,14 +11,13 @@ namespace api_flms_service.Service
         private readonly AppDbContext _context;
         private readonly IConfiguration _config;
         private readonly INotificationService _notificationService;
-        private readonly int Days;
+        private readonly LoanSettings _loanSettings;
 
-        public LoanService(AppDbContext context, IConfiguration loanSettings, INotificationService notificationService)
+        public LoanService(AppDbContext context, INotificationService notificationService, IOptions<LoanSettings> loanSettings)
         {
             _context = context;
-            _config = loanSettings;
             _notificationService = notificationService;
-            Days = int.Parse(_config["LoanSettings:LoanDeferredTime"]);
+            _loanSettings = loanSettings.Value;
         }
 
         public async Task<IEnumerable<Loan>> GetAllLoansAsync()
@@ -53,7 +53,7 @@ namespace api_flms_service.Service
         {
             var loan = await _context.Loans.FindAsync(id);
             if (loan == null) return false;
-            if (loan.ReturnDate == null && DateTime.Now > loan.LoanDate.Value.AddDays(Days)) return false;
+            if (loan.ReturnDate == null && DateTime.Now > loan.LoanDate.Value.AddDays(_loanSettings.LoanDeferredTime)) return false;
 
             var book = await _context.Books.FindAsync(loan.BookId);
             if (book != null)
@@ -122,6 +122,31 @@ namespace api_flms_service.Service
             _context.Loans.Update(existingLoan);
             await _context.SaveChangesAsync();
             return true;
+        }
+
+        public decimal? GetLoanCost(Loan loan)
+        {
+            var overdueDays = GetLoanDue(loan);
+            if (overdueDays != null)
+            {
+                return - overdueDays * _loanSettings.LoanCostPerDay; // Calculate overdue fee
+            }
+            return null;
+        }
+
+        public int? GetLoanDue(Loan loan)
+        {
+            if (loan.LoanDate.HasValue && loan.LoanDate.Value.AddDays(_loanSettings.LoanDeferredTime) < DateTime.Now)
+            {
+                var overdueDays = (loan.LoanDate.Value.AddDays(_loanSettings.LoanDeferredTime) - DateTime.Now).Days;
+                return overdueDays;
+            }
+            return 0;
+        }
+
+        public DateTime? GetLoanDueDate(Loan loan)
+        {
+            return loan.LoanDate?.AddDays(_loanSettings.LoanDeferredTime);
         }
     }
 }

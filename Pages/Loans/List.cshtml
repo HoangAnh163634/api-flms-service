@@ -147,8 +147,17 @@
                             <h3 class="card-title">@item.Book.Title</h3>
                             <ul class="list-group list-group-flush">
                                 <li class="list-group-item"><strong>Book Author:</strong> @item.Book.Author.Name</li>
-                                <li class="list-group-item"><strong>Loan Date:</strong> @item.LoanDate?.ToString("yyyy-MM-dd HH:mm:ss")</li>
-                                <li class="list-group-item"><strong>Return Date:</strong> @item.ReturnDate?.ToString("yyyy-MM-dd")</li>
+                                <li class="list-group-item"><strong>Loan Date:</strong> @item.LoanDate?.ToString("dd-MM-yyyy")</li>
+                                <li class="list-group-item">
+                                    <strong>Return Date:</strong>
+                                    @{
+                                        var returnDate = Model._loanService.GetLoanDueDate(item);
+                                        var isOverdue = returnDate < DateTime.Today;
+                                    }
+                                    <span style="color: @(isOverdue ? "red" : "black"); font-weight: @(isOverdue ? "bolder" : "normal")">
+                                        @returnDate?.ToString("dd-MM-yyyy")
+                                    </span>
+                                </li>
                             </ul>
                             <div class="mt-3">
                                 @if (Model.BookReviews.FirstOrDefault(b => b.UserId == Model.user.UserId && b.BookId == item.BookId) == null)

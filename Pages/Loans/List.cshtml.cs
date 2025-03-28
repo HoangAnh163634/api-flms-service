@@ -17,7 +17,7 @@ namespace api_flms_service.Pages.BookLoans
         private readonly AuthService _auth;
         private readonly IUserService _userService;
         private readonly IReviewService _reviewService;
-        private readonly ILoanService _loanService;
+        public readonly ILoanService _loanService;
 
         public ListModel(AuthService auth, IUserService userService, IReviewService reviewService, ILoanService loanService)
         {
@@ -83,6 +83,7 @@ namespace api_flms_service.Pages.BookLoans
             var currentUser = await _auth.GetCurrentUserAsync();
             user = await _userService.GetUserByEmail(currentUser.Email);
 
+            BookReviews = (await _reviewService.GetAllReviewsAsync()).ToList();
             BookLoan = user.BookLoans?.ToList() ?? new List<Loan>();
             BookLoanCurrent = new List<Loan>();
             BookLoanPast = new List<Loan>();
