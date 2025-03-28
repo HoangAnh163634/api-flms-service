@@ -54,10 +54,10 @@ namespace api_flms_service.Service
 
             var book = await _context.Books.FindAsync(loan.BookId);
 
-            //Check if has fee
+            //Check if outdated
             if (DateTime.Now > loan.ReturnDate)
             {
-
+                return false;
             }
 
 

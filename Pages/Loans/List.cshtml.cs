@@ -72,7 +72,11 @@ namespace api_flms_service.Pages.BookLoans
 
             if (handler == "handler")
             {
-                await _loanService.ReturnLoanAsync(id);
+                var returned = await _loanService.ReturnLoanAsync(id);
+                if (!returned)
+                {
+                    return RedirectToPage("/Loans/VNPay");
+                }
                 TempData["SuccessMessage"] = "Book returned successfully!";
             }
 
