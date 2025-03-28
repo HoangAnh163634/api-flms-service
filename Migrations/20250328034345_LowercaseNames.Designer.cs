@@ -11,7 +11,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace api_flms_service.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250327172324_LowercaseNames")]
+    [Migration("20250328034345_LowercaseNames")]
     partial class LowercaseNames
     {
         /// <inheritdoc />

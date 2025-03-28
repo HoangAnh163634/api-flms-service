@@ -1,11 +1,11 @@
 steps:
   # Build Docker Image
   - name: "gcr.io/cloud-builders/docker"
-    args: ["build", "-t", "gcr.io/project-prn231-gr3/api-flms-service", "."]
+    args: ["build", "-t", "gcr.io/silver-antonym-324409/api-flms-service", "."]
 
   # Push Docker Image lên Google Container Registry (GCR)
   - name: "gcr.io/cloud-builders/docker"
-    args: ["push", "gcr.io/project-prn231-gr3/api-flms-service"]
+    args: ["push", "gcr.io/silver-antonym-324409/api-flms-service"]
 
   # Deploy lên Cloud Run
   - name: "gcr.io/cloud-builders/gcloud"
@@ -15,7 +15,7 @@ steps:
         "deploy",
         "api-flms-service",
         "--image",
-        "gcr.io/project-prn231-gr3/api-flms-service",
+        "gcr.io/silver-antonym-324409/api-flms-service",
         "--region",
         "asia-east1",
         "--platform",
@@ -26,10 +26,10 @@ steps:
       ]
 
 # Define a Google Cloud Storage bucket for build logs
-logsBucket: "gs://flms-service-log"
+logsBucket: "gs://flms-service-log-fork"
 
 images:
-  - "gcr.io/project-prn231-gr3/api-flms-service"
+  - "gcr.io/silver-antonym-324409/api-flms-service"
 
   # Set build timeout to 15 minutes
 timeout: 600s

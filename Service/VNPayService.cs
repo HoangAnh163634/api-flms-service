@@ -27,17 +27,27 @@ public class VnPayService
         _user = user;
     }
 
-    public string CreatePaymentUrl(HttpContext httpContext, int loanId, string clientIp)
+    public async Task<string> CreatePaymentUrl(HttpContext httpContext, int loanId, string clientIp)
     {
         string vnp_Returnurl = _configuration["Vnpay:ReturnUrl"];
         string vnp_Url = _configuration["Vnpay:Url"];
         string vnp_TmnCode = _configuration["Vnpay:TmnCode"];
         string vnp_HashSecret = _configuration["Vnpay:HashSecret"];
+        var LoanDeferredTime = int.Parse(_configuration["LoanSettings:LoanDeferredTime"]);
+        var LoanCostPerDay = decimal.Parse(_configuration["LoanSettings:LoanCostPerDay"]);
+
+        var loan = await _loanService.GetLoanByIdAsync(loanId);
+        decimal OverdueFee = 100000;
+        if (loan.LoanDate.HasValue && loan.LoanDate.Value.AddDays(LoanDeferredTime) < DateTime.Now)
+        {
+            var overdueDays = (DateTime.Now - loan.LoanDate.Value.AddDays(LoanDeferredTime)).Days;
+            OverdueFee = overdueDays * LoanCostPerDay; // Calculate overdue fee
+        }
 
         //Get payment input
         OrderInfo order = new OrderInfo();
         order.OrderId = DateTime.Now.Ticks; // Giả lập mã giao dịch hệ thống merchant gửi sang VNPAY
-        order.Amount = 100000; // Giả lập số tiền thanh toán hệ thống merchant gửi sang VNPAY 100,000 VND
+        order.Amount = (int)decimal.Round(OverdueFee); // Giả lập số tiền thanh toán hệ thống merchant gửi sang VNPAY 100,000 VND
         order.Status = "0"; //0: Trạng thái thanh toán "chờ thanh toán" hoặc "Pending" khởi tạo giao dịch chưa có IPN
         order.CreatedDate = DateTime.Now;
 
