@@ -9,72 +9,160 @@
 
 
 
-<!-- Bootstrap & jQuery CDN -->
-<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+<!-- Bootstrap 5 CDN (nâng cấp từ 4.5.2 lên phiên bản mới hơn) -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <style>
     .chat-wrapper {
-        max-width: 600px;
+        max-width: 800px;
         margin: 0 auto;
-        border: 1px solid #ccc;
-        border-radius: 10px;
+        border-radius: 15px;
         padding: 20px;
-        background-color: #f9f9f9;
+        background: linear-gradient(135deg, #ffffff, #f8f9fa);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         display: flex;
         flex-direction: column;
-        height: 80vh;
+        height: 85vh;
+        transition: all 0.3s ease;
+    }
+
+    .chat-header {
+        padding-bottom: 15px;
+        border-bottom: 1px solid #eee;
+        margin-bottom: 15px;
     }
 
     #chat-box {
         flex: 1;
         overflow-y: auto;
-        margin-bottom: 15px;
-        padding-right: 5px;
+        padding: 10px;
+        scrollbar-width: thin;
+        scrollbar-color: #888 #f1f1f1;
     }
 
+        #chat-box::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #chat-box::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 3px;
+        }
+
+        #chat-box::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
     .message {
-        margin: 5px 0;
-        padding: 10px;
-        border-radius: 10px;
-        max-width: 80%;
+        margin: 8px 0;
+        padding: 12px 18px;
+        border-radius: 20px;
+        max-width: 75%;
         word-wrap: break-word;
+        position: relative;
+        animation: slideIn 0.2s ease-out;
     }
 
     .user-message {
-        background-color: #007bff;
+        background: linear-gradient(90deg, #007bff, #00b4ff);
         color: white;
         align-self: flex-end;
+        margin-left: auto;
     }
 
     .ai-message {
-        background-color: #e4e6eb;
-        color: black;
+        background: #e9ecef;
+        color: #333;
         align-self: flex-start;
+    }
+
+    .message::after {
+        content: '';
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        bottom: -5px;
+        transform: rotate(45deg);
+    }
+
+    .user-message::after {
+        right: 10px;
+        background: #007bff;
+    }
+
+    .ai-message::after {
+        left: 10px;
+        background: #e9ecef;
     }
 
     #input-area {
         display: flex;
         gap: 10px;
+        padding-top: 15px;
+        border-top: 1px solid #eee;
     }
 
     #userInput {
         flex: 1;
+        border-radius: 25px;
+        padding: 12px 20px;
+        border: 1px solid #ddd;
+        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+        resize: none;
+        transition: border-color 0.3s ease;
+    }
+
+        #userInput:focus {
+            border-color: #007bff;
+            outline: none;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+        }
+
+    #sendBtn {
+        border-radius: 25px;
+        padding: 10px 25px;
+        background: linear-gradient(90deg, #007bff, #00b4ff);
+        border: none;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+        #sendBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3);
+        }
+
+    @@keyframes slideIn {
+        from
+
+    {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
     }
 </style>
 
 <div class="container mt-5">
     <div class="chat-wrapper">
-        <h3 class="text-center mb-3">AI Chat</h3>
+        <div class="chat-header">
+            <h3 class="text-center mb-0 fw-bold">AI Chat Assistant</h3>
+        </div>
         <div id="chat-box" class="border rounded p-2"></div>
         <div id="input-area">
-            <textarea id="userInput" class="form-control" rows="1" placeholder="Type your message..."></textarea>
+            <textarea id="userInput" class="form-control" rows="1" placeholder="Type your message here..."></textarea>
             <button id="sendBtn" class="btn btn-primary">Send</button>
         </div>
     </div>
 </div>
 
+<!-- Giữ nguyên phần script của bạn -->
 <script>
     $(document).ready(function () {
         function appendMessage(message, sender) {
