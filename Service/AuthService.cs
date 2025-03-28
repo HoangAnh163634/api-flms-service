@@ -94,9 +94,15 @@ namespace api_auth_service.Services
             if (Token == null || string.IsNullOrEmpty(Token)) return;
 
             var domain = new Uri(Request.GetEncodedUrl()).Host.TrimStart('.');
-            var rootDomain = "." + domain.Split('.')[domain.Length - 2] + "." + domain.Split('.')[domain.Length - 1];
-
             var isLocalHost = Request.Host.Host.Contains("localhost") || domain == "127.0.0.1";
+            
+            var rootDomain = domain;
+            if (!isLocalHost)
+            {
+                var spitDomain = domain.Split('.');
+                rootDomain = "." + spitDomain[spitDomain.Length - 2] + "." + spitDomain[spitDomain.Length - 1];
+            }
+            
             Response.Cookies.Append("googleToken", Token, new CookieOptions
             {
                 HttpOnly = true,  // Prevents JavaScript access
