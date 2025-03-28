@@ -20,6 +20,7 @@ namespace api_flms_service.Entity
         public string? Role { get; set; }
         public string? GoogleImage { get; set; }
         public string? LocalImage { get; set; }
+
         public ICollection<Loan>? BookLoans { get; set; } = new List<Loan>();
         public ICollection<Review>? BookReviews { get; set; } = new List<Review>();
     }

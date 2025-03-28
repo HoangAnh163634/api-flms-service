@@ -23,6 +23,7 @@ namespace api_flms_service.Service
                     .Include(b => b.Author)
                     .Include(b => b.BookCategories)
                         .ThenInclude(bc => bc.Category)
+                    .AsSplitQuery() // Tối ưu hiệu suất
                     .ToListAsync();
 
                 Console.WriteLine($"GetAllBooksAsync: Retrieved {books.Count} books.");
@@ -46,6 +47,7 @@ namespace api_flms_service.Service
                         .ThenInclude(bc => bc.Category)
                     .Include(b => b.Reviews)
                         .ThenInclude(b => b.User)
+                    .AsSplitQuery() // Tối ưu hiệu suất
                     .FirstOrDefaultAsync(b => b.BookId == id);
 
                 if (book == null)
@@ -231,12 +233,13 @@ namespace api_flms_service.Service
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<Book>> SearchBooksAsync(string searchTerm, string categoryName)
+        public async Task<IEnumerable<BookDto>> SearchBooksAsync(string searchTerm, string categoryName)
         {
             var query = _dbContext.Books
                 .Include(b => b.Author)
                 .Include(b => b.BookCategories)
                     .ThenInclude(bc => bc.Category)
+                .AsSplitQuery() // Tối ưu hiệu suất
                 .AsQueryable();
 
             if (!string.IsNullOrEmpty(searchTerm))
@@ -250,7 +253,25 @@ namespace api_flms_service.Service
                 query = query.Where(b => b.BookCategories.Any(bc => EF.Functions.ILike(bc.Category.CategoryName ?? "", categoryName)));
             }
 
-            return await query.ToListAsync();
+            var books = await query.ToListAsync();
+            return books.Select(b => new BookDto
+            {
+                BookId = b.BookId,
+                BookName = b.Title ?? "No Title",
+                AuthorId = b.AuthorId,
+                AuthorName = b.Author?.Name ?? "No Author",
+                Categories = b.BookCategories?.Select(bc => new CategoryDto
+                {
+                    CategoryId = bc.Category.CategoryId,
+                    CategoryName = bc.Category.CategoryName
+                }).ToList() ?? new List<CategoryDto>(),
+                BookNo = b.ISBN ?? "No ISBN",
+                BookPrice = b.PublicationYear,
+                AvailableCopies = b.AvailableCopies,
+                BookDescription = b.BookDescription,
+                CloudinaryImageId = b.CloudinaryImageId,
+                ImageUrls = b.ImageUrls
+            });
         }
 
         public async Task<bool> AuthorExistsAsync(int authorId)

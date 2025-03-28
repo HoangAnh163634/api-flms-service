@@ -46,12 +46,17 @@ namespace api_flms_service.Pages.Books
                     BookName = book.Title ?? string.Empty,
                     AuthorId = book.AuthorId,
                     AuthorName = book.Author?.Name ?? string.Empty,
-                    Category = book.BookCategories?.Select(bc => bc.Category).ToList() ?? new List<Category>(),
+                    Categories = book.BookCategories?.Select(bc => new CategoryDto
+                    {
+                        CategoryId = bc.Category.CategoryId,
+                        CategoryName = bc.Category.CategoryName
+                    }).ToList() ?? new List<CategoryDto>(),
                     BookNo = book.ISBN ?? string.Empty,
                     BookPrice = book.PublicationYear,
                     BookDescription = book.BookDescription ?? string.Empty,
                     AvailableCopies = book.AvailableCopies,
-                    ImageUrls = book.ImageUrls ?? string.Empty
+                    ImageUrls = book.ImageUrls ?? string.Empty,
+                    BookFileUrl = book.BookFileUrl
                 };
             }
 

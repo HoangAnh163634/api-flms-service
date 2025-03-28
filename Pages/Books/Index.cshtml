@@ -7,6 +7,13 @@
 
 <h2>Books</h2>
 
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger" role="alert">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
 <p>
     <a asp-page="./Manage" class="btn btn-success">Add New Book</a>
 </p>
@@ -26,144 +33,98 @@
             <th>Actions</th>
         </tr>
     </thead>
-    <tbody id="bookTable">
+    <tbody>
+        @if (Model.Books != null && Model.Books.Any())
+        {
+            foreach (var book in Model.Books)
+            {
+                <tr>
+                    <!-- Book Name -->
+                    <td>@(book.BookName ?? "No Title")</td>
+
+                    <!-- Author -->
+                    <td>@(book.AuthorName ?? "No Author")</td>
+
+                    <!-- Category -->
+                    <td>
+                        @(book.Categories != null && book.Categories.Any()
+                            ? string.Join(", ", book.Categories.Select(cat => cat.CategoryName))
+                            : "No Category")
+                    </td>
+
+                    <!-- ISBN -->
+                    <td>@(book.BookNo ?? "No ISBN")</td>
+
+                    <!-- Publication Year -->
+                    <td>@(book.BookPrice != 0 ? book.BookPrice.ToString() : "N/A")</td>
+
+                    <!-- Available Copies -->
+                    <td>@book.AvailableCopies</td>
+
+                    <!-- Image -->
+                    <td>
+                        @if (!string.IsNullOrEmpty(book.ImageUrls))
+                        {
+                            var firstImageUrl = book.ImageUrls.Split(',')[0];
+                            <img src="@firstImageUrl" alt="Book Image" style="max-width: 50px; height: auto;" />
+                        }
+                    </td>
+
+                    <!-- Description -->
+                    <td>
+                        @{
+                            var description = book.BookDescription ?? "N/A";
+                            var maxLength = 50;
+                            @(description.Length > maxLength ? description.Substring(0, maxLength) + "..." : description)
+                        }
+                    </td>
+
+                    <!-- Book File URL -->
+                    <td>
+                        @if (!string.IsNullOrEmpty(book.BookFileUrl))
+                        {
+                            <a href="@book.BookFileUrl" target="_blank">Download</a>
+                        }
+                        else
+                        {
+                            <span>No File</span>
+                        }
+                    </td>
+
+                    <!-- Actions -->
+                    <td>
+                        <div style="display: flex; gap: 5px;">
+                            <a href="/Books/Manage?id=@book.BookId" class="btn btn-primary btn-sm">Edit</a>
+                            <button class="btn btn-danger btn-sm" onclick="deleteBook(@book.BookId)">Delete</button>
+                        </div>
+                    </td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="10">No books found.</td>
+            </tr>
+        }
     </tbody>
 </table>
 
 <script>
-    async function fetchBooks() {
-        try {
-            const response = await fetch('/api/v0/books', {
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-
-            const books = await response.json();
-            console.log('Books data:', books);
-
-            const tableBody = document.getElementById('bookTable');
-            tableBody.innerHTML = '';
-
-            books.forEach(book => {
-                const row = document.createElement('tr');
-
-                // Book Name
-                const nameCell = document.createElement('td');
-                nameCell.textContent = book.bookName || 'No Title';
-                row.appendChild(nameCell);
-
-                // Author
-                const authorCell = document.createElement('td');
-                authorCell.textContent = book.authorName || 'No Author';
-                row.appendChild(authorCell);
-
-                // Category
-                const categoryCell = document.createElement('td');
-                const categoryNames = book.category && Array.isArray(book.category)
-                    ? book.category.map(cat => cat?.categoryName).filter(name => name).join(', ')
-                    : 'No Category';
-                categoryCell.textContent = categoryNames;
-                row.appendChild(categoryCell);
-
-                // ISBN
-                const isbnCell = document.createElement('td');
-                isbnCell.textContent = book.bookNo || 'No ISBN';
-                row.appendChild(isbnCell);
-
-                // Publication Year
-                const yearCell = document.createElement('td');
-                yearCell.textContent = book.bookPrice || 'N/A';
-                row.appendChild(yearCell);
-
-                // Available Copies
-                const copiesCell = document.createElement('td');
-                copiesCell.textContent = book.availableCopies || 0;
-                row.appendChild(copiesCell);
-
-                // Image
-                const imageCell = document.createElement('td');
-                if (book.imageUrls) {
-                    const img = document.createElement('img');
-                    img.src = book.imageUrls.split(',')[0]; // Lấy URL đầu tiên
-                    img.alt = 'Book Image';
-                    img.style.maxWidth = '50px';
-                    img.style.height = 'auto';
-                    imageCell.appendChild(img);
-                }
-                row.appendChild(imageCell);
-
-                // Description (Giới hạn số ký tự)
-                const descriptionCell = document.createElement('td');
-                const maxLength = 50; // Giới hạn 50 ký tự
-                const description = book.bookDescription || 'N/A';
-                descriptionCell.textContent = description.length > maxLength
-                    ? description.substring(0, maxLength) + '...'
-                    : description;
-                row.appendChild(descriptionCell);
-
-                // Book File URL
-                const fileCell = document.createElement('td');
-                if (book.bookFileUrl) {
-                    const fileLink = document.createElement('a');
-                    fileLink.href = book.bookFileUrl;
-                    fileLink.textContent = 'Download';
-                    fileLink.target = '_blank';
-                    fileCell.appendChild(fileLink);
+    async function deleteBook(bookId) {
+        if (confirm('Are you sure you want to delete this book?')) {
+            try {
+                const response = await fetch(`/api/v0/books/${bookId}`, {
+                    method: 'DELETE'
+                });
+                if (response.ok) {
+                    window.location.reload(); // Tải lại trang để cập nhật danh sách
                 } else {
-                    fileCell.textContent = 'No File';
+                    alert('Error deleting book');
                 }
-                row.appendChild(fileCell);
-
-                // Actions
-                const actionsCell = document.createElement('td');
-                var divAction = document.createElement('div');
-                const editButton = document.createElement('a');
-                editButton.href = `/Books/Manage?id=${book.bookId}`;
-                editButton.className = 'btn btn-primary btn-sm';
-                editButton.textContent = 'Edit';
-                divAction.appendChild(editButton);
-
-                divAction.appendChild(document.createTextNode(' '));
-
-                const deleteButton = document.createElement('button');
-                deleteButton.className = 'btn btn-danger btn-sm';
-                deleteButton.textContent = 'Delete';
-                deleteButton.onclick = async () => {
-                    if (confirm('Are you sure you want to delete this book?')) {
-                        try {
-                            const response = await fetch(`/api/v0/books/${book.bookId}`, {
-                                method: 'DELETE'
-                            });
-                            if (response.ok) {
-                                fetchBooks();
-                            } else {
-                                alert('Error deleting book');
-                            }
-                        } catch (err) {
-                            alert('Error deleting book: ' + err.message);
-                        }
-                    }
-                };
-                divAction.appendChild(deleteButton);
-                divAction.style.display = "flex";
-
-                actionsCell.appendChild(divAction);
-                row.appendChild(actionsCell);
-                tableBody.appendChild(row);
-            });
-        } catch (err) {
-            console.error('Error fetching books:', err);
-            alert('Failed to load books. Please try again later.');
+            } catch (err) {
+                alert('Error deleting book: ' + err.message);
+            }
         }
     }
-
-    // Gọi hàm fetchBooks khi trang được tải
-    document.addEventListener('DOMContentLoaded', fetchBooks);
 </script>

@@ -1,5 +1,6 @@
 ﻿using api_auth_service.Services;
 using api_flms_service.Entity;
+using api_flms_service.Model; // Thêm namespace này để sử dụng BookDto
 using api_flms_service.ServiceInterface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Extensions;
@@ -36,8 +37,8 @@ namespace api_flms_service.Pages
         [BindProperty]
         public List<Entity.Author> authors { get; set; }
         [BindProperty]
-        public List<Book> books { get; set; }
-        public List<Book> PagedBooks { get; set; } // Danh sách sách cho trang hiện tại
+        public List<BookDto> books { get; set; } = new List<BookDto>(); // Sửa thành List<BookDto>
+        public List<BookDto> PagedBooks { get; set; } = new List<BookDto>(); // Sửa thành List<BookDto>
         public int CurrentPage { get; set; }
         public int TotalPages { get; set; }
         public int PageSize { get; set; } = 3; // 3 sách mỗi trang
@@ -92,8 +93,27 @@ namespace api_flms_service.Pages
             }
             else
             {
-                // Nếu không có tham số tìm kiếm, lấy tất cả sách
-                books = (await _book.GetAllBooksAsync()).ToList();
+                // Nếu không có tham số tìm kiếm, lấy tất cả sách và ánh xạ sang BookDto
+                var allBooks = await _book.GetAllBooksAsync();
+                books = allBooks.Select(b => new BookDto
+                {
+                    BookId = b.BookId,
+                    BookName = b.Title ?? "No Title",
+                    AuthorId = b.AuthorId,
+                    AuthorName = b.Author?.Name ?? "No Author",
+                    Categories = b.BookCategories?.Select(bc => new CategoryDto
+                    {
+                        CategoryId = bc.Category.CategoryId,
+                        CategoryName = bc.Category.CategoryName
+                    }).ToList() ?? new List<CategoryDto>(),
+                    BookNo = b.ISBN ?? "No ISBN",
+                    BookPrice = b.PublicationYear,
+                    AvailableCopies = b.AvailableCopies,
+                    BookDescription = b.BookDescription,
+                    CloudinaryImageId = b.CloudinaryImageId,
+                    ImageUrls = b.ImageUrls,
+                    BookFileUrl = b.BookFileUrl
+                }).ToList();
             }
 
             // Log để kiểm tra danh sách sách trước khi phân trang
