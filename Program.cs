@@ -1,17 +1,16 @@
 ﻿using api_flms_service.Model;
 using api_flms_service.Service;
 using api_flms_service.ServiceInterface;
-using api_flms_service.ServiceInterface.api_flms_service.Services;
 using api_flms_service.Services;
 using Microsoft.EntityFrameworkCore;
 using api_auth_service.Services;
 using api_flms_service.Entity;
+using api_flms_service.ServiceInterface.api_flms_service.Services;
 
 WebApplicationBuilder BuildApp()
 {
     var builder = WebApplication.CreateBuilder(args);
 
-    // Thêm CORS
     builder.Services.AddCors(options =>
     {
         options.AddPolicy("AllowFrontend", builder =>
@@ -22,14 +21,12 @@ WebApplicationBuilder BuildApp()
         });
     });
 
-    // Add services to the container
     builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
     builder.Services.AddHttpClient<AuthService>();
 
     builder.Services.AddDbContext<AppDbContext>(options =>
         options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-    // Add controllers with JSON options
     builder.Services.AddControllers()
         .AddJsonOptions(options =>
         {
@@ -39,9 +36,7 @@ WebApplicationBuilder BuildApp()
 
     builder.Services.Configure<LoanSettings>(builder.Configuration.GetSection("LoanSettings"));
 
-    // Register services
     builder.Services.AddScoped<VnPayService>();
-    builder.Services.AddScoped<IReserveBookService, ReserveBookService>();
     builder.Services.AddScoped<IUserService, UserService>();
     builder.Services.AddScoped<IBookService, BookService>();
     builder.Services.AddScoped<IReviewService, ReviewService>();
@@ -49,17 +44,15 @@ WebApplicationBuilder BuildApp()
     builder.Services.AddScoped<IAuthorService, AuthorService>();
     builder.Services.AddScoped<IIssuedBookService, IssuedBookService>();
     builder.Services.AddScoped<ILoanService, LoanService>();
+    builder.Services.AddScoped<INotificationService, NotificationService>();
     builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
     builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
-    builder.Services.AddScoped<INotificationService, NotificationService>();
 
-    // Add controllers and Razor Pages
     builder.Services.AddRazorPages().AddViewOptions(options =>
     {
-        options.HtmlHelperOptions.ClientValidationEnabled = true; // Bật client-side validation
+        options.HtmlHelperOptions.ClientValidationEnabled = true;
     });
 
-    // Configure Swagger
     builder.Services.AddHttpClient();
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
@@ -76,7 +69,6 @@ WebApplication RunApp()
 {
     var app = BuildApp().Build();
 
-    // Configure the HTTP request pipeline
     if (app.Environment.IsDevelopment())
     {
         app.UseSwagger();
@@ -85,10 +77,9 @@ WebApplication RunApp()
 
     app.UseStaticFiles();
     app.UseRouting();
-    app.UseCors("AllowFrontend"); // Thêm CORS vào pipeline
+    app.UseCors("AllowFrontend");
     app.UseAuthorization();
 
-    // Map Controllers and Razor Pages
     app.UseEndpoints(endpoints =>
     {
         endpoints.MapRazorPages();

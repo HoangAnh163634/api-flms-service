@@ -11,7 +11,6 @@
         font-family: 'Poppins', sans-serif;
     }
 
-    /* Card sách */
     .book-card {
         border: none;
         border-radius: 20px;
@@ -62,7 +61,6 @@
             text-decoration: none;
         }
 
-    /* Nút Loan the book */
     .btn-primary {
         background: linear-gradient(90deg, #ff6b6b 0%, #4ecdc4 100%);
         border: none;
@@ -88,7 +86,6 @@
             transform: scale(1.05);
         }
 
-    /* Description và Reviews */
     .description-card, .review-card {
         background: #ffffff;
         border-radius: 15px;
@@ -123,7 +120,6 @@
         color: #ffd700;
     }
 
-    /* Form thêm/sửa review */
     .form-control, .form-control textarea {
         border-radius: 10px;
         border: 2px solid #dfe6e9;
@@ -159,13 +155,11 @@
         color: #ffd700;
     }
 
-    /* Alert */
     .alert {
         border-radius: 10px;
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
     }
 
-    /* Animation */
     @@keyframes fadeInDown {
         from {
             opacity: 0;
@@ -196,13 +190,11 @@
 </style>
 
 <div class="container mt-5">
-    <!-- Success Message -->
     @if (TempData["SuccessMessage"] != null)
     {
         <div class="alert alert-success text-center fade-in-up">@TempData["SuccessMessage"]</div>
     }
 
-    <!-- Book Details -->
     <div class="book-card fade-in-up">
         <div class="row p-4">
             <div class="col-lg-5">
@@ -232,20 +224,29 @@
                                 <button type="submit" name="handler" value="handler1" class="btn btn-primary"><i class="fas fa-book me-2"></i>Loan the Book</button>
                                 <input type="hidden" name="someValue" value="@Model.SomeValue" />
                             }
+                            @if (Model.role == "User" && Model.Book.AvailableCopies <= 0 && !Model.hasReserved)
+                            {
+                                <button type="submit" name="handler" value="reserve" class="btn btn-primary"><i class="fas fa-heart me-2"></i>Add to Wishlist</button>
+                                <input type="hidden" name="someValue" value="@Model.SomeValue" />
+                            }
                         </form>
                         @if (Model.wasLoaned)
                         {
-                            var loan = Model.User.BookLoans.FirstOrDefault(l => l.BookId == Model.Book.BookId && (l.ReturnDate == null || l.ReturnDate > DateTime.UtcNow));
+                            var loan = Model.User.BookLoans.FirstOrDefault(l => l.BookId == Model.Book.BookId && l.LoanDate != DateTime.MaxValue && (l.ReturnDate == null || l.ReturnDate > DateTime.UtcNow));
                             if (loan != null)
                             {
                                 <p class="text-success mt-2"><i class="fas fa-check-circle me-2"></i>You have loaned this book. Please return by @loan.ReturnDate?.ToString("yyyy-MM-dd").</p>
                             }
                         }
-                        else if (Model.role != "User")
+                        @if (Model.hasReserved && !Model.wasLoaned)
                         {
-                            <p class="text-danger mt-2"><i class="fas fa-exclamation-circle me-2"></i>Only users with role 'User' can loan books.</p>
+                            <p class="text-info mt-2"><i class="fas fa-heart me-2"></i>You have reserved this book.</p>
                         }
-                        else if (Model.Book.AvailableCopies <= 0)
+                        @if (Model.role != "User")
+                        {
+                            <p class="text-danger mt-2"><i class="fas fa-exclamation-circle me-2"></i>Only users with role 'User' can loan or reserve books.</p>
+                        }
+                        @if (Model.Book.AvailableCopies <= 0 && !Model.hasReserved && !Model.wasLoaned)
                         {
                             <p class="text-danger mt-2"><i class="fas fa-exclamation-circle me-2"></i>This book is not available for loan.</p>
                         }
@@ -255,14 +256,12 @@
         </div>
     </div>
 
-    <!-- Description -->
     <div class="description-card mt-5 fade-in-up">
         <h2 class="display-5 text-center fw-bold section-title">Description</h2>
         <hr class="featurette-divider mb-4" style="border-color: #ff6b6b;">
         <p class="fw-bold">@Model.Book.BookDescription</p>
     </div>
 
-    <!-- Reviews -->
     <div class="mt-5 fade-in-up">
         <h2 class="display-5 text-center fw-bold section-title">Reviews</h2>
         <hr class="featurette-divider mb-4" style="border-color: #ff6b6b;">
@@ -312,7 +311,6 @@
                     </div>
                 </div>
 
-                <!-- Form chỉnh sửa review -->
                 @if (Model.EditReview != null && Model.EditReview.ReviewId == review.ReviewId)
                 {
                     <div class="review-card mt-3">
@@ -352,10 +350,9 @@
         }
     </div>
 
-    <!-- Form thêm review -->
     @if (Model.role == "User" && Model.wasLoaned && !Model.wasReviewed && Model.EditReview == null)
     {
-        var loan = Model.User.BookLoans.FirstOrDefault(l => l.BookId == Model.Book.BookId && (l.ReturnDate == null || l.ReturnDate > DateTime.UtcNow));
+        var loan = Model.User.BookLoans.FirstOrDefault(l => l.BookId == Model.Book.BookId && l.LoanDate != DateTime.MaxValue && (l.ReturnDate == null || l.ReturnDate > DateTime.UtcNow));
         if (loan != null)
         {
             <p class="text-info text-center mt-3"><i class="fas fa-info-circle me-2"></i>You loaned this book on @loan.LoanDate?.ToString("yyyy-MM-dd").</p>
@@ -400,7 +397,14 @@
             }
             else if (!Model.wasLoaned)
             {
-                <span><i class="fas fa-exclamation-circle me-2"></i>You must loan the book to add a review.</span>
+                @if (Model.hasReserved)
+                {
+                    <span><i class="fas fa-exclamation-circle me-2"></i>You have only reserved this book. You must loan the book to add a review.</span>
+                }
+                else
+                {
+                    <span><i class="fas fa-exclamation-circle me-2"></i>You must loan the book to add a review.</span>
+                }
             }
             else if (Model.wasReviewed)
             {
@@ -414,7 +418,6 @@
     <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // Xử lý star rating cho form thêm review
             const stars = document.querySelectorAll('#star-rating .star-input');
             const labels = document.querySelectorAll('#star-rating .star');
 
@@ -459,7 +462,6 @@
                 });
             });
 
-            // Xử lý star rating cho form chỉnh sửa review
             document.querySelectorAll('[id^="edit-star-rating-"]').forEach(ratingContainer => {
                 const editStars = ratingContainer.querySelectorAll('.star-input');
                 const editLabels = ratingContainer.querySelectorAll('.star');

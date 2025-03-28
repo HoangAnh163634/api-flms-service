@@ -161,7 +161,7 @@
                         @if (user.Role == "Admin" || user.Role == "Member" || user.Role == "User")
                         {
                             <li class="nav-item">
-                                <a class="nav-link" href="@Url.Page("/Loans/List")" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Gallery">Gallery</a>
+                                <a class="nav-link" href="@Url.Page("/Loans/List")" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Gallery">Loan</a>
                             </li>
                         }
 
@@ -175,7 +175,7 @@
                         @if (user.Role == "Admin" || user.Role == "Member" || user.Role == "User")
                         {
                             <li class="nav-item">
-                                <a class="nav-link" href="@Url.Page("/Books/ManagerRenewedBook")" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Book Renewed">Book Renewed</a>
+                                <a class="nav-link" href="@Url.Page("/Reserves/Index")" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Book Reserve">Book Reserve</a>
                             </li>
                         }
 
