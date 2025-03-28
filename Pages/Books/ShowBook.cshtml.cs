@@ -85,15 +85,12 @@ namespace api_flms_service.Pages.Books
                         await Console.Out.WriteLineAsync($"OnGet - BookLoan - BookId: {bookloan.BookId}, LoanDate: {bookloan.LoanDate}, ReturnDate: {bookloan.ReturnDate}, Book: {(bookloan.Book != null ? bookloan.Book.Title : "null")}");
                         if (bookloan.Book != null && bookloan.Book.BookId == id)
                         {
-                            // Kiểm tra xem đây có phải là bản ghi "reserve" không
-                            // Sử dụng khoảng thời gian để so sánh thay vì so sánh trực tiếp
                             var maxValueThreshold = DateTime.MaxValue.AddDays(-1);
                             if (bookloan.LoanDate >= maxValueThreshold && bookloan.ReturnDate == null)
                             {
                                 hasReserved = true;
                                 await Console.Out.WriteLineAsync($"OnGet - Book {id} is reserved by user {User.UserId}");
                             }
-                            // Chỉ tính là "loaned" nếu không phải bản ghi đặt trước
                             else if (bookloan.LoanDate < maxValueThreshold && (bookloan.ReturnDate == null || bookloan.ReturnDate > DateTime.UtcNow))
                             {
                                 wasLoaned = true;

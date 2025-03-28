@@ -5,9 +5,6 @@
     Layout = "~/Pages/Shared/_Layout.cshtml";
 }
 
-<!-- Formik for form handling -->
-<script src="https://cdn.jsdelivr.net/npm/formik@2.4.6/dist/formik.esm.min.js"></script>
-
 <!-- Axios for AJAX form submission -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.8.4/axios.min.js" integrity="sha512-2A1+/TAny5loNGk3RBbk11FwoKXYOMfAK6R7r4CpQH7Luz4pezqEGcfphoNzB7SM4dixUoJsKkBsB6kg+dNE2g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
@@ -77,8 +74,8 @@
 
             <!-- Image Upload -->
             <div class="form-group">
-                <label for="images">Images:</label>
-                <input type="file" id="images" name="images" class="form-control-file" accept="image/*" />
+                <label for="bookFile">Images:</label>
+                <input type="file" id="bookFile" name="bookFile" class="form-control-file" accept="image/*" />
             </div>
 
             <!-- Submit Button -->
@@ -94,7 +91,7 @@
     const bookId = new URLSearchParams(window.location.search).get('id');
 
     // Initialize FilePond for image uploads
-    const pond = FilePond.create(document.querySelector('#images'));
+    const pond = FilePond.create(document.querySelector('#bookFile'));
 
     async function fetchDropdownData() {
         try {
@@ -102,6 +99,11 @@
                 fetch('/api/v0/authors'),
                 fetch('/api/v0/category')
             ]);
+
+            if (!authorsResponse.ok || !categoriesResponse.ok) {
+                throw new Error('Failed to fetch dropdown data');
+            }
+
             const authors = await authorsResponse.json();
             const categories = await categoriesResponse.json();
 
@@ -128,12 +130,22 @@
     }
 
     async function fetchBook() {
-        if (!bookId) return;
+        if (!bookId) {
+            document.getElementById('pageTitle').textContent = 'Add New Book';
+            document.getElementById('submitButton').textContent = 'Add Book';
+            return;
+        }
 
         try {
             const response = await fetch(`/api/v0/books/${bookId}`);
-            const book = await response.json();
+            if (!response.ok) {
+                throw new Error('Failed to fetch book data');
+            }
 
+            const book = await response.json();
+            document.getElementById('pageTitle').textContent = 'Edit Book';
+            document.getElementById('submitButton').textContent = 'Update Book';
+            document.getElementById('bookId').value = book.bookId || '';
             document.getElementById('bookName').value = book.bookName || '';
             document.getElementById('authorId').value = book.authorId || '';
             document.getElementById('bookNo').value = book.bookNo || '';
@@ -142,14 +154,15 @@
             document.getElementById('availableCopies').value = book.availableCopies || 0;
 
             const categorySelect = document.getElementById('categoryIds');
-            book.categories.forEach(cat => {
-                const option = Array.from(categorySelect.options).find(opt => opt.value == cat.categoryId);
-                if (option) {
-                    option.selected = true;
-                }
-            });
+            if (book.categories && Array.isArray(book.categories)) {
+                book.categories.forEach(cat => {
+                    const option = Array.from(categorySelect.options).find(opt => opt.value == cat.categoryId);
+                    if (option) {
+                        option.selected = true;
+                    }
+                });
+            }
 
-            // Display current image
             if (book.imageUrls) {
                 document.getElementById('currentImageContainer').style.display = 'block';
                 document.getElementById('currentImage').src = book.imageUrls;
@@ -175,8 +188,37 @@
         const categoryIds = Array.from(document.getElementById('categoryIds').selectedOptions).map(option => option.value);
         categoryIds.forEach(id => formData.append('categoryIds', id));
 
-        if (pond.files.length > 0) {
-            pond.files.forEach(file => formData.append('images', file.file));
+        let imageUrl = null;
+        if (pond.getFiles().length > 0) {
+            try {
+                // Upload file to Cloudinary first
+                const file = pond.getFiles()[0].file;
+                const uploadFormData = new FormData();
+                uploadFormData.append('file', file);
+
+                const uploadResponse = await axios.post('/api/v0/books/upload', uploadFormData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
+                });
+
+                if (uploadResponse.status === 200) {
+                    imageUrl = uploadResponse.data.fileUrl;
+                    console.log("File uploaded to Cloudinary, URL:", imageUrl);
+                    formData.append('imageUrls', imageUrl); // Add the URL to FormData
+                }
+            } catch (uploadErr) {
+                console.error("Error uploading file to Cloudinary:", uploadErr);
+                document.getElementById('message').innerHTML = `<div class="alert alert-danger">Error uploading file to Cloudinary: ${uploadErr.message}</div>`;
+                return;
+            }
+        } else {
+            console.log("No file selected.");
+        }
+
+        console.log("FormData entries:");
+        for (let pair of formData.entries()) {
+            console.log(`${pair[0]}: ${pair[1]}`);
         }
 
         const method = bookId ? 'PUT' : 'POST';
@@ -186,16 +228,29 @@
             const response = await axios({
                 method: method,
                 url: url,
-                data: formData
+                data: formData,
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
             });
 
-            if (response.status === 200) {
+            if (response.status === 200 || response.status === 201) {
                 document.getElementById('message').innerHTML = `<div class="alert alert-success">${bookId ? "Book updated" : "Book added"} successfully!</div>`;
                 setTimeout(() => window.location.href = "/Books", 1000);
             }
         } catch (err) {
             console.error("Error saving book:", err);
-            document.getElementById('message').innerHTML = `<div class="alert alert-danger">Error saving book.</div>`;
+            const errorMessage = err.response?.data?.message || err.message;
+            let errorDetails = "No additional details available.";
+            if (err.response?.data?.details) {
+                try {
+                    const parsedDetails = JSON.parse(err.response.data.details);
+                    errorDetails = JSON.stringify(parsedDetails, null, 2);
+                } catch (parseError) {
+                    errorDetails = err.response.data.details;
+                }
+            }
+            document.getElementById('message').innerHTML = `<div class="alert alert-danger">Error saving book: ${errorMessage}. Details: ${errorDetails}</div>`;
         }
     });
 

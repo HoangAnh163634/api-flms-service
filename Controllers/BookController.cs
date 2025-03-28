@@ -32,28 +32,44 @@ namespace api_flms_service.Controllers
             try
             {
                 var books = await _bookService.GetAllBooksAsync();
+                if (books == null || !books.Any())
+                {
+                    Console.WriteLine("No books found in the database.");
+                    return Ok(new List<BookDto>());
+                }
+
                 var bookDtos = books.Select(b => new BookDto
                 {
                     BookId = b.BookId,
                     BookName = b.Title ?? "No Title",
                     AuthorId = b.AuthorId,
                     AuthorName = b.Author?.Name ?? "No Author",
-                    Category = b.BookCategories?.Select(bc => bc.Category).ToList() ?? new List<Category>(),
+                    Categories = b.BookCategories?.Select(bc => new CategoryDto
+                    {
+                        CategoryId = bc.Category.CategoryId,
+                        CategoryName = bc.Category.CategoryName
+                    }).ToList() ?? new List<CategoryDto>(),
                     BookNo = b.ISBN ?? "No ISBN",
                     BookPrice = b.PublicationYear,
                     AvailableCopies = b.AvailableCopies,
                     BookDescription = b.BookDescription,
                     CloudinaryImageId = b.CloudinaryImageId,
-                    ImageUrls = b.ImageUrls
+                    ImageUrls = b.ImageUrls,
+                    BookFileUrl = b.BookFileUrl
                 }).ToList();
 
+                Console.WriteLine($"Successfully retrieved {bookDtos.Count} books.");
                 return Ok(bookDtos);
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error in GetAllBooks: {ex.Message}");
                 Console.WriteLine($"StackTrace: {ex.StackTrace}");
-                return StatusCode(500, new { message = "An error occurred while retrieving books.", details = ex.Message });
+                return StatusCode(500, new ErrorResponse
+                {
+                    Message = "An error occurred while retrieving books.",
+                    Details = ex.Message
+                });
             }
         }
 
@@ -65,7 +81,7 @@ namespace api_flms_service.Controllers
                 var book = await _bookService.GetBookByIdAsync(id);
                 if (book == null)
                 {
-                    return NotFound(new { message = "Book not found" });
+                    return NotFound(new ErrorResponse { Message = "Book not found" });
                 }
 
                 var bookDto = new BookDto
@@ -74,29 +90,50 @@ namespace api_flms_service.Controllers
                     BookName = book.Title,
                     AuthorId = book.AuthorId,
                     AuthorName = book.Author?.Name ?? "No Author",
-                    Category = book.BookCategories?.Select(bc => bc.Category).ToList() ?? new List<Category>(),
+                    Categories = book.BookCategories?.Select(bc => new CategoryDto
+                    {
+                        CategoryId = bc.Category.CategoryId,
+                        CategoryName = bc.Category.CategoryName
+                    }).ToList() ?? new List<CategoryDto>(),
                     BookNo = book.ISBN,
                     BookPrice = book.PublicationYear,
                     AvailableCopies = book.AvailableCopies,
                     BookDescription = book.BookDescription,
                     CloudinaryImageId = book.CloudinaryImageId,
-                    ImageUrls = book.ImageUrls
+                    ImageUrls = book.ImageUrls,
+                    BookFileUrl = book.BookFileUrl
                 };
 
                 return Ok(bookDto);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "An error occurred while retrieving the book.", details = ex.Message });
+                return StatusCode(500, new ErrorResponse
+                {
+                    Message = "An error occurred while retrieving the book.",
+                    Details = ex.Message
+                });
             }
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateBook([FromBody] BookRequestDto bookDto)
+        public async Task<IActionResult> CreateBook([FromForm] BookRequestDto bookDto, IFormFile? bookFile)
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                // Log chi tiết lỗi ModelState
+                var errors = ModelState
+                    .Where(x => x.Value.Errors.Count > 0)
+                    .ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                    );
+                Console.WriteLine("ModelState Errors: " + JsonConvert.SerializeObject(errors));
+                return BadRequest(new ErrorResponse
+                {
+                    Message = "Invalid data submitted.",
+                    Details = JsonConvert.SerializeObject(errors)
+                });
             }
 
             try
@@ -109,12 +146,39 @@ namespace api_flms_service.Controllers
                     PublicationYear = (int)bookDto.BookPrice,
                     AvailableCopies = bookDto.AvailableCopies,
                     BookDescription = bookDto.BookDescription,
-                    BookFileUrl = bookDto.BookFileUrl,
-                    ImageUrls = bookDto.ImageUrls != null ? string.Join(", ", bookDto.ImageUrls) : null,
-                    BookCategories = bookDto.CategoryIds?.Select(id => new BookCategory { CategoryId = id }).ToList()
+                    BookFileUrl = bookDto.BookFileUrl
                 };
 
+                if (bookFile != null)
+                {
+                    try
+                    {
+                        // Upload file hình ảnh lên Cloudinary và lưu URL vào ImageUrls
+                        var imageUrl = await _cloudinaryService.UploadFileAsync(bookFile);
+                        book.ImageUrls = imageUrl; // Lưu URL hình ảnh vào ImageUrls
+                    }
+                    catch (Exception uploadEx)
+                    {
+                        return StatusCode(500, new ErrorResponse
+                        {
+                            Message = "Error uploading file to Cloudinary",
+                            Details = uploadEx.Message
+                        });
+                    }
+                }
+
                 var createdBook = await _bookService.CreateBookAsync(book);
+
+                if (bookDto.CategoryIds != null && bookDto.CategoryIds.Any())
+                {
+                    createdBook.BookCategories = bookDto.CategoryIds.Select(id => new BookCategory
+                    {
+                        BookId = createdBook.BookId,
+                        CategoryId = id
+                    }).ToList();
+
+                    await _bookService.UpdateBookAsync(createdBook);
+                }
 
                 var createdBookDto = new BookRequestDto
                 {
@@ -135,7 +199,11 @@ namespace api_flms_service.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "An error occurred while creating the book.", details = ex.Message });
+                return StatusCode(500, new ErrorResponse
+                {
+                    Message = "An error occurred while creating the book.",
+                    Details = ex.Message
+                });
             }
         }
 
@@ -145,12 +213,24 @@ namespace api_flms_service.Controllers
             Console.WriteLine($"UpdateBook called with id: {id}, bookDto.BookId: {bookDto.BookId}");
             if (id != bookDto.BookId)
             {
-                return BadRequest(new { message = "Book ID in URL does not match Book ID in form data" });
+                return BadRequest(new ErrorResponse { Message = "Book ID in URL does not match Book ID in form data" });
             }
 
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                // Log chi tiết lỗi ModelState
+                var errors = ModelState
+                    .Where(x => x.Value.Errors.Count > 0)
+                    .ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                    );
+                Console.WriteLine("ModelState Errors: " + JsonConvert.SerializeObject(errors));
+                return BadRequest(new ErrorResponse
+                {
+                    Message = "Invalid data submitted.",
+                    Details = JsonConvert.SerializeObject(errors)
+                });
             }
 
             try
@@ -158,7 +238,7 @@ namespace api_flms_service.Controllers
                 var existingBook = await _bookService.GetBookByIdAsync(bookDto.BookId);
                 if (existingBook == null)
                 {
-                    return NotFound(new { message = "Book not found" });
+                    return NotFound(new ErrorResponse { Message = "Book not found" });
                 }
 
                 existingBook.Title = bookDto.BookName;
@@ -172,21 +252,18 @@ namespace api_flms_service.Controllers
                 {
                     try
                     {
-                        existingBook.BookFileUrl = await _cloudinaryService.UploadFileAsync(bookFile);
+                        // Upload file hình ảnh lên Cloudinary và lưu URL vào ImageUrls
+                        var imageUrl = await _cloudinaryService.UploadFileAsync(bookFile);
+                        existingBook.ImageUrls = imageUrl; // Lưu URL hình ảnh vào ImageUrls
                     }
                     catch (Exception uploadEx)
                     {
-                        return StatusCode(500, new { message = "Error uploading file to Cloudinary", details = uploadEx.Message });
+                        return StatusCode(500, new ErrorResponse
+                        {
+                            Message = "Error uploading file to Cloudinary",
+                            Details = uploadEx.Message
+                        });
                     }
-                }
-                else if (!string.IsNullOrEmpty(bookDto.BookFileUrl))
-                {
-                    existingBook.BookFileUrl = bookDto.BookFileUrl;
-                }
-
-                if (bookDto.ImageUrls != null && bookDto.ImageUrls.Any())
-                {
-                    existingBook.ImageUrls = string.Join(", ", bookDto.ImageUrls);
                 }
 
                 if (bookDto.CategoryIds != null && bookDto.CategoryIds.Any())
@@ -223,7 +300,11 @@ namespace api_flms_service.Controllers
             {
                 Console.WriteLine($"Error in UpdateBook: {ex.Message}");
                 Console.WriteLine($"StackTrace: {ex.StackTrace}");
-                return StatusCode(500, new { message = "An error occurred while updating the book.", details = ex.Message });
+                return StatusCode(500, new ErrorResponse
+                {
+                    Message = "An error occurred while updating the book.",
+                    Details = ex.Message
+                });
             }
         }
 
@@ -235,7 +316,7 @@ namespace api_flms_service.Controllers
                 var book = await _bookService.GetBookByIdAsync(id);
                 if (book == null)
                 {
-                    return NotFound(new { message = "Book not found" });
+                    return NotFound(new ErrorResponse { Message = "Book not found" });
                 }
 
                 await _bookService.DeleteBookAsync(id);
@@ -243,7 +324,11 @@ namespace api_flms_service.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "An error occurred while deleting the book.", details = ex.Message });
+                return StatusCode(500, new ErrorResponse
+                {
+                    Message = "An error occurred while deleting the book.",
+                    Details = ex.Message
+                });
             }
         }
 
@@ -253,7 +338,7 @@ namespace api_flms_service.Controllers
             var userOfGG = await _authService.GetCurrentUserAsync();
             if (userOfGG == null)
             {
-                return Unauthorized("User is not logged in");
+                return Unauthorized(new ErrorResponse { Message = "User is not logged in" });
             }
 
             var user = await _userService.GetUserByEmail(userOfGG.Email);
@@ -278,12 +363,12 @@ namespace api_flms_service.Controllers
             var user = await _userService.GetUserByEmail(userOfGG?.Email);
             if (user == null || user.UserId <= 0)
             {
-                return Unauthorized("User is not logged in");
+                return Unauthorized(new ErrorResponse { Message = "User is not logged in" });
             }
 
             if (request.BookId <= 0)
             {
-                return BadRequest("Invalid ID");
+                return BadRequest(new ErrorResponse { Message = "Invalid ID" });
             }
 
             var result = await _bookService.RenewBookAsync(user.UserId, request.BookId);
@@ -301,27 +386,31 @@ namespace api_flms_service.Controllers
         public async Task<IActionResult> ReserveBook(int bookId)
         {
             var userOfGG = await _authService.GetCurrentUserAsync();
-            if (userOfGG == null) return Unauthorized("User is not logged in");
+            if (userOfGG == null)
+                return Unauthorized(new ErrorResponse { Message = "User is not logged in" });
 
             var user = await _userService.GetUserByEmail(userOfGG.Email);
-            if (user == null || user.Role != "User") return Unauthorized("Only users with role 'User' can reserve books");
+            if (user == null || user.Role != "User")
+                return Unauthorized(new ErrorResponse { Message = "Only users with role 'User' can reserve books" });
 
             var result = await _bookService.ReserveBookAsync(bookId, user.UserId);
             if (result.Contains("successfully"))
             {
                 return Ok(new { message = result });
             }
-            return BadRequest(new { message = result });
+            return BadRequest(new ErrorResponse { Message = result });
         }
 
         [HttpGet("reserved")]
         public async Task<IActionResult> GetReservedBooks()
         {
             var userOfGG = await _authService.GetCurrentUserAsync();
-            if (userOfGG == null) return Unauthorized("User is not logged in");
+            if (userOfGG == null)
+                return Unauthorized(new ErrorResponse { Message = "User is not logged in" });
 
             var user = await _userService.GetUserByEmail(userOfGG.Email);
-            if (user == null || user.UserId <= 0) return Unauthorized("Invalid user");
+            if (user == null || user.UserId <= 0)
+                return Unauthorized(new ErrorResponse { Message = "Invalid user" });
 
             var books = await _bookService.GetReservedBooksAsync(user.UserId);
             return Ok(books);
@@ -334,13 +423,13 @@ namespace api_flms_service.Controllers
         {
             if (file == null || file.Length == 0)
             {
-                return BadRequest(new { message = "No file uploaded." });
+                return BadRequest(new ErrorResponse { Message = "No file uploaded." });
             }
 
             var extension = Path.GetExtension(file.FileName).ToLower();
             if (!_allowedExtensions.Contains(extension))
             {
-                return BadRequest(new { message = "Invalid file format. Allowed formats: PDF, EPUB, MOBI, PNG, JPG." });
+                return BadRequest(new ErrorResponse { Message = "Invalid file format. Allowed formats: PDF, EPUB, MOBI, PNG, JPG." });
             }
 
             var uploadResult = await _cloudinaryService.UploadFileAsync(file);
@@ -353,7 +442,7 @@ namespace api_flms_service.Controllers
             var file = await _cloudinaryService.GetFileAsync(publicId);
             if (file == null)
             {
-                return NotFound("File not found.");
+                return NotFound(new ErrorResponse { Message = "File not found." });
             }
             return Ok(file);
         }
@@ -364,9 +453,9 @@ namespace api_flms_service.Controllers
             var result = await _cloudinaryService.DeleteFileAsync(publicId);
             if (result == null || result.Result != "ok")
             {
-                return NotFound("File not found or could not be deleted.");
+                return NotFound(new ErrorResponse { Message = "File not found or could not be deleted." });
             }
-            return Ok("File deleted successfully.");
+            return Ok(new ErrorResponse { Message = "File deleted successfully." });
         }
     }
 }

@@ -19,10 +19,15 @@ namespace api_flms_service.Service
         {
             try
             {
-                return await _dbContext.Books
+                var books = await _dbContext.Books
                     .Include(b => b.Author)
-                    .Include(c => c.Categories)
+                    .Include(b => b.BookCategories)
+                        .ThenInclude(bc => bc.Category)
+                    .AsSplitQuery() // Tối ưu hiệu suất
                     .ToListAsync();
+
+                Console.WriteLine($"GetAllBooksAsync: Retrieved {books.Count} books.");
+                return books;
             }
             catch (Exception ex)
             {
@@ -34,12 +39,29 @@ namespace api_flms_service.Service
 
         public async Task<Book?> GetBookByIdAsync(int id)
         {
-            return await _dbContext.Books
-                .Include(b => b.Author)
-                .Include(b => b.Categories)
-                .Include(b => b.Reviews)
-                .ThenInclude(b => b.User)
-                .FirstOrDefaultAsync(b => b.BookId == id);
+            try
+            {
+                var book = await _dbContext.Books
+                    .Include(b => b.Author)
+                    .Include(b => b.BookCategories)
+                        .ThenInclude(bc => bc.Category)
+                    .Include(b => b.Reviews)
+                        .ThenInclude(b => b.User)
+                    .AsSplitQuery() // Tối ưu hiệu suất
+                    .FirstOrDefaultAsync(b => b.BookId == id);
+
+                if (book == null)
+                {
+                    Console.WriteLine($"GetBookByIdAsync: Book with ID {id} not found.");
+                }
+                return book;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in GetBookByIdAsync: {ex.Message}");
+                Console.WriteLine($"StackTrace: {ex.StackTrace}");
+                throw;
+            }
         }
 
         public async Task<Book> CreateBookAsync(Book book)
@@ -48,7 +70,8 @@ namespace api_flms_service.Service
             await _dbContext.SaveChangesAsync();
             return await _dbContext.Books
                 .Include(b => b.Author)
-                .Include(b => b.Categories)
+                .Include(b => b.BookCategories)
+                    .ThenInclude(bc => bc.Category)
                 .FirstOrDefaultAsync(b => b.BookId == book.BookId);
         }
 
@@ -58,7 +81,8 @@ namespace api_flms_service.Service
             await _dbContext.SaveChangesAsync();
             return await _dbContext.Books
                 .Include(b => b.Author)
-                .Include(b => b.Categories)
+                .Include(b => b.BookCategories)
+                    .ThenInclude(bc => bc.Category)
                 .FirstOrDefaultAsync(b => b.BookId == book.BookId);
         }
 
@@ -209,11 +233,13 @@ namespace api_flms_service.Service
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<Book>> SearchBooksAsync(string searchTerm, string categoryName)
+        public async Task<IEnumerable<BookDto>> SearchBooksAsync(string searchTerm, string categoryName)
         {
             var query = _dbContext.Books
                 .Include(b => b.Author)
-                .Include(b => b.Categories)
+                .Include(b => b.BookCategories)
+                    .ThenInclude(bc => bc.Category)
+                .AsSplitQuery() // Tối ưu hiệu suất
                 .AsQueryable();
 
             if (!string.IsNullOrEmpty(searchTerm))
@@ -224,10 +250,28 @@ namespace api_flms_service.Service
 
             if (!string.IsNullOrEmpty(categoryName))
             {
-                query = query.Where(b => b.Categories.Any(c => EF.Functions.ILike(c.CategoryName ?? "", categoryName)));
+                query = query.Where(b => b.BookCategories.Any(bc => EF.Functions.ILike(bc.Category.CategoryName ?? "", categoryName)));
             }
 
-            return await query.ToListAsync();
+            var books = await query.ToListAsync();
+            return books.Select(b => new BookDto
+            {
+                BookId = b.BookId,
+                BookName = b.Title ?? "No Title",
+                AuthorId = b.AuthorId,
+                AuthorName = b.Author?.Name ?? "No Author",
+                Categories = b.BookCategories?.Select(bc => new CategoryDto
+                {
+                    CategoryId = bc.Category.CategoryId,
+                    CategoryName = bc.Category.CategoryName
+                }).ToList() ?? new List<CategoryDto>(),
+                BookNo = b.ISBN ?? "No ISBN",
+                BookPrice = b.PublicationYear,
+                AvailableCopies = b.AvailableCopies,
+                BookDescription = b.BookDescription,
+                CloudinaryImageId = b.CloudinaryImageId,
+                ImageUrls = b.ImageUrls
+            });
         }
 
         public async Task<bool> AuthorExistsAsync(int authorId)

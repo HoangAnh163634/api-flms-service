@@ -26,10 +26,10 @@ public class AppDbContext : DbContext
             .WithMany(c => c.Books)
             .UsingEntity<BookCategory>(
                 j => j.HasOne(bc => bc.Category)
-                      .WithMany()
+                      .WithMany(c => c.BookCategories)
                       .HasForeignKey(bc => bc.CategoryId),
                 j => j.HasOne(bc => bc.Book)
-                      .WithMany()
+                      .WithMany(b => b.BookCategories)
                       .HasForeignKey(bc => bc.BookId),
                 j =>
                 {
@@ -107,7 +107,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Notification>()
             .Property(n => n.CreatedAt)
             .HasColumnName("created_at")
-            .HasColumnType("timestamp with time zone"); // Sửa thành timestamp with time zone
+            .HasColumnType("timestamp with time zone");
 
         modelBuilder.Entity<Notification>()
             .Property(n => n.Type)
@@ -125,7 +125,7 @@ public class AppDbContext : DbContext
             .HasMany(a => a.Books)
             .WithOne(b => b.Author)
             .HasForeignKey(b => b.AuthorId)
-            .OnDelete(DeleteBehavior.Cascade); // Xóa tác giả sẽ xóa luôn sách
+            .OnDelete(DeleteBehavior.Cascade);
 
         // Cấu hình lowercase tên bảng và cột
         foreach (var entity in modelBuilder.Model.GetEntityTypes())
@@ -143,7 +143,7 @@ public class AppDbContext : DbContext
             }
         }
 
-        //Fix timestamp
+        // Fix timestamp
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
             foreach (var property in entityType.GetProperties())

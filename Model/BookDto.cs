@@ -8,12 +8,14 @@ namespace api_flms_service.Model
         public string BookName { get; set; } = string.Empty;
         public int AuthorId { get; set; }
         public string AuthorName { get; set; } = string.Empty;
-        public List<Category> Category { get; set; } = new List<Category>();
+        public List<CategoryDto> Categories { get; set; } = new List<CategoryDto>();
         public string BookNo { get; set; } = string.Empty;
         public int BookPrice { get; set; }
         public int AvailableCopies { get; set; }
         public string BookDescription { get; set; } = string.Empty;
         public string CloudinaryImageId { get; set; } = string.Empty;
         public string ImageUrls { get; set; } = string.Empty;
+        public string? BookFileUrl { get; set; } 
+
     }
 }

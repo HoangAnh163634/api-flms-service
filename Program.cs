@@ -15,7 +15,10 @@ WebApplicationBuilder BuildApp()
     {
         options.AddPolicy("AllowFrontend", builder =>
         {
-            builder.WithOrigins("http://localhost:5000")
+            //builder.WithOrigins("http://localhost:5000")
+            //       .AllowAnyHeader()
+            //       .AllowAnyMethod();
+            builder.AllowAnyOrigin()
                    .AllowAnyHeader()
                    .AllowAnyMethod();
         });
@@ -59,6 +62,7 @@ WebApplicationBuilder BuildApp()
 
     builder.Services.AddLogging(logging =>
     {
+        logging.ClearProviders();
         logging.AddConsole();
     });
 
