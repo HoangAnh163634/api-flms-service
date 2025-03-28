@@ -5,9 +5,6 @@
     Layout = "~/Pages/Shared/_Layout.cshtml";
 }
 
-<!-- Formik for form handling -->
-<script src="https://cdn.jsdelivr.net/npm/formik@2.4.6/dist/formik.esm.min.js"></script>
-
 <!-- Axios for AJAX form submission -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.8.4/axios.min.js" integrity="sha512-2A1+/TAny5loNGk3RBbk11FwoKXYOMfAK6R7r4CpQH7Luz4pezqEGcfphoNzB7SM4dixUoJsKkBsB6kg+dNE2g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
@@ -102,6 +99,11 @@
                 fetch('/api/v0/authors'),
                 fetch('/api/v0/category')
             ]);
+
+            if (!authorsResponse.ok || !categoriesResponse.ok) {
+                throw new Error('Failed to fetch dropdown data');
+            }
+
             const authors = await authorsResponse.json();
             const categories = await categoriesResponse.json();
 
@@ -128,12 +130,22 @@
     }
 
     async function fetchBook() {
-        if (!bookId) return;
+        if (!bookId) {
+            document.getElementById('pageTitle').textContent = 'Add New Book';
+            document.getElementById('submitButton').textContent = 'Add Book';
+            return;
+        }
 
         try {
             const response = await fetch(`/api/v0/books/${bookId}`);
-            const book = await response.json();
+            if (!response.ok) {
+                throw new Error('Failed to fetch book data');
+            }
 
+            const book = await response.json();
+            document.getElementById('pageTitle').textContent = 'Edit Book';
+            document.getElementById('submitButton').textContent = 'Update Book';
+            document.getElementById('bookId').value = book.bookId || '';
             document.getElementById('bookName').value = book.bookName || '';
             document.getElementById('authorId').value = book.authorId || '';
             document.getElementById('bookNo').value = book.bookNo || '';
@@ -142,12 +154,14 @@
             document.getElementById('availableCopies').value = book.availableCopies || 0;
 
             const categorySelect = document.getElementById('categoryIds');
-            book.categories.forEach(cat => {
-                const option = Array.from(categorySelect.options).find(opt => opt.value == cat.categoryId);
-                if (option) {
-                    option.selected = true;
-                }
-            });
+            if (book.category && Array.isArray(book.category)) {
+                book.category.forEach(cat => {
+                    const option = Array.from(categorySelect.options).find(opt => opt.value == cat.categoryId);
+                    if (option) {
+                        option.selected = true;
+                    }
+                });
+            }
 
             // Display current image
             if (book.imageUrls) {
@@ -186,16 +200,19 @@
             const response = await axios({
                 method: method,
                 url: url,
-                data: formData
+                data: formData,
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
             });
 
-            if (response.status === 200) {
+            if (response.status === 200 || response.status === 201) {
                 document.getElementById('message').innerHTML = `<div class="alert alert-success">${bookId ? "Book updated" : "Book added"} successfully!</div>`;
                 setTimeout(() => window.location.href = "/Books", 1000);
             }
         } catch (err) {
             console.error("Error saving book:", err);
-            document.getElementById('message').innerHTML = `<div class="alert alert-danger">Error saving book.</div>`;
+            document.getElementById('message').innerHTML = `<div class="alert alert-danger">Error saving book: ${err.message}</div>`;
         }
     });
 

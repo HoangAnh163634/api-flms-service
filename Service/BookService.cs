@@ -19,10 +19,14 @@ namespace api_flms_service.Service
         {
             try
             {
-                return await _dbContext.Books
+                var books = await _dbContext.Books
                     .Include(b => b.Author)
-                    .Include(c => c.Categories)
+                    .Include(b => b.BookCategories)
+                        .ThenInclude(bc => bc.Category)
                     .ToListAsync();
+
+                Console.WriteLine($"GetAllBooksAsync: Retrieved {books.Count} books.");
+                return books;
             }
             catch (Exception ex)
             {
@@ -34,12 +38,28 @@ namespace api_flms_service.Service
 
         public async Task<Book?> GetBookByIdAsync(int id)
         {
-            return await _dbContext.Books
-                .Include(b => b.Author)
-                .Include(b => b.Categories)
-                .Include(b => b.Reviews)
-                .ThenInclude(b => b.User)
-                .FirstOrDefaultAsync(b => b.BookId == id);
+            try
+            {
+                var book = await _dbContext.Books
+                    .Include(b => b.Author)
+                    .Include(b => b.BookCategories)
+                        .ThenInclude(bc => bc.Category)
+                    .Include(b => b.Reviews)
+                        .ThenInclude(b => b.User)
+                    .FirstOrDefaultAsync(b => b.BookId == id);
+
+                if (book == null)
+                {
+                    Console.WriteLine($"GetBookByIdAsync: Book with ID {id} not found.");
+                }
+                return book;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in GetBookByIdAsync: {ex.Message}");
+                Console.WriteLine($"StackTrace: {ex.StackTrace}");
+                throw;
+            }
         }
 
         public async Task<Book> CreateBookAsync(Book book)
@@ -48,7 +68,8 @@ namespace api_flms_service.Service
             await _dbContext.SaveChangesAsync();
             return await _dbContext.Books
                 .Include(b => b.Author)
-                .Include(b => b.Categories)
+                .Include(b => b.BookCategories)
+                    .ThenInclude(bc => bc.Category)
                 .FirstOrDefaultAsync(b => b.BookId == book.BookId);
         }
 
@@ -58,7 +79,8 @@ namespace api_flms_service.Service
             await _dbContext.SaveChangesAsync();
             return await _dbContext.Books
                 .Include(b => b.Author)
-                .Include(b => b.Categories)
+                .Include(b => b.BookCategories)
+                    .ThenInclude(bc => bc.Category)
                 .FirstOrDefaultAsync(b => b.BookId == book.BookId);
         }
 
@@ -213,7 +235,8 @@ namespace api_flms_service.Service
         {
             var query = _dbContext.Books
                 .Include(b => b.Author)
-                .Include(b => b.Categories)
+                .Include(b => b.BookCategories)
+                    .ThenInclude(bc => bc.Category)
                 .AsQueryable();
 
             if (!string.IsNullOrEmpty(searchTerm))
@@ -224,7 +247,7 @@ namespace api_flms_service.Service
 
             if (!string.IsNullOrEmpty(categoryName))
             {
-                query = query.Where(b => b.Categories.Any(c => EF.Functions.ILike(c.CategoryName ?? "", categoryName)));
+                query = query.Where(b => b.BookCategories.Any(bc => EF.Functions.ILike(bc.Category.CategoryName ?? "", categoryName)));
             }
 
             return await query.ToListAsync();

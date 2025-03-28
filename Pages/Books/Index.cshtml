@@ -22,7 +22,6 @@
             <th>Available Copies</th>
             <th>Image</th>
             <th>Description</th>
-            @* <th>Image URLs</th> *@
             <th>Book File</th>
             <th>Actions</th>
         </tr>
@@ -34,7 +33,18 @@
 <script>
     async function fetchBooks() {
         try {
-            const response = await fetch('/api/v0/books');
+            const response = await fetch('/api/v0/books', {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
             const books = await response.json();
             console.log('Books data:', books);
 
@@ -57,8 +67,8 @@
                 // Category
                 const categoryCell = document.createElement('td');
                 const categoryNames = book.category && Array.isArray(book.category)
-                      ? book.category.map(cat => cat.categoryName).filter(name => name).join(', ')
-                      : 'No Category';
+                    ? book.category.map(cat => cat?.categoryName).filter(name => name).join(', ')
+                    : 'No Category';
                 categoryCell.textContent = categoryNames;
                 row.appendChild(categoryCell);
 
@@ -97,11 +107,6 @@
                     ? description.substring(0, maxLength) + '...'
                     : description;
                 row.appendChild(descriptionCell);
-
-                // Image URLs
-                // const urlsCell = document.createElement('td');
-                // urlsCell.textContent = book.imageUrls || 'N/A';
-                // row.appendChild(urlsCell);
 
                 // Book File URL
                 const fileCell = document.createElement('td');
@@ -148,16 +153,17 @@
                 };
                 divAction.appendChild(deleteButton);
                 divAction.style.display = "flex";
-                
-                actionsCell.appendChild(divAction);
 
+                actionsCell.appendChild(divAction);
                 row.appendChild(actionsCell);
                 tableBody.appendChild(row);
             });
         } catch (err) {
             console.error('Error fetching books:', err);
+            alert('Failed to load books. Please try again later.');
         }
     }
 
-    fetchBooks();
+    // Gọi hàm fetchBooks khi trang được tải
+    document.addEventListener('DOMContentLoaded', fetchBooks);
 </script>

@@ -32,6 +32,12 @@ namespace api_flms_service.Controllers
             try
             {
                 var books = await _bookService.GetAllBooksAsync();
+                if (books == null || !books.Any())
+                {
+                    Console.WriteLine("No books found in the database.");
+                    return Ok(new List<BookDto>());
+                }
+
                 var bookDtos = books.Select(b => new BookDto
                 {
                     BookId = b.BookId,
@@ -47,6 +53,7 @@ namespace api_flms_service.Controllers
                     ImageUrls = b.ImageUrls
                 }).ToList();
 
+                Console.WriteLine($"Successfully retrieved {bookDtos.Count} books.");
                 return Ok(bookDtos);
             }
             catch (Exception ex)
@@ -92,7 +99,7 @@ namespace api_flms_service.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateBook([FromBody] BookRequestDto bookDto)
+        public async Task<IActionResult> CreateBook([FromForm] BookRequestDto bookDto, IFormFile? bookFile)
         {
             if (!ModelState.IsValid)
             {
@@ -109,12 +116,41 @@ namespace api_flms_service.Controllers
                     PublicationYear = (int)bookDto.BookPrice,
                     AvailableCopies = bookDto.AvailableCopies,
                     BookDescription = bookDto.BookDescription,
-                    BookFileUrl = bookDto.BookFileUrl,
-                    ImageUrls = bookDto.ImageUrls != null ? string.Join(", ", bookDto.ImageUrls) : null,
-                    BookCategories = bookDto.CategoryIds?.Select(id => new BookCategory { CategoryId = id }).ToList()
+                    BookFileUrl = bookDto.BookFileUrl
                 };
 
+                if (bookFile != null)
+                {
+                    try
+                    {
+                        book.BookFileUrl = await _cloudinaryService.UploadFileAsync(bookFile);
+                    }
+                    catch (Exception uploadEx)
+                    {
+                        return StatusCode(500, new { message = "Error uploading file to Cloudinary", details = uploadEx.Message });
+                    }
+                }
+
+                if (bookDto.ImageUrls != null && bookDto.ImageUrls.Any())
+                {
+                    book.ImageUrls = string.Join(", ", bookDto.ImageUrls);
+                }
+
+                // Lưu sách trước để sinh BookId
                 var createdBook = await _bookService.CreateBookAsync(book);
+
+                // Gán BookCategories sau khi đã có BookId
+                if (bookDto.CategoryIds != null && bookDto.CategoryIds.Any())
+                {
+                    createdBook.BookCategories = bookDto.CategoryIds.Select(id => new BookCategory
+                    {
+                        BookId = createdBook.BookId,
+                        CategoryId = id
+                    }).ToList();
+
+                    // Cập nhật lại sách với BookCategories
+                    await _bookService.UpdateBookAsync(createdBook);
+                }
 
                 var createdBookDto = new BookRequestDto
                 {
