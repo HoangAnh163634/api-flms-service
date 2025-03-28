@@ -16,20 +16,20 @@ WebApplicationBuilder BuildApp()
     {
         options.AddPolicy("AllowFrontend", builder =>
         {
-            builder.WithOrigins("http://localhost:8800") // Cho phép origin của frontend
+            builder.WithOrigins("http://localhost:5000")
                    .AllowAnyHeader()
                    .AllowAnyMethod();
         });
     });
 
-    // Add services to the 
+    // Add services to the container
     builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
     builder.Services.AddHttpClient<AuthService>();
 
     builder.Services.AddDbContext<AppDbContext>(options =>
         options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-    // Add services to the container.
+    // Add controllers with JSON options
     builder.Services.AddControllers()
         .AddJsonOptions(options =>
         {
@@ -39,6 +39,7 @@ WebApplicationBuilder BuildApp()
 
     builder.Services.Configure<LoanSettings>(builder.Configuration.GetSection("LoanSettings"));
 
+    // Register services
     builder.Services.AddScoped<VnPayService>();
     builder.Services.AddScoped<IReserveBookService, ReserveBookService>();
     builder.Services.AddScoped<IUserService, UserService>();
@@ -48,35 +49,28 @@ WebApplicationBuilder BuildApp()
     builder.Services.AddScoped<IAuthorService, AuthorService>();
     builder.Services.AddScoped<IIssuedBookService, IssuedBookService>();
     builder.Services.AddScoped<ILoanService, LoanService>();
-    builder.Services.AddControllers();
     builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
     builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
     builder.Services.AddScoped<INotificationService, NotificationService>();
+
     // Add controllers and Razor Pages
-    builder.Services.AddControllers();
     builder.Services.AddRazorPages().AddViewOptions(options =>
     {
         options.HtmlHelperOptions.ClientValidationEnabled = true; // Bật client-side validation
     });
 
-
-
     // Configure Swagger
     builder.Services.AddHttpClient();
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
-   
 
     builder.Services.AddLogging(logging =>
     {
         logging.AddConsole();
     });
 
-
     return builder;
 }
-
-
 
 WebApplication RunApp()
 {
@@ -89,11 +83,9 @@ WebApplication RunApp()
         app.UseSwaggerUI();
     }
 
-    // Add static file serving (for Razor Pages)
     app.UseStaticFiles();
-
     app.UseRouting();
-
+    app.UseCors("AllowFrontend"); // Thêm CORS vào pipeline
     app.UseAuthorization();
 
     // Map Controllers and Razor Pages
@@ -102,21 +94,9 @@ WebApplication RunApp()
         endpoints.MapRazorPages();
         endpoints.MapControllers();
     });
+
     return app;
 }
-
-/*try
-{
-    var productionApp = RunApp();
-    var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
-    productionApp.Urls.Add($"http://0.0.0.0:{port}");
-    productionApp.Run();
-}
-catch (IOException)
-{
-    var devApp = RunApp();
-    devApp.Run();
-}*/
 
 var devApp = RunApp();
 devApp.Run();
