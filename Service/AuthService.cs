@@ -96,10 +96,10 @@ namespace api_auth_service.Services
 
             var domain = new Uri(Request.GetEncodedUrl()).Host.TrimStart('.');
             var isLocalHost = Request.Host.Host.Contains("localhost") || domain == "127.0.0.1";
-            
-            
 
-            
+            if (domain[0] == '.')
+                domain = domain.Remove(0, 1);
+
             Response.Cookies.Append("googleToken", Token, new CookieOptions
             {
                 HttpOnly = true,  // Prevents JavaScript access
