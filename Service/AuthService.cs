@@ -94,6 +94,8 @@ namespace api_auth_service.Services
             if (Token == null || string.IsNullOrEmpty(Token)) return;
 
             var domain = new Uri(Request.GetEncodedUrl()).Host.TrimStart('.');
+            var rootDomain = "." + domain.Split('.')[domain.Length - 2] + "." + domain.Split('.')[domain.Length - 1];
+
             var isLocalHost = Request.Host.Host.Contains("localhost") || domain == "127.0.0.1";
             Response.Cookies.Append("googleToken", Token, new CookieOptions
             {
@@ -101,7 +103,7 @@ namespace api_auth_service.Services
                 Secure = !isLocalHost, // Secure=True only in production
                 Path = "/",
                 SameSite = isLocalHost ? SameSiteMode.Lax : SameSiteMode.None, // Allows cross-origin cookie sending
-                Domain = isLocalHost ? null : domain, // ✅ Allows sharing cookies across subdomains only in production
+                Domain = isLocalHost ? null : rootDomain, // ✅ Allows sharing cookies across subdomains only in production
                 Expires = DateTime.UtcNow.AddDays(7)
             });
         }
