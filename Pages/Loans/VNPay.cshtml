@@ -88,7 +88,7 @@
 
         const clientIp = await getClientIp(); // Get client's IP address
         const urlParams = new URLSearchParams(window.location.search);
-        const loanId = urlParams.get('Id');
+        const loanId = urlParams.get('Id') || urlParams.get('id');
 
         const response = await fetch(`/api/v0/Loan/pay?loanId=${loanId}&clientip=${clientIp}`, {
             method: "POST"

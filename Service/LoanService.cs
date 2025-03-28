@@ -42,7 +42,7 @@ namespace api_flms_service.Service
                 throw new Exception("Book is not available");
 
             book.AvailableCopies--;
-
+            _context.Books.Update(book);
             _context.Loans.Add(loan);
             await _context.SaveChangesAsync();
             return loan;
