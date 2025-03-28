@@ -8,84 +8,368 @@
 @inject IHttpContextAccessor HttpContextAccessor
 
 @{
-    var userInfo = await AuthService.GetCurrentUserAsync();
+    var users = await AuthService.GetCurrentUserAsync();
+    var user = users == null ? null : await UserService.GetUserByEmail(users.Email);
     var LoginUrl = await AuthService.GetLoginUrl();
 }
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8" />
+    <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>@ViewData["Title"] - Library Management System</title>
     <meta name="google-site-verification" content="BbcyxZcHSOSkw3_8vjAiQODp4M7zWruCb4yEag-7Hdw" />
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" />
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+    <!-- Include jQuery & Select2 CSS/JS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Load Font Awesome 6 từ CDN chính thức -->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.5.1/css/all.css" crossorigin="anonymous">
+    <!-- Formik for form handling -->
+    <script src="https://cdn.jsdelivr.net/npm/formik@2.4.6/dist/formik.esm.min.js"></script>
+
+    <!-- Axios for AJAX form submission -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.8.4/axios.min.js" integrity="sha512-2A1+/TAny5loNGk3RBbk11FwoKXYOMfAK6R7r4CpQH7Luz4pezqEGcfphoNzB7SM4dixUoJsKkBsB6kg+dNE2g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <!-- FilePond for file uploads -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/filepond/4.32.7/filepond.min.js" integrity="sha512-/kcyaB84QgojPP9E91b3lmeLZXKMG6wGqIGaTIld4RtbyTBFB0DHBSL7/WPwU/fAftwmpvYYvdq/S96smP8Ppw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/filepond/4.32.7/filepond.min.css" integrity="sha512-FJiY0+cfDomcgiTe/XuOgtE7QW6R0NGnCDonCOgVztYK7+USa0Y5a3LoUcXUhfCjDq9oJ91hqyThq2eN69OZBg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <style>
+        html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+
+        .navbar {
+        position: fixed;
+        top: 0;
+        width: 100%;
+        z-index: 1000;
+        background: linear-gradient(90deg, #ff6b6b 0%, #4ecdc4 100%);
+        }
+
+        .navbar .nav-link {
+        color: white !important;
+        transition: color 0.3s ease;
+        }
+
+        .navbar .nav-link:hover {
+        color: #f8f9fa !important;
+        }
+
+        .navbar-brand {
+        color: white !important;
+        font-weight: bold;
+        }
+
+        main {
+        flex: 1 0 auto;
+        padding-top: 80px;
+        padding-bottom: 80px;
+        }
+
+        footer {
+        flex-shrink: 0;
+        background: linear-gradient(90deg, #ff6b6b 0%, #4ecdc4 100%);
+        color: white;
+        padding: 40px 0;
+        text-align: center;
+        border-top-left-radius: 15px;
+        border-top-right-radius: 15px;
+        box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        footer a {
+        color: #fff;
+        text-decoration: none;
+        font-weight: bold;
+        transition: color 0.3s ease;
+        }
+
+        footer a:hover {
+        color: #f8f9fa;
+        text-decoration: underline;
+        }
+
+        /* Style cho notification dropdown */
+        .notification-icon {
+        margin-right: 8px;
+        font-size: 1.2rem;
+        }
+
+        .notification-item {
+        padding: 10px;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        }
+
+        .notification-date {
+        font-size: 0.8rem;
+        color: #666;
+        }
+
+        .notification-title {
+        font-weight: bold;
+        }
+
+        .notification-content {
+        font-size: 0.9rem;
+        color: #333;
+        }
+
+        .no-notifications {
+        padding: 10px;
+        text-align: center;
+        color: #666;
+        }
+
+        .mark-read-btn {
+        font-size: 0.8rem;
+        padding: 2px 6px;
+        }
+    </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <nav class="navbar navbar-expand-lg">
         <div class="container-fluid">
+            <a class="navbar-brand" href="@Url.Page("/Index")">Library Management System (LMS)</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav">
-                    <li class="nav-item active">
-                        <a class="nav-link" href="@Url.Page("/Index")" data-toggle="tooltip" data-placement="bottom" title="Home">
-                            Library Management System (LMS)
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="@Url.Page("/Index")" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Home">Home</a>
+                    </li>
+                    @if (user != null) // Kiểm tra nếu đã đăng nhập
+                    {
+                        @if (user.Role == "Admin" || user.Role == "Member" || user.Role == "User")
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" href="@Url.Page("/Loans/List")" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Gallery">Gallery</a>
+                            </li>
+                        }
+
+                        @if (user.Role == "Admin")
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" href="@Url.Page("/Dashboard")" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Librarian">Librarian</a>
+                            </li>
+                        }
+
+                        @if (user.Role == "Admin" || user.Role == "Member" || user.Role == "User")
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" href="@Url.Page("/Books/ManagerRenewedBook")" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Book Renewed">Book Renewed</a>
+                            </li>
+                        }
+
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Page("/AI/Index")" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Chat Box">Chat Box</a>
+                        </li>
+                    }
+                </ul>
+
+                <!-- User profile, notification, and logout -->
+                <ul class="navbar-nav ms-auto">
+                    <!-- Notification Dropdown -->
+                    <li class="nav-item dropdown notification-dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-bell text-white"></i>
+                            <span id="notificationCount" class="badge bg-danger rounded-pill">0</span>
                         </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationDropdown" id="notificationList">
+                            <li class="no-notifications">No notifications</li>
+                        </ul>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="@Url.Page("/Loans/List")" data-toggle="tooltip" data-placement="bottom" title="Gallery">Gallery</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="@Url.Page("/Dashboard")" data-toggle="tooltip" data-placement="bottom" title="Librarian">Librarian</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="@Url.Page("/Books/ManagerRenewedBook")" data-toggle="tooltip" data-placement="bottom" title="Book Renewed">Book Renewed</a>
-                    </li>
+
+                    @if (user != null)
+                    {
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <img src="@user.LocalImage" class="rounded-circle me-2" width="30" height="30" alt="User Image"> @user.Name
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+                                <li><a class="dropdown-item" href="/ViewProfile">View & Edit Profile</a></li>
+                                <li><a class="dropdown-item" href="/Logout">Logout</a></li>
+                            </ul>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="nav-item">
+                            <a class="btn btn-light text-dark fw-bold" href="@LoginUrl">Login</a>
+                        </li>
+                    }
                 </ul>
             </div>
-
-            <!-- User profile and logout -->
-            <ul class="navbar-nav ml-auto">
-                @if (userInfo != null)
-                {
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="profileDropdown" role="button" data-toggle="dropdown">
-                            <img src="@userInfo.Picture" class="rounded-circle" width="30" height="30" alt="User Image"> @userInfo.Name
-                        </a>
-                        <div class="dropdown-menu" aria-labelledby="profileDropdown">
-                            <a class="dropdown-item" href="/ViewProfile">View Profile</a>
-                            <a class="dropdown-item" href="/EditProfile">Edit Profile</a>
-                        </div>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/Logout">Logout</a>
-                    </li>
-                }
-                else
-                {
-                    <li class="nav-item">
-                        <a class="btn btn-primary" href="@LoginUrl">Login</a>
-                    </li>
-                }
-            </ul>
         </div>
     </nav>
 
     <!-- Page content -->
-    <div class="container mt-4">
-        @RenderBody()
-    </div>
+    <main>
+        <div class="container">
+            @RenderBody()
+        </div>
+    </main>
 
-    <!-- Scripts for validation and tooltip -->
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>© @DateTime.Now.Year - Library Management System (LMS)</p>
+            <p>
+                <a href="@Url.Page("/AboutUs")">About Us</a> |
+                <a href="https://www.facebook.com/hoangang.nguyen.509">Contact Us</a> |
+                <a href="@Url.Page("/PrivacyPolicy")">Privacy Policy</a>
+            </p>
+            <p>Email: <a href="mailto:minzz8128@gmail.com">support</a> | Phone: (+84) 976-054728</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.3/jquery.validate.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
     <script>
         $(document).ready(function () {
-            // Initialize all tooltips on the page
-            $('[data-toggle="tooltip"]').tooltip();
+        $('[data-bs-toggle="tooltip"]').tooltip();
+
+        // Fetch notifications
+        fetchNotifications();
+
+        function fetchNotifications() {
+        fetch('/api/v0/notifications')
+        .then(response => response.json())
+        .then(data => {
+        const notificationList = $('#notificationList');
+        const notificationCount = $('#notificationCount');
+        notificationList.empty();
+
+        if (data.length === 0) {
+        notificationList.append('<li class="no-notifications">No notifications</li>');
+        notificationCount.text('0');
+        return;
+        }
+
+        const unreadCount = data.filter(n => !n.isRead).length;
+        notificationCount.text(unreadCount);
+
+        data.forEach(notification => {
+        const date = new Date(notification.createdAt).toLocaleDateString('vi-VN', {
+        day: '2-digit', month: '2-digit', year: 'numeric'
+        });
+        const iconClass = notification.type === 'Event' ? 'fas fa-calendar-alt text-primary' : 'fas fa-info-circle text-success';
+        const content = notification.content ? `<div class="notification-content">${notification.content}</div>` : '';
+        const item = `
+        <li class="notification-item" data-id="${notification.id}">
+        <div class="d-flex align-items-start">
+        <i class="${iconClass} notification-icon"></i>
+        <div>
+        <div class="notification-date">${date}</div>
+        <div class="notification-title">${notification.title}</div>
+        ${content}
+        </div>
+        </div>
+        ${notification.isRead ? '' : '<button class="btn btn-sm btn-outline-primary mark-read-btn">Mark as Read</button>'}
+        </li>
+        `;
+        notificationList.append(item);
+        });
+
+        // Xử lý sự kiện "Mark as Read"
+        $('.mark-read-btn').on('click', function () {
+        const notificationItem = $(this).closest('.notification-item');
+        const notificationId = notificationItem.data('id');
+
+        fetch(`/api/v0/notifications/${notificationId}`, {
+        method: 'PUT',
+        headers: {
+        'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ ...data.find(n => n.id === notificationId), isRead: true })
+        })
+        .then(response => {
+        if (response.ok) {
+        notificationItem.find('.mark-read-btn').remove();
+        fetchNotifications(); // Cập nhật lại danh sách và badge
+        } else {
+        console.error('Failed to mark notification as read');
+        }
+        })
+        .catch(error => {
+        console.error('Error marking notification as read:', error);
+        });
+        });
+        })
+        .catch(error => {
+        console.error('Error fetching notifications:', error);
+        });
+        }
         });
     </script>
+    @if (user != null && user.Role == "Guest")
+    {
+        <script>
+            $(document).ready(function () {
+                // Create the popup dynamically
+                var $popup = $("<div>")
+                    .text("Your account is not verified. Contact the Librarian to verify your account! 🥰")
+                    .css({
+                        "position": "fixed",
+                        "bottom": "20px",
+                        "right": "20px",
+                        "background": "#ffcccb",
+                        "color": "#333",
+                        "padding": "15px 20px",
+                        "border-radius": "8px",
+                        "box-shadow": "0 4px 8px rgba(0, 0, 0, 0.2)",
+                        "font-size": "16px",
+                        "font-weight": "bold",
+                        "z-index": "9999",
+                        "opacity": "0",
+                        "transform": "translateY(20px)",
+                        "transition": "opacity 0.5s ease-in-out, transform 0.5s ease-in-out"
+                    });
+
+                // Append the popup to the body
+                $("body").append($popup);
+
+                // Show the popup with animation
+                setTimeout(function () {
+                    $popup.css({
+                        "opacity": "1",
+                        "transform": "translateY(0)"
+                    });
+                }, 100);
+
+                // Auto-hide after 5 seconds
+                setTimeout(function () {
+                    $popup.css({
+                        "opacity": "0",
+                        "transform": "translateY(20px)"
+                    });
+                    setTimeout(() => $popup.remove(), 500);
+                }, 8000);
+            });
+        </script>
+    }
     @RenderSection("Scripts", required: false)
 </body>
 </html>

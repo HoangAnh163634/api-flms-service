@@ -14,7 +14,6 @@ namespace api_flms_service.Pages.BookLoans
 {
     public class ListModel : PageModel
     {
-
         private readonly AuthService _auth;
         private readonly IUserService _userService;
         private readonly IReviewService _reviewService;
@@ -28,13 +27,13 @@ namespace api_flms_service.Pages.BookLoans
             _loanService = loanService;
         }
 
-        public List<Loan> BookLoan { get;set; } = default!;
+        public List<Loan> BookLoan { get; set; } = default!;
         [BindProperty]
         public List<Loan> BookLoanPast { get; set; } = default!;
         public List<Loan> BookLoanCurrent { get; set; } = default!;
         public Author author { get; set; }
         [BindProperty]
-        public string opinion {  get; set; }
+        public string opinion { get; set; }
         [BindProperty]
         public string rating { get; set; }
         [BindProperty]
@@ -54,7 +53,7 @@ namespace api_flms_service.Pages.BookLoans
 
             foreach (var item in BookLoan)
             {
-                if (item.ReturnDate == null || item.LoanDate >= item.ReturnDate)
+                if (item.ReturnDate == null || item.ReturnDate > DateTime.UtcNow)
                 {
                     BookLoanCurrent.Add(item);
                 }
@@ -65,7 +64,6 @@ namespace api_flms_service.Pages.BookLoans
             }
         }
 
-
         public async Task<IActionResult> OnPostAsync(int id, string handler)
         {
             BookReviews = (await _reviewService.GetAllReviewsAsync()).ToList();
@@ -75,18 +73,19 @@ namespace api_flms_service.Pages.BookLoans
             if (handler == "handler")
             {
                 await _loanService.ReturnLoanAsync(id);
+                TempData["SuccessMessage"] = "Book returned successfully!";
             }
 
             var currentUser = await _auth.GetCurrentUserAsync();
-
             user = await _userService.GetUserByEmail(currentUser.Email);
 
-            BookLoan = (List<Loan>) user.BookLoans;
+            BookLoan = user.BookLoans?.ToList() ?? new List<Loan>();
             BookLoanCurrent = new List<Loan>();
             BookLoanPast = new List<Loan>();
+
             foreach (var item in BookLoan)
             {
-                if (item.ReturnDate == null || item.LoanDate >= item.ReturnDate)
+                if (item.ReturnDate == null || item.ReturnDate > DateTime.UtcNow)
                 {
                     BookLoanCurrent.Add(item);
                 }
@@ -95,8 +94,7 @@ namespace api_flms_service.Pages.BookLoans
                     BookLoanPast.Add(item);
                 }
             }
-            
-            
+
             return Page();
         }
     }

@@ -11,6 +11,17 @@ WebApplicationBuilder BuildApp()
 {
     var builder = WebApplication.CreateBuilder(args);
 
+    // Thêm CORS
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy("AllowFrontend", builder =>
+        {
+            builder.WithOrigins("http://localhost:8800") // Cho phép origin của frontend
+                   .AllowAnyHeader()
+                   .AllowAnyMethod();
+        });
+    });
+
     // Add services to the 
     builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
     builder.Services.AddHttpClient<AuthService>();
@@ -26,9 +37,9 @@ WebApplicationBuilder BuildApp()
             options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
         });
 
-    builder.Services.Configure<VNPaySettings>(builder.Configuration.GetSection("VNPay"));
-    
-    builder.Services.AddScoped<VNPayService>();
+    builder.Services.Configure<LoanSettings>(builder.Configuration.GetSection("LoanSettings"));
+
+    builder.Services.AddScoped<VnPayService>();
     builder.Services.AddScoped<IReserveBookService, ReserveBookService>();
     builder.Services.AddScoped<IUserService, UserService>();
     builder.Services.AddScoped<IBookService, BookService>();
@@ -38,7 +49,9 @@ WebApplicationBuilder BuildApp()
     builder.Services.AddScoped<IIssuedBookService, IssuedBookService>();
     builder.Services.AddScoped<ILoanService, LoanService>();
     builder.Services.AddControllers();
-
+    builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
+    builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
+    builder.Services.AddScoped<INotificationService, NotificationService>();
     // Add controllers and Razor Pages
     builder.Services.AddControllers();
     builder.Services.AddRazorPages().AddViewOptions(options =>
@@ -52,14 +65,18 @@ WebApplicationBuilder BuildApp()
     builder.Services.AddHttpClient();
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
+   
 
     builder.Services.AddLogging(logging =>
     {
         logging.AddConsole();
     });
 
+
     return builder;
 }
+
+
 
 WebApplication RunApp()
 {
@@ -80,8 +97,11 @@ WebApplication RunApp()
     app.UseAuthorization();
 
     // Map Controllers and Razor Pages
-    app.MapRazorPages();
-    app.MapControllers();
+    app.UseEndpoints(endpoints =>
+    {
+        endpoints.MapRazorPages();
+        endpoints.MapControllers();
+    });
     return app;
 }
 

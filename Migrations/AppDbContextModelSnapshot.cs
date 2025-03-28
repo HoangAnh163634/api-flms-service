@@ -74,6 +74,11 @@ namespace api_flms_service.Migrations
                         .HasColumnType("text")
                         .HasColumnName("bookdescription");
 
+                    b.Property<string>("BookFileUrl")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("bookfileurl");
+
                     b.Property<DateTime>("BorrowedUntil")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("borroweduntil");
@@ -124,22 +129,22 @@ namespace api_flms_service.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("categoryid");
 
-                    b.Property<int?>("BookId1")
+                    b.Property<int?>("BookId2")
                         .HasColumnType("integer")
-                        .HasColumnName("bookid1");
+                        .HasColumnName("bookid2");
 
-                    b.Property<int?>("CategoryId1")
+                    b.Property<int?>("CategoryId2")
                         .HasColumnType("integer")
-                        .HasColumnName("categoryid1");
+                        .HasColumnName("categoryid2");
 
                     b.HasKey("BookId", "CategoryId")
                         .HasName("pk_bookcategory");
 
-                    b.HasIndex("BookId1");
+                    b.HasIndex("BookId2");
 
                     b.HasIndex("CategoryId");
 
-                    b.HasIndex("CategoryId1");
+                    b.HasIndex("CategoryId2");
 
                     b.ToTable("bookcategory", (string)null);
                 });
@@ -238,6 +243,48 @@ namespace api_flms_service.Migrations
                     b.ToTable("loans");
                 });
 
+            modelBuilder.Entity("api_flms_service.Entity.Notification", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Content")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("content");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<bool>("IsRead")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_read");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("title");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("type");
+
+                    b.HasKey("Id")
+                        .HasName("pk_notifications");
+
+                    b.ToTable("notifications", (string)null);
+                });
+
             modelBuilder.Entity("api_flms_service.Entity.Review", b =>
                 {
                     b.Property<int>("ReviewId")
@@ -268,18 +315,12 @@ namespace api_flms_service.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("userid");
 
-                    b.Property<int?>("UserId1")
-                        .HasColumnType("integer")
-                        .HasColumnName("userid1");
-
                     b.HasKey("ReviewId")
                         .HasName("pk_reviews");
 
                     b.HasIndex("BookId");
 
                     b.HasIndex("UserId");
-
-                    b.HasIndex("UserId1");
 
                     b.ToTable("reviews");
                 });
@@ -297,6 +338,14 @@ namespace api_flms_service.Migrations
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("email");
+
+                    b.Property<string>("GoogleImage")
+                        .HasColumnType("text")
+                        .HasColumnName("googleimage");
+
+                    b.Property<string>("LocalImage")
+                        .HasColumnType("text")
+                        .HasColumnName("localimage");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -344,7 +393,7 @@ namespace api_flms_service.Migrations
 
                     b.HasOne("api_flms_service.Entity.Book", null)
                         .WithMany("BookCategories")
-                        .HasForeignKey("BookId1");
+                        .HasForeignKey("BookId2");
 
                     b.HasOne("api_flms_service.Entity.Category", "Category")
                         .WithMany()
@@ -354,7 +403,7 @@ namespace api_flms_service.Migrations
 
                     b.HasOne("api_flms_service.Entity.Category", null)
                         .WithMany("BookCategories")
-                        .HasForeignKey("CategoryId1");
+                        .HasForeignKey("CategoryId2");
 
                     b.Navigation("Book");
 
@@ -389,14 +438,11 @@ namespace api_flms_service.Migrations
                         .IsRequired();
 
                     b.HasOne("api_flms_service.Entity.User", "User")
-                        .WithMany()
+                        .WithMany("BookReviews")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("api_flms_service.Entity.User", null)
-                        .WithMany("BookReviews")
-                        .HasForeignKey("UserId1");
+                        .IsRequired()
+                        .HasConstraintName("fk_reviews_users_userid");
 
                     b.Navigation("Book");
 

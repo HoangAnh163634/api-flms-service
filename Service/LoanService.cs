@@ -1,16 +1,20 @@
 ﻿using api_flms_service.Entity;
+using api_flms_service.Model;
 using api_flms_service.ServiceInterface;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace api_flms_service.Service
 {
     public class LoanService : ILoanService
     {
         private readonly AppDbContext _context;
+        private readonly LoanSettings _loan;
 
-        public LoanService(AppDbContext context)
+        public LoanService(AppDbContext context, IOptions<LoanSettings> loanSettings)
         {
             _context = context;
+            _loan = loanSettings.Value;
         }
 
         public async Task<IEnumerable<Loan>> GetAllLoansAsync()
@@ -49,6 +53,14 @@ namespace api_flms_service.Service
             if (loan.ReturnDate != null) return false;
 
             var book = await _context.Books.FindAsync(loan.BookId);
+
+            //Check if has fee
+            if (DateTime.Now > loan.ReturnDate)
+            {
+
+            }
+
+
             if (book != null)
                 book.AvailableCopies++;
             loan.ReturnDate = DateTime.Now;
@@ -74,6 +86,20 @@ namespace api_flms_service.Service
             if (loan == null) return false;
 
             loan.LoanDate = DateTime.Now;
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> UpdateLoanAsync(Loan loan)
+        {
+            var existingLoan = await _context.Loans.FindAsync(loan.BookLoanId);
+            if (existingLoan == null) return false;
+
+            // Chỉ cập nhật LoanDate và ReturnDate
+            existingLoan.LoanDate = loan.LoanDate;
+            existingLoan.ReturnDate = loan.ReturnDate;
+
+            _context.Loans.Update(existingLoan);
             await _context.SaveChangesAsync();
             return true;
         }

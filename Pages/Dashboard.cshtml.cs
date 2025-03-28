@@ -1,7 +1,5 @@
-using api_flms_service.ServiceInterface;
+﻿using api_flms_service.ServiceInterface;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using System.Net.Http;
-using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace api_flms_service.Pages
@@ -13,26 +11,34 @@ namespace api_flms_service.Pages
         private readonly IUserService _userService;
         private readonly IBookService _bookService;
         private readonly ICategoryService _categoryService;
-        private readonly IIssuedBookService _issuedBookService;
+        private readonly ILoanService _loanService; // Thay IIssuedBookService bằng ILoanService
+        private readonly IReviewService _reviewService;
+        private readonly INotificationService _notificationService;
 
         public int TotalUsers { get; set; }
         public int TotalBooks { get; set; }
         public int TotalCategories { get; set; }
         public int TotalAuthors { get; set; }
-        public int TotalIssuedBooks { get; set; }
+        public int TotalLoans { get; set; } // Thay TotalIssuedBooks bằng TotalLoans
+        public int TotalReviews { get; set; }
+        public int TotalNotifications { get; set; }
 
         public DashboardModel(
             IAuthorService authorService,
             IUserService userService,
             IBookService bookService,
             ICategoryService categoryService,
-            IIssuedBookService issuedBookService)
+            ILoanService loanService, // Thay IIssuedBookService bằng ILoanService
+            IReviewService reviewService,
+            INotificationService notificationService)
         {
             _authorService = authorService;
             _userService = userService;
             _bookService = bookService;
             _categoryService = categoryService;
-            _issuedBookService = issuedBookService;
+            _loanService = loanService; // Khởi tạo ILoanService
+            _reviewService = reviewService;
+            _notificationService = notificationService;
         }
 
         public async Task OnGetAsync()
@@ -53,10 +59,17 @@ namespace api_flms_service.Pages
             var categories = await _categoryService.GetAllCategoriesAsync();
             TotalCategories = categories.Count();
 
-            // Fetch issued books count
-            var issuedBooks = await _issuedBookService.GetAllIssuedBooksAsync();
-            TotalIssuedBooks = issuedBooks.Count();
+            // Fetch loans count (thay thế issued books)
+            var loans = await _loanService.GetAllLoansAsync(); // Lấy danh sách khoản mượn
+            TotalLoans = loans.Count(); // Đếm tổng số khoản mượn
+
+            // Fetch reviews count
+            var reviews = await _reviewService.GetAllReviewsAsync();
+            TotalReviews = reviews.Count();
+
+            // Fetch notifications count
+            var notifications = await _notificationService.GetAllNotificationsAsync();
+            TotalNotifications = notifications.Count();
         }
     }
-   
 }

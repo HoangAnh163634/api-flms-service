@@ -4,187 +4,419 @@
 @{
     ViewData["Title"] = Model.Book.Title;
 }
-<br />
-@if (TempData["SuccessMessage"] != null)
-{
-    <div class="alert alert-success text-center">@TempData["SuccessMessage"]</div>
-}
-<div class="card" style="border-radius:20px">
-    <div class="row" style="padding:10px">
-        <div class="col-lg-5">
-            <img src="@Model.Book.CloudinaryImageId" class="img-fluid" alt="Item Image" style="border-radius:20px; max-height:600px">
-        </div>
-        <div class="col-lg-7">
-            <h2 class="display-4 fw-bold text-body" style="font-family:sans-serif; font-weight:bold;">@Model.Book.Title</h2>
-            <ul class="list-group list-group-flush">
-                <li class="list-group-item fontItem">Author: @Model.Book.Author.Name</li>
-                <li class="list-group-item fontItem">Year of publication: @Model.Book.PublicationYear</li>
-                <li class="list-group-item fontItem">ISBN: @Model.Book.ISBN</li>
-                <li class="list-group-item fontItem">
-                    <ul class="list-inline">
-                        <div class="d-flex gap-2">
-                        <li class="list-inline-item">Categories:</li>
-                            @foreach (var category in Model.Book.Categories)
-                            {
-                            <a class="btn btn-outline-secondary rounded-pill px-1" style="text-decoration:none" href="/Books/ShowBooks?Title=&Category=@(category.CategoryName)">@category.CategoryName</a>
-                            }
-        </div>
-        </ul>
-        </li>
-                @if (Model.Book.AvailableCopies > 0)
-                {
-            <li class="list-group-item fontItem">Available: Yes</li>
-                }
-                else
-                {
-            <li class="list-group-item fontItem">Available: No</li>
-                }
-        <li class="list-group-item fontItem">
-            <div asp-validation-summary="All" class="text-danger"></div>
-            <form method="post">
-                        @if (Model.role == "User" && Model.Book.AvailableCopies > 0 && !Model.wasLoaned)
-                        {
-                    <button type="submit" name="handler" value="handler1" class="btn btn-outline-primary" style="border-radius:20px; position:relative;">Loan the book</button>
-                    <input type="hidden" name="someValue" value="@Model.SomeValue" />
-                        }
-            </form>
-                    @if (Model.wasLoaned)
-                    {
-                        var loan = Model.User.BookLoans.FirstOrDefault(l => l.BookId == Model.Book.BookId && (l.ReturnDate == null || l.ReturnDate > DateTime.UtcNow));
-                        if (loan != null)
-                        {
-                    <p class="text-success">You have loaned this book. Please return by @loan.ReturnDate?.ToString("yyyy-MM-dd").</p>
-                        }
-                    }
-                    else if (Model.role != "User")
-                    {
-                <p class="text-danger">Only users with role 'User' can loan books.</p>
-                    }
-                    else if (Model.Book.AvailableCopies <= 0)
-                    {
-                <p class="text-danger">This book is not available for loan.</p>
-                    }
-        </li>
-        </ul>
-    </div>
-</div>
-</div>
-<br />
-<hr class="featurette-divider">
-<h2 class="display-5 text-center fw-bold text-body">Description</h2>
-<hr class="featurette-divider">
-<div class="row">
-    <p class="fw-bold">@Model.Book.BookDescription</p>
-</div>
-<br />
-<hr class="featurette-divider">
-<h2 class="display-5 text-center fw-bold text-body">Reviews</h2>
-@if (Model.Book.Reviews.Count == 0)
-{
-    <hr class="featurette-divider">
-    <p class="fw-bold">There is no review yet! Be the first one to rate the book!</p>
-}
-else
-{
-    @foreach (var review in Model.Book.Reviews)
-    {
-        <hr class="featurette-divider">
-        <div class="col d-flex align-items-start">
-            <div class="icon-square text-body-emphasis bg-body-secondary d-inline-flex align-items-center justify-content-center fs-4 flex-shrink-0 me-3">
-                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" class="bi bi-person-circle" viewBox="0 0 16 16">
-                    <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" />
-                    <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z" />
-                </svg>
-            </div>
-            <div>
-                <h3 class="fs-2 text-body-emphasis">@review.User.Name</h3>
-                <div class="star-rating">
-                    @for (int i = 1; i <= 5; i++)
-                    {
-                        if (i <= review.Rating)
-                        {
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-star-fill" viewBox="0 0 16 16">
-                                <path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z" />
-                            </svg>
-                        }
-                        else
-                        {
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-star" viewBox="0 0 16 16">
-                                <path d="M2.866 14.85c-.078.444.36.791.746.593l4.39-2.256 4.389 2.256c.386.198.824-.149.746-.592l-.83-4.73 3.522-3.356c.33-.314.16-.888-.282-.95l-4.898-.696L8.465.792a.513.513 0 0 0-.927 0L5.354 5.12l-4.898.696c-.441.062-.612.636-.283.95l3.523 3.356-.83 4.73zm4.905-2.767-3.686 1.894.694-3.957a.565.565 0 0 0-.163-.505L1.71 6.745l4.052-.576a.525.525 0 0 0 .393-.288L8 2.223l1.847 3.658a.525.525 0 0 0 .393.288l4.052.575-2.906 2.77a.565.565 0 0 0-.163.506l.694 3.957-3.686-1.894a.503.503 0 0 0-.461 0z" />
-                            </svg>
-                        }
-                    }
-                </div>
-                <br />
-                <p class="small">@review.ReviewDate?.ToString("yyyy-MM-dd HH:mm:ss")</p>
-                <p>@review.ReviewText</p>
-            </div>
-        </div>
-    }
-}
 
-<!-- Form thêm review -->
-@if (Model.role == "User" && Model.wasLoaned && !Model.wasReviewed)
-{
-    var loan = Model.User.BookLoans.FirstOrDefault(l => l.BookId == Model.Book.BookId && (l.ReturnDate == null || l.ReturnDate > DateTime.UtcNow));
-    if (loan != null)
-    {
-        <p class="text-info">You loaned this book on @loan.LoanDate?.ToString("yyyy-MM-dd").</p>
+<style>
+    body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        font-family: 'Poppins', sans-serif;
     }
-    <hr class="featurette-divider">
-    <h3 class="text-center">Add Your Review</h3>
-    <form method="post" class="mt-4">
-        <div asp-validation-summary="All" class="text-danger"></div>
-        <input type="hidden" asp-for="NewReview.BookId" />
-        <input type="hidden" asp-for="NewReview.UserId" />
-        <div class="form-group">
-            <label asp-for="NewReview.Rating">Rating (1-5)</label>
-            <div class="star-rating" id="star-rating">
-                @for (int i = 1; i <= 5; i++)
-                {
-                    <input type="radio" name="NewReview.Rating" value="@i" id="star@(i)" class="star-input" required>
-                    <label for="star@(i)" class="star">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-star" viewBox="0 0 16 16">
-                            <path d="M2.866 14.85c-.078.444.36.791.746.593l4.39-2.256 4.389 2.256c.386.198.824-.149.746-.592l-.83-4.73 3.522-3.356c.33-.314.16-.888-.282-.95l-4.898-.696L8.465.792a.513.513 0 0 0-.927 0L5.354 5.12l-4.898.696c-.441.062-.612.636-.283.95l3.523 3.356-.83 4.73zm4.905-2.767-3.686 1.894.694-3.957a.565.565 0 0 0-.163-.505L1.71 6.745l4.052-.576a.525.525 0 0 0 .393-.288L8 2.223l1.847 3.658a.525.525 0 0 0 .393.288l4.052.575-2.906 2.77a.565.565 0 0 0-.163.506l.694 3.957-3.686-1.894a.503.503 0 0 0-.461 0z" />
-                        </svg>
-                    </label>
-                }
+
+    /* Card sách */
+    .book-card {
+        border: none;
+        border-radius: 20px;
+        background: #ffffff;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+        .book-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .book-card img {
+            border-radius: 20px;
+            transition: transform 0.3s ease;
+            max-height: 600px;
+            object-fit: cover;
+        }
+
+        .book-card:hover img {
+            transform: scale(1.05);
+        }
+
+        .book-card h2 {
+            color: #ff6b6b;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+    .list-group-item {
+        border: none;
+        padding: 10px 0;
+        font-size: 1.1rem;
+        color: #2c3e50;
+    }
+
+    .category-badge {
+        background: linear-gradient(90deg, #ff6b6b 0%, #4ecdc4 100%);
+        color: white;
+        border-radius: 20px;
+        padding: 5px 15px;
+        margin: 0 5px;
+        transition: transform 0.3s ease;
+    }
+
+        .category-badge:hover {
+            transform: scale(1.05);
+            text-decoration: none;
+        }
+
+    /* Nút Loan the book */
+    .btn-primary {
+        background: linear-gradient(90deg, #ff6b6b 0%, #4ecdc4 100%);
+        border: none;
+        border-radius: 20px;
+        padding: 10px 20px;
+        font-weight: bold;
+        transition: transform 0.3s ease, background 0.3s ease;
+    }
+
+        .btn-primary:hover {
+            transform: scale(1.05);
+            background: linear-gradient(90deg, #e65b5b 0%, #45b7b0 100%);
+        }
+
+    .btn-secondary {
+        border-radius: 20px;
+        transition: background 0.3s ease, transform 0.3s ease;
+    }
+
+        .btn-secondary:hover {
+            background: #4ecdc4;
+            color: white;
+            transform: scale(1.05);
+        }
+
+    /* Description và Reviews */
+    .description-card, .review-card {
+        background: #ffffff;
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+
+    .section-title {
+        color: #2c3e50;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        animation: fadeInDown 1s ease-in-out;
+    }
+
+    .review-card .avatar {
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        background: #ff6b6b;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+
+    .review-card h3 {
+        color: #ff6b6b;
+    }
+
+    .star-rating .bi-star-fill {
+        color: #ffd700;
+    }
+
+    /* Form thêm/sửa review */
+    .form-control, .form-control textarea {
+        border-radius: 10px;
+        border: 2px solid #dfe6e9;
+        transition: border-color 0.3s ease;
+    }
+
+        .form-control:focus, .form-control textarea:focus {
+            border-color: #ff6b6b;
+            box-shadow: 0 0 5px rgba(255, 107, 107, 0.5);
+        }
+
+    .star-rating {
+        display: flex;
+        gap: 5px;
+    }
+
+    .star-input {
+        display: none;
+    }
+
+    .star {
+        cursor: pointer;
+        color: #ccc;
+        transition: color 0.2s;
+    }
+
+        .star:hover,
+        .star:hover ~ .star {
+            color: #ffd700;
+        }
+
+    .bi-star-fill {
+        color: #ffd700;
+    }
+
+    /* Alert */
+    .alert {
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Animation */
+    @@keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .fade-in-up {
+        animation: fadeInUp 1s ease-in-out;
+    }
+</style>
+
+<div class="container mt-5">
+    <!-- Success Message -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success text-center fade-in-up">@TempData["SuccessMessage"]</div>
+    }
+
+    <!-- Book Details -->
+    <div class="book-card fade-in-up">
+        <div class="row p-4">
+            <div class="col-lg-5">
+                <img src="@Model.Book.CloudinaryImageId" class="img-fluid" alt="@Model.Book.Title">
             </div>
-            <span asp-validation-for="NewReview.Rating" class="text-danger"></span>
+            <div class="col-lg-7">
+                <h2 class="display-4 fw-bold">@Model.Book.Title</h2>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item"><strong>Author:</strong> @Model.Book.Author.Name</li>
+                    <li class="list-group-item"><strong>Year of Publication:</strong> @Model.Book.PublicationYear</li>
+                    <li class="list-group-item"><strong>ISBN:</strong> @Model.Book.ISBN</li>
+                    <li class="list-group-item">
+                        <strong>Categories:</strong>
+                        @foreach (var category in Model.Book.Categories)
+                        {
+                            <a class="category-badge" href="/Books/ShowBooks?Title=&Category=@(category.CategoryName)">@category.CategoryName</a>
+                        }
+                    </li>
+                    <li class="list-group-item">
+                        <strong>Available:</strong> @(Model.Book.AvailableCopies > 0 ? "Yes" : "No")
+                    </li>
+                    <li class="list-group-item">
+                        <div asp-validation-summary="All" class="text-danger"></div>
+                        <form method="post">
+                            @if (Model.role == "User" && Model.Book.AvailableCopies > 0 && !Model.wasLoaned)
+                            {
+                                <button type="submit" name="handler" value="handler1" class="btn btn-primary"><i class="fas fa-book me-2"></i>Loan the Book</button>
+                                <input type="hidden" name="someValue" value="@Model.SomeValue" />
+                            }
+                        </form>
+                        @if (Model.wasLoaned)
+                        {
+                            var loan = Model.User.BookLoans.FirstOrDefault(l => l.BookId == Model.Book.BookId && (l.ReturnDate == null || l.ReturnDate > DateTime.UtcNow));
+                            if (loan != null)
+                            {
+                                <p class="text-success mt-2"><i class="fas fa-check-circle me-2"></i>You have loaned this book. Please return by @loan.ReturnDate?.ToString("yyyy-MM-dd").</p>
+                            }
+                        }
+                        else if (Model.role != "User")
+                        {
+                            <p class="text-danger mt-2"><i class="fas fa-exclamation-circle me-2"></i>Only users with role 'User' can loan books.</p>
+                        }
+                        else if (Model.Book.AvailableCopies <= 0)
+                        {
+                            <p class="text-danger mt-2"><i class="fas fa-exclamation-circle me-2"></i>This book is not available for loan.</p>
+                        }
+                    </li>
+                </ul>
+            </div>
         </div>
-        <div class="form-group">
-            <label asp-for="NewReview.ReviewText">Review Text</label>
-            <textarea class="form-control" asp-for="NewReview.ReviewText" rows="3" required></textarea>
-            <span asp-validation-for="NewReview.ReviewText" class="text-danger"></span>
+    </div>
+
+    <!-- Description -->
+    <div class="description-card mt-5 fade-in-up">
+        <h2 class="display-5 text-center fw-bold section-title">Description</h2>
+        <hr class="featurette-divider mb-4" style="border-color: #ff6b6b;">
+        <p class="fw-bold">@Model.Book.BookDescription</p>
+    </div>
+
+    <!-- Reviews -->
+    <div class="mt-5 fade-in-up">
+        <h2 class="display-5 text-center fw-bold section-title">Reviews</h2>
+        <hr class="featurette-divider mb-4" style="border-color: #ff6b6b;">
+        @if (Model.Book.Reviews.Count == 0)
+        {
+            <p class="text-center text-muted"><i class="fas fa-star me-2"></i>There is no review yet! Be the first one to rate the book!</p>
+        }
+        else
+        {
+            @foreach (var review in Model.Book.Reviews)
+            {
+                <div class="review-card">
+                    <div class="d-flex align-items-start">
+                        <div class="avatar me-3">
+                            <span>@review.User.Name[0]</span>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h3 class="fs-4">@review.User.Name</h3>
+                            <div class="star-rating mb-2">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    if (i <= review.Rating)
+                                    {
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-star-fill" viewBox="0 0 16 16">
+                                            <path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z" />
+                                        </svg>
+                                    }
+                                    else
+                                    {
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-star" viewBox="0 0 16 16">
+                                            <path d="M2.866 14.85c-.078.444.36.791.746.593l4.39-2.256 4.389 2.256c.386.198.824-.149.746-.592l-.83-4.73 3.522-3.356c.33-.314.16-.888-.282-.95l-4.898-.696L8.465.792a.513.513 0 0 0-.927 0L5.354 5.12l-4.898.696c-.441.062-.612.636-.283.95l3.523 3.356-.83 4.73zm4.905-2.767-3.686 1.894.694-3.957a.565.565 0 0 0-.163-.505L1.71 6.745l4.052-.576a.525.525 0 0 0 .393-.288L8 2.223l1.847 3.658a.525.525 0 0 0 .393.288l4.052.575-2.906 2.77a.565.565 0 0 0-.163.506l.694 3.957-3.686-1.894a.503.503 0 0 0-.461 0z" />
+                                        </svg>
+                                    }
+                                }
+                            </div>
+                            <p class="small text-muted">@review.ReviewDate?.ToString("yyyy-MM-dd HH:mm:ss")</p>
+                            <p>@review.ReviewText</p>
+                            @if (Model.role == "User" && Model.User != null && review.UserId == Model.User.UserId)
+                            {
+                                <form method="post" style="display:inline;" class="edit-review-form">
+                                    <input type="hidden" name="reviewId" value="@review.ReviewId" />
+                                    <input type="hidden" name="someValue" value="@Model.SomeValue" />
+                                    <button type="submit" name="handler" value="editReview" class="btn btn-sm btn-primary"><i class="fas fa-edit me-1"></i>Edit</button>
+                                </form>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form chỉnh sửa review -->
+                @if (Model.EditReview != null && Model.EditReview.ReviewId == review.ReviewId)
+                {
+                    <div class="review-card mt-3">
+                        <h3 class="text-center">Edit Your Review</h3>
+                        <form method="post" class="mt-4">
+                            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                            <input type="hidden" asp-for="EditReview.ReviewId" />
+                            <input type="hidden" asp-for="EditReview.BookId" />
+                            <input type="hidden" asp-for="EditReview.UserId" />
+                            <div class="form-group">
+                                <label asp-for="EditReview.Rating">Rating (1-5)</label>
+                                <div class="star-rating" id="edit-star-rating-@review.ReviewId">
+                                    @for (int i = 1; i <= 5; i++)
+                                    {
+                                        <input type="radio" name="EditReview.Rating" value="@i" id="edit-star-@review.ReviewId-@i" class="star-input" required @(i == Model.EditReview.Rating ? "checked" : "")>
+                                        <label for="edit-star-@review.ReviewId-@i" class="star">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi @(i <= Model.EditReview.Rating ? "bi-star-fill" : "bi-star")" viewBox="0 0 16 16">
+                                                <path d="M2.866 14.85c-.078.444.36.791.746.593l4.39-2.256 4.389 2.256c.386.198.824-.149.746-.592l-.83-4.73 3.522-3.356c.33-.314.16-.888-.282-.95l-4.898-.696L8.465.792a.513.513 0 0 0-.927 0L5.354 5.12l-4.898.696c-.441.062-.612.636-.283.95l3.523 3.356-.83 4.73zm4.905-2.767-3.686 1.894.694-3.957a.565.565 0 0 0-.163-.505L1.71 6.745l4.052-.576a.525.525 0 0 0 .393-.288L8 2.223l1.847 3.658a.525.525 0 0 0 .393.288l4.052.575-2.906 2.77a.565.565 0 0 0-.163.506l.694 3.957-3.686-1.894a.503.503 0 0 0-.461 0z" />
+                                            </svg>
+                                        </label>
+                                    }
+                                </div>
+                                <span asp-validation-for="EditReview.Rating" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="EditReview.ReviewText">Review Text</label>
+                                <textarea class="form-control" asp-for="EditReview.ReviewText" rows="3" required></textarea>
+                                <span asp-validation-for="EditReview.ReviewText" class="text-danger"></span>
+                            </div>
+                            <button type="submit" name="handler" value="updateReview" class="btn btn-primary"><i class="fas fa-save me-2"></i>Update Review</button>
+                            <a href="/Books/ShowBook?id=@Model.SomeValue" class="btn btn-secondary"><i class="fas fa-times me-2"></i>Cancel</a>
+                            <input type="hidden" name="someValue" value="@Model.SomeValue" />
+                        </form>
+                    </div>
+                }
+            }
+        }
+    </div>
+
+    <!-- Form thêm review -->
+    @if (Model.role == "User" && Model.wasLoaned && !Model.wasReviewed && Model.EditReview == null)
+    {
+        var loan = Model.User.BookLoans.FirstOrDefault(l => l.BookId == Model.Book.BookId && (l.ReturnDate == null || l.ReturnDate > DateTime.UtcNow));
+        if (loan != null)
+        {
+            <p class="text-info text-center mt-3"><i class="fas fa-info-circle me-2"></i>You loaned this book on @loan.LoanDate?.ToString("yyyy-MM-dd").</p>
+        }
+        <div class="review-card mt-3">
+            <h3 class="text-center">Add Your Review</h3>
+            <form method="post" class="mt-4">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <input type="hidden" asp-for="NewReview.BookId" />
+                <input type="hidden" asp-for="NewReview.UserId" />
+                <div class="form-group">
+                    <label asp-for="NewReview.Rating">Rating (1-5)</label>
+                    <div class="star-rating" id="star-rating">
+                        @for (int i = 1; i <= 5; i++)
+                        {
+                            <input type="radio" name="NewReview.Rating" value="@i" id="star@(i)" class="star-input" required>
+                            <label for="star@(i)" class="star">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-star" viewBox="0 0 16 16">
+                                    <path d="M2.866 14.85c-.078.444.36.791.746.593l4.39-2.256 4.389 2.256c.386.198.824-.149.746-.592l-.83-4.73 3.522-3.356c.33-.314.16-.888-.282-.95l-4.898-.696L8.465.792a.513.513 0 0 0-.927 0L5.354 5.12l-4.898.696c-.441.062-.612.636-.283.95l3.523 3.356-.83 4.73zm4.905-2.767-3.686 1.894.694-3.957a.565.565 0 0 0-.163-.505L1.71 6.745l4.052-.576a.525.525 0 0 0 .393-.288L8 2.223l1.847 3.658a.525.525 0 0 0 .393.288l4.052.575-2.906 2.77a.565.565 0 0 0-.163.506l.694 3.957-3.686-1.894a.503.503 0 0 0-.461 0z" />
+                                </svg>
+                            </label>
+                        }
+                    </div>
+                    <span asp-validation-for="NewReview.Rating" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="NewReview.ReviewText">Review Text</label>
+                    <textarea class="form-control" asp-for="NewReview.ReviewText" rows="3" required></textarea>
+                    <span asp-validation-for="NewReview.ReviewText" class="text-danger"></span>
+                </div>
+                <button type="submit" name="handler" value="addReview" class="btn btn-primary"><i class="fas fa-star me-2"></i>Submit Review</button>
+                <input type="hidden" name="someValue" value="@Model.SomeValue" />
+            </form>
         </div>
-        <button type="submit" name="handler" value="addReview" class="btn btn-primary">Submit Review</button>
-        <input type="hidden" name="someValue" value="@Model.SomeValue" />
-    </form>
-}
-else
-{
-    <hr class="featurette-divider">
-    <p class="text-danger">
-        @if (Model.role != "User")
-        {
-            @:Only users with role 'User' can add reviews.
-        }
-        else if (!Model.wasLoaned)
-        {
-            @:You must loan the book to add a review.
-        }
-        else if (Model.wasReviewed)
-        {
-            @:You have already reviewed this book.
-        }
-    </p>
-}
+    }
+    else
+    {
+        <p class="text-danger text-center mt-3">
+            @if (Model.role != "User")
+            {
+                <span><i class="fas fa-exclamation-circle me-2"></i>Only users with role 'User' can add reviews.</span>
+            }
+            else if (!Model.wasLoaned)
+            {
+                <span><i class="fas fa-exclamation-circle me-2"></i>You must loan the book to add a review.</span>
+            }
+            else if (Model.wasReviewed)
+            {
+                <span><i class="fas fa-exclamation-circle me-2"></i>You have already reviewed this book.</span>
+            }
+        </p>
+    }
+</div>
 
 @section Scripts {
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const stars = document.querySelectorAll('.star-input');
-            const labels = document.querySelectorAll('.star');
+            // Xử lý star rating cho form thêm review
+            const stars = document.querySelectorAll('#star-rating .star-input');
+            const labels = document.querySelectorAll('#star-rating .star');
 
             stars.forEach((star, index) => {
                 star.addEventListener('change', function () {
@@ -213,7 +445,7 @@ else
                 });
 
                 star.addEventListener('mouseout', function () {
-                    const checkedRating = document.querySelector('.star-input:checked');
+                    const checkedRating = document.querySelector('#star-rating .star-input:checked');
                     labels.forEach((label, i) => {
                         const starSvg = label.querySelector('svg');
                         if (checkedRating && i < parseInt(checkedRating.value)) {
@@ -226,33 +458,53 @@ else
                     });
                 });
             });
+
+            // Xử lý star rating cho form chỉnh sửa review
+            document.querySelectorAll('[id^="edit-star-rating-"]').forEach(ratingContainer => {
+                const editStars = ratingContainer.querySelectorAll('.star-input');
+                const editLabels = ratingContainer.querySelectorAll('.star');
+
+                editStars.forEach((star, index) => {
+                    star.addEventListener('change', function () {
+                        const rating = parseInt(this.value);
+                        editLabels.forEach((label, i) => {
+                            const starSvg = label.querySelector('svg');
+                            if (i < rating) {
+                                starSvg.classList.add('bi-star-fill');
+                                starSvg.classList.remove('bi-star');
+                            } else {
+                                starSvg.classList.remove('bi-star-fill');
+                                starSvg.classList.add('bi-star');
+                            }
+                        });
+                    });
+
+                    star.addEventListener('mouseover', function () {
+                        const rating = parseInt(this.value);
+                        editLabels.forEach((label, i) => {
+                            const starSvg = label.querySelector('svg');
+                            if (i < rating) {
+                                starSvg.classList.add('bi-star-fill');
+                                starSvg.classList.remove('bi-star');
+                            }
+                        });
+                    });
+
+                    star.addEventListener('mouseout', function () {
+                        const checkedRating = ratingContainer.querySelector('.star-input:checked');
+                        editLabels.forEach((label, i) => {
+                            const starSvg = label.querySelector('svg');
+                            if (checkedRating && i < parseInt(checkedRating.value)) {
+                                starSvg.classList.add('bi-star-fill');
+                                starSvg.classList.remove('bi-star');
+                            } else {
+                                starSvg.classList.remove('bi-star-fill');
+                                starSvg.classList.add('bi-star');
+                            }
+                        });
+                    });
+                });
+            });
         });
     </script>
 }
-
-<style>
-    .star-rating {
-        display: flex;
-        flex-direction: row-reverse;
-        gap: 5px;
-    }
-
-    .star-input {
-        display: none;
-    }
-
-    .star {
-        cursor: pointer;
-        color: #ccc;
-        transition: color 0.2s;
-    }
-
-        .star:hover,
-        .star:hover ~ .star {
-            color: #ffd700;
-        }
-
-    .bi-star-fill {
-        color: #ffd700;
-    }
-</style>

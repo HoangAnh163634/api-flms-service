@@ -1,0 +1,143 @@
+﻿@page
+@model api_flms_service.Pages.Notifications.ManageModel
+@{
+    ViewData["Title"] = "Manage Notifications";
+    Layout = "~/Pages/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-5">
+    <h4 class="text-center mb-4">Manage Notifications</h4>
+
+    <!-- Hiển thị thông báo thành công hoặc lỗi -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Form thêm thông báo -->
+    <h5>Add New Notification</h5>
+    <form method="post" asp-page-handler="Create" accept-charset="UTF-8">
+        <div class="form-group mb-3">
+            <label asp-for="NewNotification.Title">Title</label>
+            <input asp-for="NewNotification.Title" class="form-control" name="NewNotification.Title" required />
+            <span asp-validation-for="NewNotification.Title" class="text-danger"></span>
+        </div>
+        <div class="form-group mb-3">
+            <label asp-for="NewNotification.Content">Content</label>
+            <textarea asp-for="NewNotification.Content" class="form-control" name="NewNotification.Content" rows="3"></textarea>
+            <span asp-validation-for="NewNotification.Content" class="text-danger"></span>
+        </div>
+        <div class="form-group mb-3">
+            <label asp-for="NewNotification.Type">Type</label>
+            <select asp-for="NewNotification.Type" class="form-control" name="NewNotification.Type" required>
+                <option value="">Select Type</option>
+                <option value="Event">Event</option>
+                <option value="Update">Update</option>
+            </select>
+            <span asp-validation-for="NewNotification.Type" class="text-danger"></span>
+        </div>
+        <button type="submit" class="btn btn-primary">Add Notification</button>
+    </form>
+
+    <!-- Danh sách thông báo -->
+    <h5 class="mt-5">Notification List</h5>
+    @if (Model.Notifications != null && Model.Notifications.Any())
+    {
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>STT</th>
+                    <th>Title</th>
+                    <th>Content</th>
+                    <th>Type</th>
+                    <th>Created At</th>
+                    <th>Is Read</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    int stt = 1;
+                    foreach (var notification in Model.Notifications)
+                    {
+                        <tr>
+                            <td>@stt</td>
+                            <td>@notification.Title</td>
+                            <td>@notification.Content</td>
+                            <td>@notification.Type</td>
+                            <td>@notification.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>@notification.IsRead</td>
+                            <td>
+                                <!-- Nút sửa (mở modal) -->
+                                <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#editModal_@notification.Id">Edit</button>
+                                <!-- Nút xóa -->
+                                <form method="post" asp-page-handler="Delete" asp-route-id="@notification.Id" style="display:inline;">
+                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this notification?')">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+
+                        <!-- Modal sửa thông báo -->
+                        <div class="modal fade" id="editModal_@notification.Id" tabindex="-1" aria-labelledby="editModalLabel_@notification.Id" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="editModalLabel_@notification.Id">Edit Notification</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <form method="post" asp-page-handler="Update" accept-charset="UTF-8">
+                                            <input type="hidden" asp-for="EditNotification.Id" name="EditNotification.Id" value="@notification.Id" />
+                                            <div class="form-group mb-3">
+                                                <label asp-for="EditNotification.Title">Title</label>
+                                                <input asp-for="EditNotification.Title" class="form-control" name="EditNotification.Title" value="@notification.Title" required />
+                                                <span asp-validation-for="EditNotification.Title" class="text-danger"></span>
+                                            </div>
+                                            <div class="form-group mb-3">
+                                                <label asp-for="EditNotification.Content">Content</label>
+                                                <textarea asp-for="EditNotification.Content" class="form-control" name="EditNotification.Content" rows="3">@notification.Content</textarea>
+                                                <span asp-validation-for="EditNotification.Content" class="text-danger"></span>
+                                            </div>
+                                            <div class="form-group mb-3">
+                                                <label asp-for="EditNotification.Type">Type</label>
+                                                <select asp-for="EditNotification.Type" class="form-control" name="EditNotification.Type" required>
+                                                    <option value="Event" selected="@(notification.Type == "Event")">Event</option>
+                                                    <option value="Update" selected="@(notification.Type == "Update")">Update</option>
+                                                </select>
+                                                <span asp-validation-for="EditNotification.Type" class="text-danger"></span>
+                                            </div>
+                                            <div class="form-group mb-3">
+                                                <label asp-for="EditNotification.IsRead">Is Read</label>
+                                                <input asp-for="EditNotification.IsRead" type="checkbox" class="form-check-input" name="EditNotification.IsRead" checked="@notification.IsRead" />
+                                            </div>
+                                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        stt++;
+                    }
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p class="text-center text-muted">No notifications found.</p>
+    }
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

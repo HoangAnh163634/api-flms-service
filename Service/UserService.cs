@@ -1,6 +1,8 @@
 ﻿using api_flms_service.Entity;
 using api_flms_service.Model;
+using api_flms_service.Service;
 using Microsoft.EntityFrameworkCore;
+using System.Net;
 namespace api_flms_service.ServiceInterface
 {
 
@@ -9,12 +11,16 @@ namespace api_flms_service.ServiceInterface
         public class UserService : IUserService
         {
             private readonly AppDbContext _dbContext;
+            private readonly ICloudinaryService _cloudinaryService;
             private readonly IConfiguration _configuration;
+            private readonly List<string> _allowTailEmail;
 
-            public UserService(AppDbContext dbContext, IConfiguration configuration)
+            public UserService(AppDbContext dbContext, IConfiguration configuration, ICloudinaryService cloudinaryService)
             {
                 _dbContext = dbContext;
                 _configuration = configuration;
+                _cloudinaryService = cloudinaryService;
+                _allowTailEmail = _configuration.GetSection("AllowEmail").Get<List<string>>() ?? new List<string>();
             }
 
             public async Task<IEnumerable<User>> GetAllUsersAsync()
@@ -68,28 +74,71 @@ namespace api_flms_service.ServiceInterface
                 return true;
             }
 
-            public async Task<User> GetUserByEmail(string email)
+            public async Task<User> GetUserByEmail(string email, HttpClient client = null, string userImage = null)
             {
+                Console.WriteLine($"GetUserByEmail called with email: {email}");
+
                 var user = await _dbContext.Users
-                                .Include(e => e.BookLoans)
-                                .ThenInclude(e => e.Book)
-                                .ThenInclude(b => b.Reviews)
-                                .Include(e => e.BookLoans)
-                                .ThenInclude(e => e.Book)
-                                .ThenInclude(e => e.Author)
-                                .FirstOrDefaultAsync(x => x.Email == email);
+                    .Include(e => e.BookLoans)
+                        .ThenInclude(bl => bl.Book)
+                            .ThenInclude(b => b.Reviews)
+                    .Include(e => e.BookLoans)
+                        .ThenInclude(bl => bl.Book)
+                            .ThenInclude(b => b.Author)
+                    .Include(e => e.BookReviews)
+                        .ThenInclude(br => br.Book)
+                    .FirstOrDefaultAsync(x => x.Email == email);
 
                 if (user == null)
                 {
-                    // Tạo user mới nếu chưa tồn tại
+                    string downloadUrl = null;
+
+                    if (!string.IsNullOrEmpty(userImage) && client != null)
+                    {
+                        try
+                        {
+                            var response = await client.GetAsync(userImage);
+                            if (response.IsSuccessStatusCode)
+                            {
+                                await using var stream = await response.Content.ReadAsStreamAsync();
+                                using var memoryStream = new MemoryStream();
+                                await stream.CopyToAsync(memoryStream);
+                                memoryStream.Position = 0;
+
+                                // Chuyển `MemoryStream` thành `IFormFile`
+                                var formFile = new FormFile(memoryStream, 0, memoryStream.Length, $"file", $"user_image_{Guid.NewGuid().ToString().Replace('-','_')}.jpg")
+                                {
+                                    Headers = new HeaderDictionary(),
+                                    ContentType = response.Content.Headers.ContentType?.ToString() ?? "image/jpeg"
+                                };
+
+                                downloadUrl = await _cloudinaryService.UploadFileAsync(formFile);
+                            }
+                            else
+                            {
+                                Console.WriteLine($"Failed to download image: {userImage}. Status code: {response.StatusCode}");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Error downloading user image: {ex.Message}");
+                        }
+                    }
+
+                    Console.WriteLine($"User with email {email} not found. Creating new user...");
+                    var isAllow = _allowTailEmail.Any(e => email.Contains(e));
+
                     user = new User
                     {
                         Email = email,
-                        Name = email.Split('@')[0] ?? "Unknown", // Tạm lấy phần trước @ làm Name
+                        Name = email.Split('@')[0] ?? "Unknown",
                         PhoneNumber = "",
-                        Role = "User", // Gán mặc định là "User"
+                        Role = isAllow ? "User" : "Guest",
+                        GoogleImage = userImage,
+                        LocalImage = downloadUrl,
                         RegistrationDate = DateTime.Now
                     };
+
                     _dbContext.Users.Add(user);
                     try
                     {
@@ -99,12 +148,72 @@ namespace api_flms_service.ServiceInterface
                     catch (Exception ex)
                     {
                         Console.WriteLine($"Error creating user: {ex.Message}");
-                        throw; // Ném lỗi để debug
+                        throw;
                     }
                 }
+                else 
+                {
+                    var downloadUrl = user.LocalImage;
 
+                    if (!string.IsNullOrEmpty(userImage) && client != null && userImage != user.GoogleImage)
+                    {
+                        try
+                        {
+                            var response = await client.GetAsync(userImage);
+                            if (response.IsSuccessStatusCode)
+                            {
+                                await using var stream = await response.Content.ReadAsStreamAsync();
+                                using var memoryStream = new MemoryStream();
+                                await stream.CopyToAsync(memoryStream);
+                                memoryStream.Position = 0;
+
+                                // Chuyển `MemoryStream` thành `IFormFile`
+                                var formFile = new FormFile(memoryStream, 0, memoryStream.Length, $"file", $"user_image_{Guid.NewGuid().ToString().Replace('-', '_')}.jpg")
+                                {
+                                    Headers = new HeaderDictionary(),
+                                    ContentType = response.Content.Headers.ContentType?.ToString() ?? "image/jpeg"
+                                };
+
+                                downloadUrl = await _cloudinaryService.UploadFileAsync(formFile);
+                                
+                                user.GoogleImage = userImage;
+                                user.LocalImage = downloadUrl;
+                                _dbContext.Users.Update(user);
+
+                                try
+                                {
+                                    await _dbContext.SaveChangesAsync();
+                                    Console.WriteLine($"User update image: {email}, Role: {user.Role}");
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine($"Error update user: {ex.Message}");
+                                    throw;
+                                }
+                            }
+                            else
+                            {
+                                Console.WriteLine($"Failed to download image: {userImage}. Status code: {response.StatusCode}");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Error downloading user image: {ex.Message}");
+                        }
+                    }
+
+                    Console.WriteLine($"User found: {user.Email}, UserId: {user.UserId}, Reviews count: {user.BookReviews?.Count ?? 0}");
+                    if (user.BookReviews != null)
+                    {
+                        foreach (var review in user.BookReviews)
+                        {
+                            Console.WriteLine($"Review: ReviewId={review.ReviewId}, BookId={review.BookId}, UserId={review.UserId}, ReviewText={review.ReviewText}");
+                        }
+                    }
+                }
                 return user;
             }
+
 
             public async Task<bool> IsUserAllowedAsync(string email)
             {

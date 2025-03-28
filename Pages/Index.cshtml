@@ -1,132 +1,385 @@
-﻿
- @page
+﻿@page
 @model api_flms_service.Pages.IndexModel
 @{
     ViewData["Title"] = "Library";
 }
 
-
-<body>
-    <div id="carouselExampleCaptions" class="carousel slide">
-        <div class="carousel-indicators">
-            <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
-            <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="1" aria-label="Slide 2"></button>
-            <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="2" aria-label="Slide 3"></button>
-        </div>
-        <div class="carousel-inner">
-            <div class="carousel-item active">
-                <img src="https://res.cloudinary.com/dxmsosoui/image/upload/v1697910313/a63adbp4j5dsogcqwyfj.png" class="d-block w-100" style="opacity:100%" alt="...">
-                <div class="carousel-caption d-none d-md-block">
-                    <h5>Welcome to Our Library</h5>
-                    <p>Discover a world of knowledge and imagination at our library. We're dedicated to bringing you the best in literature, from timeless classics to the latest bestsellers. Whether you're a bookworm, a student, or simply looking for a quiet space to read, you've come to the right place.</p>
-                </div>
-            </div>
-            <div class="carousel-item">
-                <img src="https://res.cloudinary.com/dxmsosoui/image/upload/v1697910502/w3vjgviktnq6qjepaxpw.png" class="d-block w-100" style="opacity:100%" alt="...">
-                <div class="carousel-caption d-none d-md-block">
-                    <h5>Explore Our Collection</h5>
-                    <p>Our extensive collection spans various genres and subject areas. From fiction and non-fiction to academic resources, we have something for everyone. Dive into captivating stories, explore the depths of human knowledge, or embark on a journey of self-discovery through our books.</p>
-                </div>
-            </div>
-            <div class="carousel-item">
-                <img src="https://res.cloudinary.com/dxmsosoui/image/upload/v1697910717/rwnxyewxfi0s09ushwgz.png" class="d-block w-100" style="opacity:100%" alt="...">
-                <div class="carousel-caption d-none d-md-block">
-                    <h5>A Hub for Learning and Inspiration</h5>
-                    <p>Beyond the books, our library is a hub for learning and inspiration. Attend book clubs, author talks, and workshops to enrich your understanding and spark your creativity. Our knowledgeable staff is here to assist you in your quest for knowledge.</p>
-                </div>
-            </div>
-        </div>
-        <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="prev">
-            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-            <span class="visually-hidden">Previous</span>
-        </button>
-        <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="next">
-            <span class="carousel-control-next-icon" aria-hidden="true"></span>
-            <span class="visually-hidden">Next</span>
-        </button>
-    </div>
-    <br />
-
-    <!-- Search & Filter Section -->
-    <h1 class="display-4 fw-bold text-body text-center">Search & Filter Books</h1>
-    <hr class="featurette-divider">
-  <form method="get" action="" class="container">
-    <div class="row g-3 align-items-end">
-        <div class="col-md-4">
-            <label for="searchTerm" class="form-label">Search Books</label>
-            <input type="text" id="searchTerm" name="searchTerm" class="form-control" 
-                   placeholder="Enter book title..." value="@Request.Query["searchTerm"]" />
-        </div>
-        
-        <div class="col-md-4">
-            <label for="categoryName" class="form-label">Category</label>
-            <select id="categoryName" name="categoryName" class="form-control">
-                <option value="">All Categories</option>
-                    @foreach (var category in Model.Categories)
-                    {
-                        <option value="@category.CategoryName" selected="@(category.CategoryName == Request.Query["categoryName"])">@category.CategoryName</option>
-                    }
-            </select>
-        </div>
-        
-        <div class="col-md-4">
-            <div class="d-flex gap-2">
-                <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-search me-1"></i> Search
-                </button>
-                <a href="/" class="btn btn-outline-secondary">
-                    <i class="bi bi-x-circle me-1"></i> Reset
-                </a>
-            </div>
-        </div>
-    </div>
-</form>
-
-    <!-- Search Results Feedback -->
-    @if (!string.IsNullOrEmpty(Request.Query["searchTerm"]) ||
-    !string.IsNullOrEmpty(Request.Query["categoryName"]) ||
-    !string.IsNullOrEmpty(Request.Query["publicationYear"]))
-    {
-        <div class="container mt-3">
-            <div class="alert alert-info">
-                <h4>Kết quả tìm kiếm</h4>
-                <p>
-                    @if (!string.IsNullOrEmpty(Request.Query["searchTerm"]))
-                    {
-                        <span>Từ khóa: "@Request.Query["searchTerm"]" </span>
-                    }
-                    @if (!string.IsNullOrEmpty(Request.Query["categoryName"]))
-                    {
-                        <span>Thể loại: "@Request.Query["categoryName"]" </span>
-                    }
-                    
-                </p>
-                <p>Tìm thấy @Model.books.Count sách phù hợp với tiêu chí của bạn</p>
-            </div>
-        </div>
+<style>
+    body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        font-family: 'Poppins', sans-serif;
     }
 
-    <h1 class="display-4 fw-bold text-body text-center">Best Authors</h1>
-    <hr class="featurette-divider">
+    /* Carousel */
+    .carousel-inner {
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
 
-    <div class="container marketing">
-        <div class="row">
-            @foreach (var item in Model.authors)
+    .carousel-item {
+        position: relative;
+    }
+
+        .carousel-item img {
+            opacity: 0.8;
+            transition: opacity 0.3s ease;
+        }
+
+        .carousel-item:hover img {
+            opacity: 1;
+        }
+
+    .carousel-caption {
+        background: rgba(0, 0, 0, 0.6);
+        border-radius: 10px;
+        padding: 20px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        animation: fadeInUp 1s ease-in-out;
+    }
+
+        .carousel-caption h5 {
+            color: #ff6b6b;
+            font-weight: bold;
+        }
+
+        .carousel-caption p {
+            color: #fff;
+        }
+
+    /* Search Section */
+    .search-section {
+        background: #fff;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        margin: 40px 0;
+    }
+
+    .form-control {
+        border-radius: 10px;
+        border: 2px solid #dfe6e9;
+        transition: border-color 0.3s ease;
+    }
+
+        .form-control:focus {
+            border-color: #ff6b6b;
+            box-shadow: 0 0 5px rgba(255, 107, 107, 0.5);
+        }
+
+    .btn-primary {
+        background: linear-gradient(90deg, #ff6b6b 0%, #4ecdc4 100%);
+        border: none;
+        border-radius: 10px;
+        padding: 10px 20px;
+        font-weight: bold;
+        transition: transform 0.3s ease, background 0.3s ease;
+    }
+
+        .btn-primary:hover {
+            transform: scale(1.05);
+            background: linear-gradient(90deg, #e65b5b 0%, #45b7b0 100%);
+        }
+
+    .btn-outline-secondary {
+        border-radius: 10px;
+        transition: background 0.3s ease, transform 0.3s ease;
+    }
+
+        .btn-outline-secondary:hover {
+            background: #4ecdc4;
+            color: white;
+            transform: scale(1.05);
+        }
+
+    /* Authors & Books */
+    .author-card, .book-card {
+        background: #fff;
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+        .author-card:hover, .book-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .author-card img {
+            border: 4px solid #ff6b6b;
+        }
+
+        .book-card img {
+            border-radius: 15px;
+            transition: transform 0.3s ease;
+        }
+
+        .book-card:hover img {
+            transform: scale(1.05);
+        }
+
+    .section-title {
+        color: #2c3e50;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        animation: fadeInDown 1s ease-in-out;
+    }
+
+    /* Pagination */
+    .pagination .page-link {
+        border-radius: 5px;
+        color: #ff6b6b;
+        transition: background 0.3s ease;
+    }
+
+    .pagination .page-item.active .page-link {
+        background: linear-gradient(90deg, #ff6b6b 0%, #4ecdc4 100%);
+        border-color: #ff6b6b;
+        color: white;
+    }
+
+    .pagination .page-link:hover {
+        background: #4ecdc4;
+        color: white;
+    }
+
+    /* Description Text */
+    .description-container {
+        position: relative;
+        margin-bottom: 10px;
+    }
+
+    .description-text {
+        max-height: 80px;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+        margin-bottom: 0;
+    }
+
+        .description-text.expanded {
+            max-height: 1000px;
+        }
+
+    .read-more {
+        color: #ff6b6b;
+        cursor: pointer;
+        display: block;
+        text-align: center;
+        font-weight: bold;
+        transition: color 0.3s ease;
+    }
+
+        .read-more:hover {
+            color: #e65b5b;
+            text-decoration: underline;
+        }
+
+    /* Author List Toggle */
+    .author-item {
+        opacity: 1;
+        max-height: 1000px;
+        transition: opacity 0.5s ease, max-height 0.5s ease;
+    }
+
+        .author-item.hidden-author {
+            opacity: 0;
+            max-height: 0;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+    .author-list.expanded .author-item {
+        opacity: 1;
+        max-height: 1000px;
+        margin: 0.5rem 0;
+        padding: 0.5rem 0;
+    }
+
+    .toggle-authors {
+        background: linear-gradient(90deg, #ff6b6b 0%, #4ecdc4 100%);
+        border: none;
+        border-radius: 10px;
+        padding: 10px 20px;
+        font-weight: bold;
+        color: white;
+        transition: transform 0.3s ease, background 0.3s ease;
+    }
+
+        .toggle-authors:hover {
+            transform: scale(1.05);
+            background: linear-gradient(90deg, #e65b5b 0%, #45b7b0 100%);
+        }
+
+    /* Animation */
+    @@keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .fade-in-up {
+        animation: fadeInUp 1s ease-in-out;
+    }
+</style>
+
+<!-- Carousel -->
+<div id="carouselExampleCaptions" class="carousel slide" data-bs-ride="carousel">
+    <ol class="carousel-indicators">
+        <li data-bs-target="#carouselExampleCaptions" data-bs-slide-to="0" class="active"></li>
+        <li data-bs-target="#carouselExampleCaptions" data-bs-slide-to="1"></li>
+        <li data-bs-target="#carouselExampleCaptions" data-bs-slide-to="2"></li>
+    </ol>
+    <div class="carousel-inner">
+        <div class="carousel-item active">
+            <img src="https://res.cloudinary.com/dxmsosoui/image/upload/v1697910313/a63adbp4j5dsogcqwyfj.png" class="d-block w-100" alt="Welcome">
+            <div class="carousel-caption d-none d-md-block">
+                <h5>Welcome to Our Library</h5>
+                <p>Discover a world of knowledge and imagination at our library. We're dedicated to bringing you the best in literature.</p>
+                <a href="/Books" class="btn btn-primary mt-2">Explore Now</a>
+            </div>
+        </div>
+        <div class="carousel-item">
+            <img src="https://res.cloudinary.com/dxmsosoui/image/upload/v1697910502/w3vjgviktnq6qjepaxpw.png" class="d-block w-100" alt="Collection">
+            <div class="carousel-caption d-none d-md-block">
+                <h5>Explore Our Collection</h5>
+                <p>From fiction to academic resources, dive into captivating stories and explore the depths of knowledge.</p>
+                <a href="/Books" class="btn btn-primary mt-2">Browse Books</a>
+            </div>
+        </div>
+        <div class="carousel-item">
+            <img src="https://res.cloudinary.com/dxmsosoui/image/upload/v1697910717/rwnxyewxfi0s09ushwgz.png" class="d-block w-100" alt="Learning Hub">
+            <div class="carousel-caption d-none d-md-block">
+                <h5>A Hub for Learning</h5>
+                <p>Join book clubs, author talks, and workshops to spark your creativity with our knowledgeable staff.</p>
+                <a href="/Events" class="btn btn-primary mt-2">Join Events</a>
+            </div>
+        </div>
+    </div>
+    <a class="carousel-control-prev" href="#carouselExampleCaptions" role="button" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Previous</span>
+    </a>
+    <a class="carousel-control-next" href="#carouselExampleCaptions" role="button" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Next</span>
+    </a>
+</div>
+
+<!-- Best Authors -->
+<div class="container fade-in-up" id="best-author">
+    @if (string.IsNullOrEmpty(Request.Query["searchTerm"]) && string.IsNullOrEmpty(Request.Query["categoryName"]))
+    {
+        <div class="container fade-in-up" id="best-author">
+            <h1 class="display-4 fw-bold text-center section-title">Best Authors</h1>
+            <hr class="featurette-divider mb-4" style="border-color: #ff6b6b;">
+
+            <div class="row author-list">
+                @for (int i = 0; i < Model.authors.Count; i++)
+                {
+                    var item = Model.authors[i];
+                    <div class="col-lg-4 text-center mb-4 author-item @(i >= 3 ? "hidden-author" : "")">
+                        <div class="author-card">
+                            @if (!string.IsNullOrEmpty(item.CloudinaryId))
+                            {
+                                <img src="https://res.cloudinary.com/dtlmurwxe/image/upload/@item.CloudinaryId" alt="@item.Name" width="200" height="200" class="rounded-circle">
+                            }
+                            else
+                            {
+                                <img src="https://via.placeholder.com/200" alt="No Image" width="200" height="200" class="rounded-circle">
+                            }
+                            <h2 class="fw-bold mt-3" style="color: #ff6b6b;">@item.Name</h2>
+                            <div class="description-container">
+                                <p class="description-text">@item.Biography</p>
+                            </div>
+                            <a href="#" class="read-more">Xem thêm</a>
+                            <p><a class="btn btn-primary mt-2" href="/Authors/SeeAuthor?id=@(item.AuthorId)">View Author</a></p>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            @if (Model.authors.Count > 3)
             {
-                <div class="col-lg-4 text-center">
-                    <img src="@item.CloudinaryId" alt="Image Description" width="200" height="200" class="rounded-circle">
-                    <h2 class="fw-normal">@item.Name</h2>
-                    <p>@item.Biography</p>
-                    <p><a class="btn btn-secondary" href="/Authors/SeeAuthor?id=@(item.AuthorId)">View Books &raquo;</a></p>
+                <div class="text-center mt-3">
+                    <button type="button" class="toggle-authors">Xem thêm</button>
                 </div>
             }
         </div>
-        <hr class="featurette-divider">
-    </div>
+    }
+</div>
 
-    <h1 class="display-4 fw-bold text-body text-center">
-        @if (!string.IsNullOrEmpty(Request.Query["searchTerm"]) ||
-        !string.IsNullOrEmpty(Request.Query["categoryName"]))
+<!-- Search & Filter Section -->
+<div class="container search-section fade-in-up">
+    <h1 class="display-4 fw-bold text-center section-title">Search & Filter Books</h1>
+    <hr class="featurette-divider mb-4" style="border-color: #ff6b6b;">
+    <form method="get" action="" class="row g-3 align-items-end">
+        <div class="col-md-4">
+            <label for="searchTerm" class="form-label fw-bold">Search Books</label>
+            <input type="text" id="searchTerm" name="searchTerm" class="form-control" placeholder="Enter book title..." value="@Request.Query["searchTerm"]" />
+        </div>
+        <div class="col-md-4">
+            <label for="categoryName" class="form-label fw-bold">Category</label>
+            <select id="categoryName" name="categoryName" class="form-control">
+                <option value="">All Categories</option>
+                @foreach (var category in Model.Categories)
+                {
+                    <option value="@category.CategoryName" selected="@(category.CategoryName == Request.Query["categoryName"])">@category.CategoryName</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-4">
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-search me-1"></i> Search</button>
+                <a href="/" class="btn btn-outline-secondary"><i class="fas fa-times me-1"></i> Reset</a>
+            </div>
+        </div>
+    </form>
+
+    <!-- Search Results Feedback -->
+    @if (!string.IsNullOrEmpty(Request.Query["searchTerm"]) || !string.IsNullOrEmpty(Request.Query["categoryName"]))
+    {
+        <div class="d-flex justify-content-center mt-3">
+            <div class="alert alert-info text-center w-50" role="alert">
+                <h4 class="fw-bold">Kết quả tìm kiếm</h4>
+                <p>
+                    @if (!string.IsNullOrEmpty(Request.Query["searchTerm"]))
+                    {
+                        <span><strong>Từ khóa:</strong> "@Request.Query["searchTerm"]" </span>
+                    }
+                    @if (!string.IsNullOrEmpty(Request.Query["categoryName"]))
+                    {
+                        <span> | <strong>Thể loại:</strong> "@Request.Query["categoryName"]" </span>
+                    }
+                </p>
+                <p><strong>@Model.books.Count</strong> sách phù hợp</p>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Best Books / Search Results -->
+<div class="container fade-in-up">
+    <h1 class="display-4 fw-bold text-center section-title">
+        @if (!string.IsNullOrEmpty(Request.Query["searchTerm"]) || !string.IsNullOrEmpty(Request.Query["categoryName"]))
         {
             <span>Kết quả tìm kiếm</span>
         }
@@ -135,44 +388,117 @@
             <span>Best Books</span>
         }
     </h1>
-    <hr class="featurette-divider">
+    <hr class="featurette-divider mb-4" style="border-color: #ff6b6b;">
 
-    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-0 text-center">
-        @if (Model.books.Count == 0 && (!string.IsNullOrEmpty(Request.Query["searchTerm"]) ||
-        !string.IsNullOrEmpty(Request.Query["categoryName"])
-       ))
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 justify-content-center align-items-center" style="min-height: 50vh; display: flex;">
+        @if (Model.books.Count == 0 && (!string.IsNullOrEmpty(Request.Query["searchTerm"]) || !string.IsNullOrEmpty(Request.Query["categoryName"])))
         {
-            <div class="col-12 text-center">
-                <div class="alert alert-warning">
-                    <h4>Không tìm thấy sách phù hợp với tiêu chí của bạn</h4>
+            <div class="d-flex justify-content-center align-items-center w-100">
+                <div class="alert alert-warning text-center w-50">
+                    <h4 class="fw-bold">Không tìm thấy sách phù hợp</h4>
                     <p>Vui lòng thử lại với các tiêu chí khác</p>
                 </div>
             </div>
         }
         else
         {
-            @foreach (var item in Model.books)
+            @foreach (var item in Model.PagedBooks)
             {
-                <div class="card" style="width:19rem; padding:10px;margin:10px; border-radius:20px">
-                    <a href="/Books/ShowBook?id=@(item.BookId)" style="text-decoration:none">
-                        <img src="@item.CloudinaryImageId" class="card-img-top" style="border-radius:20px" alt="...">
-
-                        <div class="card-body">
-                            <h5 class="card-title" style="font-family:sans-serif; color:black">@item.Title</h5>
-                            <ul class="list-group list-group-flush">
-                                <li class="list-group-item">Author: @item.Author?.Name</li>
-                               
-                            </ul>
-                        </div>
-                    </a>
+                <div class="col d-flex justify-content-center">
+                    <div class="book-card text-center">
+                        <a href="/Books/ShowBook?id=@(item.BookId)" style="text-decoration: none;">
+                            <img src="@item.CloudinaryImageId" class="card-img-top" alt="@item.Title">
+                            <div class="card-body">
+                                <h5 class="card-title fw-bold" style="color: #2c3e50;">@item.Title</h5>
+                                <p class="text-muted">Author: @item.Author?.Name</p>
+                            </div>
+                        </a>
+                    </div>
                 </div>
             }
         }
     </div>
-</body>
-<!-- jQuery -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<!-- Popper.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
-<!-- Bootstrap JS -->
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+    <!-- Pagination -->
+    @if (Model.TotalPages > 1)
+    {
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center">
+                <li class="page-item @(Model.CurrentPage == 1 ? "disabled" : "")">
+                    @{
+                        var prevUrl = $"/Index?page={Model.CurrentPage - 1}";
+                        if (!string.IsNullOrEmpty(Request.Query["searchTerm"])) { prevUrl += $"&searchTerm={Request.Query["searchTerm"]}"; }
+                        if (!string.IsNullOrEmpty(Request.Query["categoryName"])) { prevUrl += $"&categoryName={Request.Query["categoryName"]}"; }
+                    }
+                    <a class="page-link" href="@prevUrl" aria-label="Previous">
+                        <span aria-hidden="true">«</span>
+                    </a>
+                </li>
+                @for (int i = 1; i <= Model.TotalPages; i++)
+                {
+                    var pageUrl = $"/Index?page={i}";
+                    if (!string.IsNullOrEmpty(Request.Query["searchTerm"])) { pageUrl += $"&searchTerm={Request.Query["searchTerm"]}"; }
+                    if (!string.IsNullOrEmpty(Request.Query["categoryName"])) { pageUrl += $"&categoryName={Request.Query["categoryName"]}"; }
+                    <li class="page-item @(Model.CurrentPage == i ? "active" : "")">
+                        <a class="page-link" href="@pageUrl">@i</a>
+                    </li>
+                }
+                <li class="page-item @(Model.CurrentPage == Model.TotalPages ? "disabled" : "")">
+                    @{
+                        var nextUrl = $"/Index?page={Model.CurrentPage + 1}";
+                        if (!string.IsNullOrEmpty(Request.Query["searchTerm"])) { nextUrl += $"&searchTerm={Request.Query["searchTerm"]}"; }
+                        if (!string.IsNullOrEmpty(Request.Query["categoryName"])) { nextUrl += $"&categoryName={Request.Query["categoryName"]}"; }
+                    }
+                    <a class="page-link" href="@nextUrl" aria-label="Next">
+                        <span aria-hidden="true">»</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    }
+</div>
+
+<!-- JavaScript -->
+@section Scripts {
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Handle "Read More" for Biography
+            const readMoreLinks = document.querySelectorAll('.read-more');
+            readMoreLinks.forEach(link => {
+                link.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const descriptionContainer = this.previousElementSibling;
+                    const description = descriptionContainer.querySelector('.description-text');
+                    if (description) {
+                        description.classList.toggle('expanded');
+                        this.textContent = description.classList.contains('expanded') ? 'Thu gọn' : 'Xem thêm';
+                    }
+                });
+            });
+
+            // Handle "Toggle Authors" button
+            const toggleAuthorsBtn = document.querySelector('.toggle-authors');
+            const authorList = document.querySelector('.author-list');
+            if (toggleAuthorsBtn && authorList) {
+                toggleAuthorsBtn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    authorList.classList.toggle('expanded');
+                    this.textContent = authorList.classList.contains('expanded') ? 'Thu gọn' : 'Xem thêm';
+                });
+            }
+
+            // Handle pagination
+            const pageLinks = document.querySelectorAll('.page-link');
+            pageLinks.forEach(link => {
+                link.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const url = this.getAttribute('href');
+                    if (url && !this.parentElement.classList.contains('disabled')) {
+                        window.location.href = url;
+                    }
+                });
+            });
+        });
+    </script>
+}

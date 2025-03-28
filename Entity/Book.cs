@@ -9,7 +9,7 @@ namespace api_flms_service.Entity
         [Key]
         public int BookId { get; set; }
         public int AuthorId { get; set; }
-        public Author Author { get; set; }
+        public Author? Author { get; set; }
         public int AvailableCopies { get; set; }
         public string BookDescription { get; set; } = string.Empty; // Khởi tạo mặc định
         public string CloudinaryImageId { get; set; } = string.Empty; // Khởi tạo mặc định
@@ -18,6 +18,7 @@ namespace api_flms_service.Entity
         public string Title { get; set; } = string.Empty; // Khởi tạo mặc định
 
         public ICollection<BookCategory> BookCategories { get; set; } = new List<BookCategory>();
+        
         [JsonIgnore]
         public ICollection<Category> Categories => BookCategories.Select(bc => bc.Category).ToList();
 
@@ -27,5 +28,7 @@ namespace api_flms_service.Entity
 
         public ICollection<Loan> BookLoans { get; set; } = new List<Loan>();
         public ICollection<Review> Reviews { get; set; } = new List<Review>();
+
+        public string BookFileUrl { get; set; } = string.Empty;
     }
 }

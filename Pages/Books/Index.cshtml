@@ -22,7 +22,8 @@
             <th>Available Copies</th>
             <th>Image</th>
             <th>Description</th>
-            <th>Image URLs</th>
+            @* <th>Image URLs</th> *@
+            <th>Book File</th>
             <th>Actions</th>
         </tr>
     </thead>
@@ -35,6 +36,7 @@
         try {
             const response = await fetch('/api/v0/books');
             const books = await response.json();
+            console.log('Books data:', books);
 
             const tableBody = document.getElementById('bookTable');
             tableBody.innerHTML = '';
@@ -55,8 +57,8 @@
                 // Category
                 const categoryCell = document.createElement('td');
                 const categoryNames = book.category && Array.isArray(book.category)
-                    ? book.category.map(cat => cat.categoryName).join(', ')
-                    : 'No Category';
+                      ? book.category.map(cat => cat.categoryName).filter(name => name).join(', ')
+                      : 'No Category';
                 categoryCell.textContent = categoryNames;
                 row.appendChild(categoryCell);
 
@@ -87,25 +89,43 @@
                 }
                 row.appendChild(imageCell);
 
-                // Description
+                // Description (Giới hạn số ký tự)
                 const descriptionCell = document.createElement('td');
-                descriptionCell.textContent = book.bookDescription || 'N/A';
+                const maxLength = 50; // Giới hạn 50 ký tự
+                const description = book.bookDescription || 'N/A';
+                descriptionCell.textContent = description.length > maxLength
+                    ? description.substring(0, maxLength) + '...'
+                    : description;
                 row.appendChild(descriptionCell);
 
                 // Image URLs
-                const urlsCell = document.createElement('td');
-                urlsCell.textContent = book.imageUrls || 'N/A';
-                row.appendChild(urlsCell);
+                // const urlsCell = document.createElement('td');
+                // urlsCell.textContent = book.imageUrls || 'N/A';
+                // row.appendChild(urlsCell);
+
+                // Book File URL
+                const fileCell = document.createElement('td');
+                if (book.bookFileUrl) {
+                    const fileLink = document.createElement('a');
+                    fileLink.href = book.bookFileUrl;
+                    fileLink.textContent = 'Download';
+                    fileLink.target = '_blank';
+                    fileCell.appendChild(fileLink);
+                } else {
+                    fileCell.textContent = 'No File';
+                }
+                row.appendChild(fileCell);
 
                 // Actions
                 const actionsCell = document.createElement('td');
+                var divAction = document.createElement('div');
                 const editButton = document.createElement('a');
                 editButton.href = `/Books/Manage?id=${book.bookId}`;
                 editButton.className = 'btn btn-primary btn-sm';
                 editButton.textContent = 'Edit';
-                actionsCell.appendChild(editButton);
+                divAction.appendChild(editButton);
 
-                actionsCell.appendChild(document.createTextNode(' '));
+                divAction.appendChild(document.createTextNode(' '));
 
                 const deleteButton = document.createElement('button');
                 deleteButton.className = 'btn btn-danger btn-sm';
@@ -126,7 +146,10 @@
                         }
                     }
                 };
-                actionsCell.appendChild(deleteButton);
+                divAction.appendChild(deleteButton);
+                divAction.style.display = "flex";
+                
+                actionsCell.appendChild(divAction);
 
                 row.appendChild(actionsCell);
                 tableBody.appendChild(row);

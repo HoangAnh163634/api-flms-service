@@ -1,6 +1,7 @@
 ﻿using api_flms_service.Entity;
 using api_flms_service.ServiceInterface;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace api_flms_service.Controllers
 {
@@ -9,16 +10,14 @@ namespace api_flms_service.Controllers
     public class AuthorController : ControllerBase
     {
         private readonly IAuthorService _authorService;
+        private readonly ICloudinaryService _cloudinaryService;
 
-        public AuthorController(IAuthorService authorService)
+        public AuthorController(IAuthorService authorService, ICloudinaryService cloudinaryService)
         {
             _authorService = authorService;
+            _cloudinaryService = cloudinaryService;
         }
 
-        /// <summary>
-        /// Get all authors
-        /// </summary>
-        /// <returns>List of authors</returns>
         [HttpGet]
         public async Task<IActionResult> GetAllAuthors()
         {
@@ -26,11 +25,6 @@ namespace api_flms_service.Controllers
             return Ok(authors);
         }
 
-        /// <summary>
-        /// Get author by ID
-        /// </summary>
-        /// <param name="id">Author ID</param>
-        /// <returns>Author object</returns>
         [HttpGet("{id}")]
         public async Task<IActionResult> GetAuthorById(int id)
         {
@@ -39,44 +33,65 @@ namespace api_flms_service.Controllers
             return Ok(author);
         }
 
-        /// <summary>
-        /// Add a new author
-        /// </summary>
-        /// <param name="author">Author object</param>
-        /// <returns>Created author</returns>
         [HttpPost]
         public async Task<IActionResult> AddAuthor([FromBody] Author author)
         {
-            if (!ModelState.IsValid) return BadRequest("Invalid data.");
+            if (!ModelState.IsValid || string.IsNullOrEmpty(author.Name))
+            {
+                return BadRequest("Invalid data. Author name is required.");
+            }
             var createdAuthor = await _authorService.AddAuthorAsync(author);
             return CreatedAtAction(nameof(GetAuthorById), new { id = createdAuthor.AuthorId }, createdAuthor);
         }
 
-        /// <summary>
-        /// Update an author
-        /// </summary>
-        /// <param name="author">Updated author object</param>
-        /// <returns>Updated author</returns>
-        [HttpPut]
-        public async Task<IActionResult> UpdateAuthor([FromBody] Author author)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateAuthor(int id, [FromBody] Author author)
         {
-            if (!ModelState.IsValid) return BadRequest("Invalid data.");
+            if (id != author.AuthorId)
+            {
+                return BadRequest("Author ID mismatch.");
+            }
+            if (!ModelState.IsValid || string.IsNullOrEmpty(author.Name))
+            {
+                return BadRequest("Invalid data. Author name is required.");
+            }
             var updatedAuthor = await _authorService.UpdateAuthorAsync(author);
             if (updatedAuthor == null) return NotFound("Author not found.");
             return Ok(updatedAuthor);
         }
 
-        /// <summary>
-        /// Delete an author by ID
-        /// </summary>
-        /// <param name="id">Author ID</param>
-        /// <returns>Success or failure</returns>
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAuthor(int id)
         {
             var result = await _authorService.DeleteAuthorAsync(id);
             if (!result) return NotFound("Author not found.");
             return NoContent();
+        }
+
+        [HttpPost("upload")]
+        public async Task<IActionResult> UploadFile(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest(new { message = "No file uploaded." });
+            }
+
+            var allowedExtensions = new List<string> { ".png", ".jpg", ".jpeg", ".gif" };
+            var extension = Path.GetExtension(file.FileName).ToLower();
+            if (!allowedExtensions.Contains(extension))
+            {
+                return BadRequest(new { message = "Invalid file format. Allowed formats: PNG, JPG, JPEG, GIF." });
+            }
+
+            try
+            {
+                var uploadResult = await _cloudinaryService.UploadFileAsync(file);
+                return Ok(new { fileUrl = uploadResult });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error uploading file to Cloudinary", details = ex.Message });
+            }
         }
     }
 }

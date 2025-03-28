@@ -5,56 +5,221 @@
     Layout = "_Layout";
 }
 
-    <div class="container">
-        <h2>Dashboard</h2>
-        <div class="row">
-            <div class="col-md-3">
-                <div class="card bg-light">
-                    <div class="card-header">Registered Users</div>
-                    <div class="card-body">
-                        <p class="card-text">No. total Users: @Model.TotalUsers</p>
-                        <a href="/Users" class="btn btn-danger">View Registered Users</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card bg-light">
-                    <div class="card-header">Total Books</div>
-                    <div class="card-body">
-                        <p class="card-text">No. of books available: @Model.TotalBooks</p>
-                        <a href="/Books" class="btn btn-success">View All Books</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card bg-light">
-                    <div class="card-header">Book Categories</div>
-                    <div class="card-body">
-                        <p class="card-text">No. of Book Categories: @Model.TotalCategories</p>
-                        <a href="/Categories/" class="btn btn-warning">View Categories</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card bg-light">
-                    <div class="card-header">Authors</div>
-                    <div class="card-body">
-                        <p class="card-text">No. of Authors: @Model.TotalAuthors</p>
-                        <a href="/Authors" class="btn btn-primary">View Authors</a>
-                    </div>
+<style>
+    body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        font-family: 'Poppins', sans-serif;
+    }
+
+    /* Tiêu đề Dashboard */
+    .dashboard-title {
+        color: #2c3e50;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        animation: fadeInDown 1s ease-in-out;
+        background: linear-gradient(90deg, #ff6b6b 0%, #4ecdc4 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* Card thống kê */
+    .stat-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        margin-bottom: 20px;
+    }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .stat-card .card-header {
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-bottom: none;
+            padding: 15px;
+            color: white;
+            border-radius: 15px 15px 0 0;
+        }
+
+        .stat-card .card-body {
+            padding: 20px;
+        }
+
+        .stat-card .card-text {
+            font-size: 1.1rem;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+    /* Màu sắc cho từng card */
+    .card-users .card-header {
+        background: linear-gradient(90deg, #ff6b6b 0%, #e65b5b 100%);
+    }
+
+    .card-books .card-header {
+        background: linear-gradient(90deg, #4ecdc4 0%, #45b7b0 100%);
+    }
+
+    .card-categories .card-header {
+        background: linear-gradient(90deg, #f7b731 0%, #e0a614 100%);
+    }
+
+    .card-authors .card-header {
+        background: linear-gradient(90deg, #1e90ff 0%, #187bcd 100%);
+    }
+
+    .card-loans .card-header { /* Thay card-issued thành card-loans */
+        background: linear-gradient(90deg, #2ecc71 0%, #27ae60 100%);
+    }
+
+    .card-reviews .card-header {
+        background: linear-gradient(90deg, #00cec9 0%, #00b7b3 100%);
+    }
+
+    .card-notifications .card-header {
+        background: linear-gradient(90deg, #9b59b6 0%, #8e44ad 100%);
+    }
+
+    /* Nút */
+    .btn-view {
+        background: linear-gradient(90deg, #ff6b6b 0%, #4ecdc4 100%);
+        border: none;
+        border-radius: 20px;
+        padding: 10px 20px;
+        font-weight: bold;
+        color: white;
+        transition: transform 0.3s ease, background 0.3s ease;
+    }
+
+        .btn-view:hover {
+            transform: scale(1.05);
+            background: linear-gradient(90deg, #e65b5b 0%, #45b7b0 100%);
+        }
+
+    /* Animation */
+    @@keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .fade-in-up {
+        animation: fadeInUp 1s ease-in-out;
+    }
+</style>
+
+<div class="container mt-5">
+    <!-- Tiêu đề Dashboard -->
+    <h2 class="dashboard-title text-center mb-5">Dashboard</h2>
+
+    <!-- Row 1 -->
+    <div class="row">
+        <!-- Registered Users -->
+        <div class="col-md-3">
+            <div class="stat-card card-users fade-in-up">
+                <div class="card-header">Registered Users</div>
+                <div class="card-body">
+                    <p class="card-text"><i class="fas fa-users me-2"></i>No. total Users: @Model.TotalUsers</p>
+                    <a href="/Users" class="btn btn-view">View Registered Users</a>
                 </div>
             </div>
         </div>
-        <br>
-        <div class="row">
-            <div class="col-md-3">
-                <div class="card bg-light">
-                    <div class="card-header">Books Issued</div>
-                    <div class="card-body">
-                        <p class="card-text">No. of books issued: @Model.TotalIssuedBooks</p>
-                        <a href="/IssuedBooks" class="btn btn-success">View Issued Books</a>
-                    </div>
+
+        <!-- Total Books -->
+        <div class="col-md-3">
+            <div class="stat-card card-books fade-in-up">
+                <div class="card-header">Total Books</div>
+                <div class="card-body">
+                    <p class="card-text"><i class="fas fa-book me-2"></i>No. of books available: @Model.TotalBooks</p>
+                    <a href="/Books" class="btn btn-view">View All Books</a>
                 </div>
             </div>
         </div>
+
+        <!-- Book Categories -->
+        <div class="col-md-3">
+            <div class="stat-card card-categories fade-in-up">
+                <div class="card-header">Book Categories</div>
+                <div class="card-body">
+                    <p class="card-text"><i class="fas fa-tags me-2"></i>No. of Book Categories: @Model.TotalCategories</p>
+                    <a href="/Categories/" class="btn btn-view">View Categories</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Authors -->
+        <div class="col-md-3">
+            <div class="stat-card card-authors fade-in-up">
+                <div class="card-header">Authors</div>
+                <div class="card-body">
+                    <p class="card-text"><i class="fas fa-user-edit me-2"></i>No. of Authors: @Model.TotalAuthors</p>
+                    <a href="/Authors" class="btn btn-view">View Authors</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Row 2 -->
+    <div class="row mt-4">
+        <!-- Total Loans (Thay thế Books Issued) -->
+        <div class="col-md-3">
+            <div class="stat-card card-loans fade-in-up">
+                <!-- Thay card-issued thành card-loans -->
+                <div class="card-header">Total Loans</div>
+                <div class="card-body">
+                    <p class="card-text"><i class="fas fa-book-open me-2"></i>No. of loans: @Model.TotalLoans</p>
+                    <a href="/Loans" class="btn btn-view">View Loans</a> <!-- Link đến trang Loans -->
+                </div>
+            </div>
+        </div>
+
+        <!-- List Of Reviews -->
+        <div class="col-md-3">
+            <div class="stat-card card-reviews fade-in-up">
+                <div class="card-header">List Of Reviews</div>
+                <div class="card-body">
+                    <p class="card-text"><i class="fas fa-star me-2"></i>No. of reviews: @Model.TotalReviews</p>
+                    <a href="/Reviews/ListOfReview" class="btn btn-view">View Reviews</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Notifications -->
+        <div class="col-md-3">
+            <div class="stat-card card-notifications fade-in-up">
+                <div class="card-header">Total Notifications</div>
+                <div class="card-body">
+                    <p class="card-text"><i class="fas fa-bell me-2"></i>No. of notifications: @Model.TotalNotifications</p>
+                    <a href="/Notifications/Manage" class="btn btn-view">View Notifications</a>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+@section Scripts {
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+}
