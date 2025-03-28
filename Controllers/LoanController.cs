@@ -4,6 +4,7 @@ using api_flms_service.Service;
 using api_flms_service.ServiceInterface;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace api_flms_service.Controllers
@@ -110,6 +111,7 @@ namespace api_flms_service.Controllers
 
             var transactionId = queryParams["vnp_TxnRef"];
             var responseCode = queryParams["vnp_ResponseCode"];
+            var info = queryParams["vnp_OrderInfo"];
 
             // Validate mandatory parameters
             if (string.IsNullOrEmpty(transactionId) || string.IsNullOrEmpty(responseCode))
@@ -127,7 +129,23 @@ namespace api_flms_service.Controllers
             // Process the payment based on response code
             if (responseCode == "00") // Thanh toán thành công
             {
-                await _loanService.MarkAsPaidAsync(int.Parse(transactionId));
+                string pattern = @"Thanh toan don hang: (\d+)";
+
+                Match match = Regex.Match(info, pattern);
+                if (match.Success)
+                {
+                    var lId = match.Groups[1].Value;
+                    var paid = await _loanService.MarkAsPaidAsync(int.Parse(lId));
+                    if (paid)
+                    {
+                        var ret = await _loanService.ReturnLoanAsync(int.Parse(lId));
+                    }
+                }
+                else
+                {
+                    BadRequest("loanId not found.");
+                }
+                
                 return Ok("Payment successful");
             }
 

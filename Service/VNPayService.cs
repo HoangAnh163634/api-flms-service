@@ -82,7 +82,7 @@ public class VnPayService
         //{
         //    vnpay.AddRequestData("vnp_Locale", "en");
         //}
-        vnpay.AddRequestData("vnp_OrderInfo", "Thanh toan don hang:" + order.OrderId);
+        vnpay.AddRequestData("vnp_OrderInfo", "Thanh toan don hang: " + loanId);
         vnpay.AddRequestData("vnp_OrderType", "other"); //default value: other
 
         vnpay.AddRequestData("vnp_ReturnUrl", vnp_Returnurl);

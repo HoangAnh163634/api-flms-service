@@ -16,15 +16,10 @@ namespace api_flms_service.Pages.Loans
         public Loan Loan { get; set; }
         public Book Book { get; set; }
         public decimal OverdueFee { get; set; }
-        public decimal LoanCostPerDay { get; set; }
-        private int LoanDeferredTime { get; set; }
 
-        public VNPayModel(ILoanService loanService, IConfiguration configuration)
+        public VNPayModel(ILoanService loanService)
         {
             _loanService = loanService;
-            _configuration = configuration;
-            LoanCostPerDay = decimal.Parse(_configuration["LoanSettings:LoanCostPerDay"]); // Get cost per day from config
-            LoanDeferredTime = int.Parse(_configuration["LoanSettings:LoanDeferredTime"]);
         }
 
         public async Task<IActionResult> OnGetAsync(int id)
@@ -41,11 +36,7 @@ namespace api_flms_service.Pages.Loans
             Book = Loan.Book;
 
             // Calculate overdue fee if applicable
-            if (Loan.LoanDate.HasValue && Loan.LoanDate.Value.AddDays(LoanDeferredTime) < DateTime.Now)
-            {
-                var overdueDays = (DateTime.Now - Loan.LoanDate.Value.AddDays(LoanDeferredTime)).Days;
-                OverdueFee = overdueDays * LoanCostPerDay; // Calculate overdue fee
-            }
+            OverdueFee = _loanService.GetLoanCost(Loan) ?? 0;
 
             return Page();
         }

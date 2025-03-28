@@ -11,6 +11,8 @@ namespace api_flms_service.ServiceInterface
         Task<bool> DeleteLoanAsync(int id);
         Task<bool> MarkAsPaidAsync(int loanId);
         Task<bool> UpdateLoanAsync(Loan loan);
-
+        decimal? GetLoanCost(Loan loan);
+        int? GetLoanDue(Loan loan);
+        DateTime? GetLoanDueDate(Loan loan);
     }
 }
