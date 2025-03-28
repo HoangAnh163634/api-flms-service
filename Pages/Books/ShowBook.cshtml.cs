@@ -18,15 +18,15 @@ namespace api_flms_service.Pages.Books
         private readonly AuthService _authService;
         private readonly IUserService _userService;
         private readonly IReviewService _reviewService;
-        private readonly AppDbContext _dbContext;
+        public readonly ILoanService _loanService;
 
-        public ShowBookModel(IBookService bookService, AuthService authService, IUserService userService, IReviewService reviewService, AppDbContext dbContext)
+        public ShowBookModel(IBookService bookService, AuthService authService, IUserService userService, IReviewService reviewService, ILoanService loanService)
         {
             _authService = authService;
             _bookService = bookService;
             _userService = userService;
             _reviewService = reviewService;
-            _dbContext = dbContext;
+            _loanService = loanService;
         }
 
         [BindProperty]

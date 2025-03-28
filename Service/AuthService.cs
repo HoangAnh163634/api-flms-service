@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text.Json;
@@ -95,13 +96,17 @@ namespace api_auth_service.Services
 
             var domain = new Uri(Request.GetEncodedUrl()).Host.TrimStart('.');
             var isLocalHost = Request.Host.Host.Contains("localhost") || domain == "127.0.0.1";
+
+            if (domain[0] == '.')
+                domain = domain.Remove(0, 1);
+
             Response.Cookies.Append("googleToken", Token, new CookieOptions
             {
                 HttpOnly = true,  // Prevents JavaScript access
                 Secure = !isLocalHost, // Secure=True only in production
                 Path = "/",
                 SameSite = isLocalHost ? SameSiteMode.Lax : SameSiteMode.None, // Allows cross-origin cookie sending
-                Domain = isLocalHost ? null : domain, // ✅ Allows sharing cookies across subdomains only in production
+                Domain = null, // ✅ Allows sharing cookies across subdomains only in production
                 Expires = DateTime.UtcNow.AddDays(7)
             });
         }
