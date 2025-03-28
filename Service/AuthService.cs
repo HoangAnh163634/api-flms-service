@@ -106,7 +106,7 @@ namespace api_auth_service.Services
                 Secure = !isLocalHost, // Secure=True only in production
                 Path = "/",
                 SameSite = isLocalHost ? SameSiteMode.Lax : SameSiteMode.None, // Allows cross-origin cookie sending
-                Domain = isLocalHost ? null : domain, // ✅ Allows sharing cookies across subdomains only in production
+                Domain = null, // ✅ Allows sharing cookies across subdomains only in production
                 Expires = DateTime.UtcNow.AddDays(7)
             });
         }
