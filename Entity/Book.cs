@@ -18,6 +18,7 @@ namespace api_flms_service.Entity
         public string Title { get; set; } = string.Empty; // Khởi tạo mặc định
 
         public ICollection<BookCategory> BookCategories { get; set; } = new List<BookCategory>();
+        
         [JsonIgnore]
         public ICollection<Category> Categories => BookCategories.Select(bc => bc.Category).ToList();
 

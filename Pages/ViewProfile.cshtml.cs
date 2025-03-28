@@ -65,7 +65,7 @@ namespace api_flms_service.Pages
             try
             {
                 // Cập nhật thông tin người dùng (giả định có phương thức UpdateUser trong IUserService)
-                // await _userService.UpdateUserAsync(user);
+                await _userService.UpdateUserAsync(user);
                 SuccessMessage = "Profile updated successfully!";
             }
             catch

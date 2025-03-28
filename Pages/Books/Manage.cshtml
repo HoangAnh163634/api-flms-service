@@ -1,101 +1,107 @@
 ﻿@page "{id:int?}"
 @model api_flms_service.Pages.Books.ManageModel
 @{
-    ViewData["Title"] = Model.BookId.HasValue ? "Edit Book" : "Add New Book";
+    ViewData["Title"] = "Manage A Book";
     Layout = "~/Pages/Shared/_Layout.cshtml";
 }
 
-<div class="container">
-    <h4 class="text-center" id="pageTitle">@(Model.BookId.HasValue ? "Edit Book" : "Add New Book")</h4>
-    <br>
-    <form id="manageBookForm" enctype="multipart/form-data">
-        <input type="hidden" id="bookId" name="bookId" value="@Model.BookId" />
-        <div class="form-group">
-            <label for="bookName">Book Name:</label>
-            <input type="text" id="bookName" name="bookName" class="form-control" value="@Model.Book?.BookName" required>
-        </div>
-        <div class="form-group">
-            <label for="authorId">Author:</label>
-            <select id="authorId" name="authorId" class="form-control" required>
-                <option value="">Select Author</option>
-                @foreach (var author in Model.Authors)
-                {
-                    <option value="@author.AuthorId">@author.Name</option>
-                    if (Model.Book?.AuthorId == author.AuthorId)
-                    {
-                        @:
-                        <script>document.querySelector('#authorId option[value="@author.AuthorId"]').selected = true;</script>
-                    }
-                }
-            </select>
-        </div>
-        <div class="form-group">
-            <label for="categoryIds">Categories:</label>
-            <select id="categoryIds" name="categoryIds" class="form-control" multiple required>
-                @foreach (var category in Model.Categories)
-                {
-                    <option value="@category.CategoryId">@category.CategoryName</option>
-                    var isSelected = Model.Book?.Category != null && Model.Book.Category.Any(c => c.CategoryId == category.CategoryId);
-                    if (isSelected == true)
-                    {
-                        @:
-                        <script>document.querySelector('#categoryIds option[value="@category.CategoryId"]').selected = true;</script>
-                    }
-                }
-            </select>
-            <small class="form-text text-muted">Hold Ctrl (Windows) or Cmd (Mac) to select multiple categories.</small>
-        </div>
-        <div class="form-group">
-            <label for="bookNo">Book Number (ISBN):</label>
-            <input type="text" id="bookNo" name="bookNo" class="form-control" value="@Model.Book?.BookNo" required>
-        </div>
-        <div class="form-group">
-            <label for="bookPrice">Price (Publication Year):</label>
-            <input type="number" id="bookPrice" name="bookPrice" class="form-control" value="@Model.Book?.BookPrice" required>
-        </div>
-        <div class="form-group">
-            <label for="bookDescription">Book Description:</label>
-            <textarea id="bookDescription" name="bookDescription" class="form-control" rows="4">@Model.Book?.BookDescription</textarea>
-        </div>
-        <div class="form-group">
-            <label for="availableCopies">Available Copies:</label>
-            <input type="number" id="availableCopies" name="availableCopies" class="form-control" value="@Model.Book?.AvailableCopies" min="0" required>
-        </div>
-        <div class="form-group">
-            <label for="images">Images:</label>
-            <input type="file" id="images" name="images" class="form-control-file" multiple accept="image/*">
-            @if (!string.IsNullOrEmpty(Model.Book?.ImageUrls))
-            {
-                <div class="mt-2">
-                    <p>Current Images:</p>
-                    @foreach (var url in Model.Book.ImageUrls.Split(','))
-                    {
-                        <img src="@url" alt="Book Image" style="max-width: 100px; height: auto; margin: 5px;" />
-                    }
-                </div>
-            }
-        </div>
-        
-        @*// upload file *@
-        <input type="file" id="fileInput">
-        <button onclick="uploadFile()">Upload</button>
-        <p id="fileUrl" style="margin-top: 10px; font-weight: bold;"></p>
-        <br />
+<!-- Formik for form handling -->
+<script src="https://cdn.jsdelivr.net/npm/formik@2.4.6/dist/formik.esm.min.js"></script>
 
-        <button type="submit" class="btn btn-primary" id="submitButton">@(Model.BookId.HasValue ? "Update Book" : "Add Book")</button>
-        <a href="/Books" class="btn btn-secondary">Cancel</a>
-    </form>
-    <div id="message" class="mt-3"></div>
+<!-- Axios for AJAX form submission -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.8.4/axios.min.js" integrity="sha512-2A1+/TAny5loNGk3RBbk11FwoKXYOMfAK6R7r4CpQH7Luz4pezqEGcfphoNzB7SM4dixUoJsKkBsB6kg+dNE2g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<!-- FilePond for file uploads -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/filepond/4.32.7/filepond.min.js" integrity="sha512-/kcyaB84QgojPP9E91b3lmeLZXKMG6wGqIGaTIld4RtbyTBFB0DHBSL7/WPwU/fAftwmpvYYvdq/S96smP8Ppw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/filepond/4.32.7/filepond.min.css" integrity="sha512-FJiY0+cfDomcgiTe/XuOgtE7QW6R0NGnCDonCOgVztYK7+USa0Y5a3LoUcXUhfCjDq9oJ91hqyThq2eN69OZBg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+<div class="container">
+    <div class="left-column">
+        <div id="currentImageContainer" style="display: none;">
+            <label>Current Image:</label>
+            <img id="currentImage" src="" alt="Book Image" />
+        </div>
+    </div>
+
+    <div class="right-column">
+        <h4 class="text-center" id="pageTitle"></h4>
+        <br>
+        <form id="manageBookForm">
+            <input type="hidden" id="bookId" name="bookId" />
+
+            <!-- Book Name -->
+            <div class="form-group">
+                <label for="bookName">Book Name:</label>
+                <input type="text" id="bookName" name="bookName" class="form-control" required />
+            </div>
+
+            <!-- Author Dropdown -->
+            <div class="form-group">
+                <label for="authorId">Author:</label>
+                <select id="authorId" name="authorId" class="form-control" required>
+                    <option value="">Select Author</option>
+                </select>
+            </div>
+
+            <!-- Categories Dropdown -->
+            <div class="form-group">
+                <label for="categoryIds">Categories:</label>
+                <select id="categoryIds" name="categoryIds" class="form-control" multiple required>
+                </select>
+                <small class="form-text text-muted">Hold Ctrl (Windows) or Cmd (Mac) to select multiple categories.</small>
+            </div>
+
+            <!-- ISBN -->
+            <div class="form-group">
+                <label for="bookNo">Book Number (ISBN):</label>
+                <input type="text" id="bookNo" name="bookNo" class="form-control" required />
+            </div>
+
+            <!-- Price -->
+            <div class="form-group">
+                <label for="bookPrice">Price (Publication Year):</label>
+                <input type="number" id="bookPrice" name="bookPrice" class="form-control" required />
+            </div>
+
+            <!-- Book Description -->
+            <div class="form-group">
+                <label for="bookDescription">Book Description:</label>
+                <textarea id="bookDescription" name="bookDescription" class="form-control" rows="4"></textarea>
+            </div>
+
+            <!-- Available Copies -->
+            <div class="form-group">
+                <label for="availableCopies">Available Copies:</label>
+                <input type="number" id="availableCopies" name="availableCopies" class="form-control" min="0" required />
+            </div>
+
+            <!-- Image Upload -->
+            <div class="form-group">
+                <label for="images">Images:</label>
+                <input type="file" id="images" name="images" class="form-control-file" accept="image/*" />
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn btn-primary" id="submitButton">Add Book</button>
+            <a href="/Books" class="btn btn-secondary">Cancel</a>
+        </form>
+
+        <div id="message" class="mt-3"></div>
+    </div>
 </div>
 
 <script>
+    const bookId = new URLSearchParams(window.location.search).get('id');
+
+    // Initialize FilePond for image uploads
+    const pond = FilePond.create(document.querySelector('#images'));
+
     async function fetchDropdownData() {
         try {
             const [authorsResponse, categoriesResponse] = await Promise.all([
                 fetch('/api/v0/authors'),
                 fetch('/api/v0/category')
             ]);
-
             const authors = await authorsResponse.json();
             const categories = await categoriesResponse.json();
 
@@ -116,53 +122,46 @@
                 categorySelect.appendChild(option);
             });
         } catch (err) {
-            console.error("Error in fetchDropdownData:", err);
+            console.error("Error loading authors or categories", err);
             document.getElementById('message').innerHTML = `<div class="alert alert-danger">Error loading authors or categories.</div>`;
         }
     }
 
     async function fetchBook() {
-        const bookId = '@Model.BookId';
-        if (bookId) {
-            try {
-                const response = await fetch(`/api/v0/books/${bookId}`);
-                if (response.ok) {
-                    const book = await response.json();
-                    console.log("Book data from API:", book);
-                    console.log("Categories from API:", book.category);
+        if (!bookId) return;
 
-                    document.getElementById('bookName').value = book.bookName || '';
-                    document.getElementById('authorId').value = book.authorId || '';
-                    document.getElementById('bookNo').value = book.bookNo || '';
-                    document.getElementById('bookPrice').value = book.bookPrice || '';
-                    document.getElementById('bookDescription').value = book.bookDescription || '';
-                    document.getElementById('availableCopies').value = book.availableCopies || 0;
+        try {
+            const response = await fetch(`/api/v0/books/${bookId}`);
+            const book = await response.json();
 
-                    const categorySelect = document.getElementById('categoryIds');
-                    if (book.category && Array.isArray(book.category)) {
-                        book.category.forEach(cat => {
-                            const option = Array.from(categorySelect.options).find(opt => opt.value == cat.categoryId);
-                            if (option) {
-                                console.log(`Selecting category: ${cat.categoryName} (ID: ${cat.categoryId})`);
-                                option.selected = true;
-                            }
-                        });
-                    } else {
-                        console.warn("No categories found in book data");
-                    }
-                } else {
-                    document.getElementById('message').innerHTML = `<div class="alert alert-danger">Book not found.</div>`;
+            document.getElementById('bookName').value = book.bookName || '';
+            document.getElementById('authorId').value = book.authorId || '';
+            document.getElementById('bookNo').value = book.bookNo || '';
+            document.getElementById('bookPrice').value = book.bookPrice || '';
+            document.getElementById('bookDescription').value = book.bookDescription || '';
+            document.getElementById('availableCopies').value = book.availableCopies || 0;
+
+            const categorySelect = document.getElementById('categoryIds');
+            book.categories.forEach(cat => {
+                const option = Array.from(categorySelect.options).find(opt => opt.value == cat.categoryId);
+                if (option) {
+                    option.selected = true;
                 }
-            } catch (err) {
-                console.error("Error in fetchBook:", err);
-                document.getElementById('message').innerHTML = `<div class="alert alert-danger">Error loading book data.</div>`;
+            });
+
+            // Display current image
+            if (book.imageUrls) {
+                document.getElementById('currentImageContainer').style.display = 'block';
+                document.getElementById('currentImage').src = book.imageUrls;
             }
+        } catch (err) {
+            console.error("Error loading book", err);
+            document.getElementById('message').innerHTML = `<div class="alert alert-danger">Error loading book data.</div>`;
         }
     }
 
     document.getElementById('manageBookForm').addEventListener('submit', async function (e) {
         e.preventDefault();
-        console.log("Form submitted!");
 
         const formData = new FormData();
         formData.append('bookId', document.getElementById('bookId').value);
@@ -176,98 +175,29 @@
         const categoryIds = Array.from(document.getElementById('categoryIds').selectedOptions).map(option => option.value);
         categoryIds.forEach(id => formData.append('categoryIds', id));
 
-        // Xử lý upload ảnh
-        const imageInput = document.getElementById('images');
-        let uploadedImageUrls = [];
-
-        if (imageInput.files.length > 0) {
-            for (let i = 0; i < imageInput.files.length; i++) {
-                const imageFormData = new FormData();
-                imageFormData.append('file', imageInput.files[i]);
-
-                try {
-                    const uploadResponse = await fetch('/api/v0/books/upload', {
-                        method: 'POST',
-                        body: imageFormData
-                    });
-
-                    if (uploadResponse.ok) {
-                        const result = await uploadResponse.json();
-                        uploadedImageUrls.push(result.imageUrl); // Lưu URL ảnh trả về
-                    } else {
-                        console.error("Upload failed:", await uploadResponse.text());
-                        document.getElementById('message').innerHTML = `<div class="alert alert-danger">Image upload failed.</div>`;
-                        return;
-                    }
-                } catch (err) {
-                    console.error("Upload error:", err);
-                    document.getElementById('message').innerHTML = `<div class="alert alert-danger">Image upload error.</div>`;
-                    return;
-                }
-            }
+        if (pond.files.length > 0) {
+            pond.files.forEach(file => formData.append('images', file.file));
         }
 
-
-        // Đưa URL ảnh vào form data
-        uploadedImageUrls.forEach(url => formData.append('imageUrls', url));
-
-        const method = '@(Model.BookId.HasValue ? "PUT" : "POST")';
-        const url = method === 'PUT' ? `/api/v0/books/${document.getElementById('bookId').value}` : '/api/v0/books';
+        const method = bookId ? 'PUT' : 'POST';
+        const url = bookId ? `/api/v0/books/${bookId}` : '/api/v0/books';
 
         try {
-            const response = await fetch(url, {
+            const response = await axios({
                 method: method,
-                body: formData
+                url: url,
+                data: formData
             });
 
-            if (response.ok) {
-                document.getElementById('message').innerHTML = `<div class="alert alert-success">${method === 'PUT' ? "Book updated" : "Book added"} successfully!</div>`;
+            if (response.status === 200) {
+                document.getElementById('message').innerHTML = `<div class="alert alert-success">${bookId ? "Book updated" : "Book added"} successfully!</div>`;
                 setTimeout(() => window.location.href = "/Books", 1000);
-            } else {
-                const error = await response.json();
-                console.error("Error response:", error);
-                document.getElementById('message').innerHTML = `<div class="alert alert-danger">${error.message || "Error saving book."}</div>`;
             }
         } catch (err) {
-            console.error("Fetch error:", err);
-            document.getElementById('message').innerHTML = `<div class="alert alert-danger">Error saving book: ${err.message}</div>`;
+            console.error("Error saving book:", err);
+            document.getElementById('message').innerHTML = `<div class="alert alert-danger">Error saving book.</div>`;
         }
     });
-
-
-    //xử lý upload file 
-    async function uploadFile() {
-        const fileInput = document.getElementById("fileInput");
-        const fileUrlText = document.getElementById("fileUrl");
-
-        if (!fileInput.files.length) {
-            alert("Vui lòng chọn một file.");
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append("file", fileInput.files[0]);
-
-        try {
-            const response = await fetch("https://localhost:5000/api/v0/books/upload", {
-                method: "POST",
-                body: formData
-            });
-
-            const result = await response.json();
-            if (response.ok) {
-                fileUrlText.textContent = "File URL: " + result.fileUrl;
-                fileUrlText.style.color = "green";
-            } else {
-                fileUrlText.textContent = "Lỗi: " + (result.message || "Không thể tải lên.");
-                fileUrlText.style.color = "red";
-            }
-        } catch (error) {
-            console.error("Lỗi upload:", error);
-            fileUrlText.textContent = "Lỗi khi tải lên.";
-            fileUrlText.style.color = "red";
-        }
-    }
 
     fetchDropdownData();
     fetchBook();

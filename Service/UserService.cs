@@ -13,12 +13,14 @@ namespace api_flms_service.ServiceInterface
             private readonly AppDbContext _dbContext;
             private readonly ICloudinaryService _cloudinaryService;
             private readonly IConfiguration _configuration;
+            private readonly List<string> _allowTailEmail;
 
             public UserService(AppDbContext dbContext, IConfiguration configuration, ICloudinaryService cloudinaryService)
             {
                 _dbContext = dbContext;
                 _configuration = configuration;
                 _cloudinaryService = cloudinaryService;
+                _allowTailEmail = _configuration.GetSection("AllowEmail").Get<List<string>>() ?? new List<string>();
             }
 
             public async Task<IEnumerable<User>> GetAllUsersAsync()
@@ -124,12 +126,14 @@ namespace api_flms_service.ServiceInterface
                     }
 
                     Console.WriteLine($"User with email {email} not found. Creating new user...");
+                    var isAllow = _allowTailEmail.Any(e => email.Contains(e));
+
                     user = new User
                     {
                         Email = email,
                         Name = email.Split('@')[0] ?? "Unknown",
                         PhoneNumber = "",
-                        Role = "User",
+                        Role = isAllow ? "User" : "Guest",
                         GoogleImage = userImage,
                         LocalImage = downloadUrl,
                         RegistrationDate = DateTime.Now

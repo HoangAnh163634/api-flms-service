@@ -21,8 +21,7 @@ namespace api_flms_service.Service
             {
                 return await _dbContext.Books
                     .Include(b => b.Author)
-                    .Include(b => b.BookCategories)
-                    .ThenInclude(bc => bc.Category)
+                    .Include(c => c.Categories)
                     .ToListAsync();
             }
             catch (Exception ex)
