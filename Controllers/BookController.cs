@@ -92,9 +92,7 @@ namespace api_flms_service.Controllers
         }
 
         [HttpPost]
-
         public async Task<IActionResult> CreateBook([FromBody] BookRequestDto bookDto)
-
         {
             if (!ModelState.IsValid)
             {
@@ -114,7 +112,6 @@ namespace api_flms_service.Controllers
                     BookFileUrl = bookDto.BookFileUrl,
                     ImageUrls = bookDto.ImageUrls != null ? string.Join(", ", bookDto.ImageUrls) : null,
                     BookCategories = bookDto.CategoryIds?.Select(id => new BookCategory { CategoryId = id }).ToList()
-
                 };
 
                 var createdBook = await _bookService.CreateBookAsync(book);
@@ -130,10 +127,8 @@ namespace api_flms_service.Controllers
                     BookPrice = createdBook.PublicationYear,
                     AvailableCopies = createdBook.AvailableCopies,
                     BookDescription = createdBook.BookDescription,
-             
                     BookFileUrl = createdBook.BookFileUrl,
-                    ImageUrls = createdBook.ImageUrls?.Split(", ").ToList() // Tách lại thành danh sách khi trả về
-
+                    ImageUrls = createdBook.ImageUrls?.Split(", ").ToList()
                 };
 
                 return CreatedAtAction(nameof(GetBookById), new { id = createdBook.BookId }, createdBookDto);
@@ -144,48 +139,37 @@ namespace api_flms_service.Controllers
             }
         }
 
-
-
         [HttpPut("{id}")]
-
         public async Task<IActionResult> UpdateBook(int id, [FromForm] BookRequestDto bookDto, IFormFile? bookFile)
-
         {
-            Console.WriteLine($"UpdateBook called with id: {id}, bookDto.BookId: {bookDto.BookId}"); // Debug: Kiểm tra request
+            Console.WriteLine($"UpdateBook called with id: {id}, bookDto.BookId: {bookDto.BookId}");
             if (id != bookDto.BookId)
             {
                 return BadRequest(new { message = "Book ID in URL does not match Book ID in form data" });
             }
 
             if (!ModelState.IsValid)
-
             {
                 return BadRequest(ModelState);
             }
-
 
             try
             {
                 var existingBook = await _bookService.GetBookByIdAsync(bookDto.BookId);
                 if (existingBook == null)
-
                 {
                     return NotFound(new { message = "Book not found" });
                 }
 
-
                 existingBook.Title = bookDto.BookName;
                 existingBook.AuthorId = bookDto.AuthorId;
                 existingBook.ISBN = bookDto.BookNo;
-                existingBook.PublicationYear = (int)bookDto.BookPrice; // Giả sử model Book có Price
+                existingBook.PublicationYear = (int)bookDto.BookPrice;
                 existingBook.AvailableCopies = bookDto.AvailableCopies;
                 existingBook.BookDescription = bookDto.BookDescription ?? existingBook.BookDescription;
 
-
-                // Upload file nếu có
                 if (bookFile != null)
                 {
-                 
                     try
                     {
                         existingBook.BookFileUrl = await _cloudinaryService.UploadFileAsync(bookFile);
@@ -200,14 +184,11 @@ namespace api_flms_service.Controllers
                     existingBook.BookFileUrl = bookDto.BookFileUrl;
                 }
 
-
-                // Cập nhật danh sách ảnh
                 if (bookDto.ImageUrls != null && bookDto.ImageUrls.Any())
                 {
                     existingBook.ImageUrls = string.Join(", ", bookDto.ImageUrls);
                 }
 
-                // Cập nhật danh mục sách
                 if (bookDto.CategoryIds != null && bookDto.CategoryIds.Any())
                 {
                     var existingCategories = existingBook.BookCategories.Select(c => c.CategoryId).ToHashSet();
@@ -215,10 +196,15 @@ namespace api_flms_service.Controllers
 
                     var categoriesToRemove = existingCategories.Except(newCategories).ToList();
                     var categoriesToAdd = newCategories.Except(existingCategories).ToList();
-                    // Xóa categories cũ
+
                     var itemsToRemove = existingBook.BookCategories
-                    .Where(c => categoriesToRemove.Contains(c.CategoryId))
-                 .ToList(); // Chuyển về List để tránh lỗi khi xóa trong vòng lặp
+                        .Where(c => categoriesToRemove.Contains(c.CategoryId))
+                        .ToList();
+
+                    foreach (var item in itemsToRemove)
+                    {
+                        existingBook.BookCategories.Remove(item);
+                    }
 
                     foreach (var categoryId in categoriesToAdd)
                     {
@@ -235,16 +221,11 @@ namespace api_flms_service.Controllers
             }
             catch (Exception ex)
             {
-
                 Console.WriteLine($"Error in UpdateBook: {ex.Message}");
                 Console.WriteLine($"StackTrace: {ex.StackTrace}");
                 return StatusCode(500, new { message = "An error occurred while updating the book.", details = ex.Message });
-
             }
         }
-
-//       
-
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteBook(int id)
@@ -270,14 +251,12 @@ namespace api_flms_service.Controllers
         public async Task<IActionResult> GetBorrowedBooks()
         {
             var userOfGG = await _authService.GetCurrentUserAsync();
-
             if (userOfGG == null)
             {
                 return Unauthorized("User is not logged in");
             }
 
             var user = await _userService.GetUserByEmail(userOfGG.Email);
-
             if (user == null || user.UserId <= 0)
             {
                 return RedirectToPage("/AccessDenied");
@@ -314,15 +293,41 @@ namespace api_flms_service.Controllers
         [HttpGet("search")]
         public async Task<IActionResult> Search(string searchTerm, string categoryName)
         {
-
             var books = await _bookService.SearchBooksAsync(searchTerm, categoryName);
-
             return Ok(books);
         }
 
+        [HttpPost("reserve/{bookId}")]
+        public async Task<IActionResult> ReserveBook(int bookId)
+        {
+            var userOfGG = await _authService.GetCurrentUserAsync();
+            if (userOfGG == null) return Unauthorized("User is not logged in");
 
+            var user = await _userService.GetUserByEmail(userOfGG.Email);
+            if (user == null || user.Role != "User") return Unauthorized("Only users with role 'User' can reserve books");
 
-        private readonly List<string> _allowedExtensions = new() { ".pdf", ".epub", ".mobi",".png",".jpg" };
+            var result = await _bookService.ReserveBookAsync(bookId, user.UserId);
+            if (result.Contains("successfully"))
+            {
+                return Ok(new { message = result });
+            }
+            return BadRequest(new { message = result });
+        }
+
+        [HttpGet("reserved")]
+        public async Task<IActionResult> GetReservedBooks()
+        {
+            var userOfGG = await _authService.GetCurrentUserAsync();
+            if (userOfGG == null) return Unauthorized("User is not logged in");
+
+            var user = await _userService.GetUserByEmail(userOfGG.Email);
+            if (user == null || user.UserId <= 0) return Unauthorized("Invalid user");
+
+            var books = await _bookService.GetReservedBooksAsync(user.UserId);
+            return Ok(books);
+        }
+
+        private readonly List<string> _allowedExtensions = new() { ".pdf", ".epub", ".mobi", ".png", ".jpg" };
 
         [HttpPost("upload")]
         public async Task<IActionResult> UploadFile(IFormFile file)
@@ -342,9 +347,6 @@ namespace api_flms_service.Controllers
             return Ok(new { fileUrl = uploadResult });
         }
 
-
-
-
         [HttpGet("get/{publicId}")]
         public async Task<IActionResult> GetFile(string publicId)
         {
@@ -356,8 +358,6 @@ namespace api_flms_service.Controllers
             return Ok(file);
         }
 
-
-
         [HttpDelete("delete/{publicId}")]
         public async Task<IActionResult> DeleteFile(string publicId)
         {
@@ -368,8 +368,5 @@ namespace api_flms_service.Controllers
             }
             return Ok("File deleted successfully.");
         }
-
-
-
     }
 }

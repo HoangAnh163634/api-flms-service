@@ -41,12 +41,14 @@ namespace api_flms_service.Pages.Books
         public bool wasLoaned { get; set; } = false;
         [BindProperty]
         public bool wasReviewed { get; set; } = false;
+        [BindProperty]
+        public bool hasReserved { get; set; } = false;
 
         [BindProperty]
         public Review NewReview { get; set; } = new Review();
 
         [BindProperty]
-        public Review EditReview { get; set; } // Thuộc tính để lưu review đang chỉnh sửa
+        public Review EditReview { get; set; }
 
         public async Task<IActionResult> OnGetAsync(int? id)
         {
@@ -63,25 +65,10 @@ namespace api_flms_service.Pages.Books
             }
             else
             {
-
                 Book = book;
                 await Console.Out.WriteLineAsync($"OnGet - Book ID: {id}, AvailableCopies: {Book.AvailableCopies}");
                 await Console.Out.WriteLineAsync($"OnGet - Reviews Count: {Book.Reviews.Count()}");
                 await Console.Out.WriteLineAsync($"OnGet - Categories Count: {Book.Categories.Count()}");
-
-
-   
-                Book = book;
-
-                await Console.Out.WriteLineAsync($"Book ID: {id}, AvailableCopies: {Book.AvailableCopies}");
-                await Console.Out.WriteLineAsync("Count: " + Book.Reviews.Count() + " Number");
-                // Thêm logging cho Categories
-                await Console.Out.WriteLineAsync("Categories Count: " + Book.Categories.Count());
-
-                foreach (var category in Book.Categories)
-                {
-                    await Console.Out.WriteLineAsync($"OnGet - Category: {category.CategoryName}");
-                }
             }
 
             var userEmail = (await _authService.GetCurrentUserAsync())?.Email;
@@ -95,14 +82,22 @@ namespace api_flms_service.Pages.Books
                     await Console.Out.WriteLineAsync($"OnGet - User ID: {User.UserId}, Email: {User.Email}, BookLoans Count: {User.BookLoans?.Count ?? 0}");
                     foreach (var bookloan in User.BookLoans)
                     {
-                        await Console.Out.WriteLineAsync($"OnGet - BookLoan - BookId: {bookloan.BookId}, ReturnDate: {bookloan.ReturnDate}, Book: {(bookloan.Book != null ? bookloan.Book.Title : "null")}");
+                        await Console.Out.WriteLineAsync($"OnGet - BookLoan - BookId: {bookloan.BookId}, LoanDate: {bookloan.LoanDate}, ReturnDate: {bookloan.ReturnDate}, Book: {(bookloan.Book != null ? bookloan.Book.Title : "null")}");
                         if (bookloan.Book != null && bookloan.Book.BookId == id)
                         {
-                            if (bookloan.ReturnDate == null || bookloan.ReturnDate > DateTime.UtcNow)
+                            // Kiểm tra xem đây có phải là bản ghi "reserve" không
+                            // Sử dụng khoảng thời gian để so sánh thay vì so sánh trực tiếp
+                            var maxValueThreshold = DateTime.MaxValue.AddDays(-1);
+                            if (bookloan.LoanDate >= maxValueThreshold && bookloan.ReturnDate == null)
+                            {
+                                hasReserved = true;
+                                await Console.Out.WriteLineAsync($"OnGet - Book {id} is reserved by user {User.UserId}");
+                            }
+                            // Chỉ tính là "loaned" nếu không phải bản ghi đặt trước
+                            else if (bookloan.LoanDate < maxValueThreshold && (bookloan.ReturnDate == null || bookloan.ReturnDate > DateTime.UtcNow))
                             {
                                 wasLoaned = true;
                                 await Console.Out.WriteLineAsync($"OnGet - Book {id} is loaned by user {User.UserId}, ReturnDate: {bookloan.ReturnDate}");
-                                break;
                             }
                         }
                     }
@@ -118,16 +113,13 @@ namespace api_flms_service.Pages.Books
             NewReview.BookId = (int)id;
             if (User != null) NewReview.UserId = User.UserId;
 
-            await Console.Out.WriteLineAsync($"OnGet - Role: {role}, WasLoaned: {wasLoaned}, WasReviewed: {wasReviewed}");
-
+            await Console.Out.WriteLineAsync($"OnGet - Role: {role}, WasLoaned: {wasLoaned}, WasReviewed: {wasReviewed}, HasReserved: {hasReserved}");
             return Page();
         }
 
         public async Task<IActionResult> OnPostAsync(string handler)
         {
             int someValue = int.Parse(Request.Form["someValue"]);
-
-            // Tải lại thông tin user để đảm bảo role được cập nhật
             var userEmail = (await _authService.GetCurrentUserAsync())?.Email;
             if (userEmail != null)
             {
@@ -145,7 +137,6 @@ namespace api_flms_service.Pages.Books
             if (handler == "handler1")
             {
                 ModelState.Clear();
-
                 var userOfGG = await _authService.GetCurrentUserAsync();
                 if (userOfGG == null || string.IsNullOrEmpty(userOfGG.Email))
                 {
@@ -173,6 +164,22 @@ namespace api_flms_service.Pages.Books
                 TempData["SuccessMessage"] = "Book loaned successfully!";
                 return RedirectToPage(new { id = someValue });
             }
+            else if (handler == "reserve")
+            {
+                ModelState.Clear();
+                var result = await _bookService.ReserveBookAsync(someValue, User.UserId);
+                if (result.Contains("successfully"))
+                {
+                    TempData["SuccessMessage"] = "Book reserved successfully!";
+                    return RedirectToPage(new { id = someValue });
+                }
+                else
+                {
+                    ModelState.AddModelError("", result);
+                    Book = await _bookService.GetBookByIdAsync(someValue);
+                    return Page();
+                }
+            }
             else if (handler == "addReview")
             {
                 ModelState.Clear();
@@ -188,11 +195,16 @@ namespace api_flms_service.Pages.Books
 
                     if (User != null)
                     {
+                        var maxValueThreshold = DateTime.MaxValue.AddDays(-1);
                         foreach (var bookloan in User.BookLoans)
                         {
                             if (bookloan.Book != null && bookloan.Book.BookId == someValue)
                             {
-                                if (bookloan.ReturnDate == null || bookloan.ReturnDate > DateTime.UtcNow)
+                                if (bookloan.LoanDate >= maxValueThreshold && bookloan.ReturnDate == null)
+                                {
+                                    hasReserved = true;
+                                }
+                                else if (bookloan.LoanDate < maxValueThreshold && (bookloan.ReturnDate == null || bookloan.ReturnDate > DateTime.UtcNow))
                                 {
                                     wasLoaned = true;
                                     break;
@@ -206,13 +218,20 @@ namespace api_flms_service.Pages.Books
                         }
                     }
 
-                    await Console.Out.WriteLineAsync($"Validation failed - Role: {role}, WasLoaned: {wasLoaned}, WasReviewed: {wasReviewed}");
+                    await Console.Out.WriteLineAsync($"Validation failed - Role: {role}, WasLoaned: {wasLoaned}, WasReviewed: {wasReviewed}, HasReserved: {hasReserved}");
                     return Page();
                 }
 
                 if (role != "User")
                 {
                     ModelState.AddModelError("", "Only users with role 'User' can add reviews.");
+                    Book = await _bookService.GetBookByIdAsync(someValue);
+                    return Page();
+                }
+
+                if (!wasLoaned)
+                {
+                    ModelState.AddModelError("", "You must loan the book to add a review.");
                     Book = await _bookService.GetBookByIdAsync(someValue);
                     return Page();
                 }
@@ -239,7 +258,6 @@ namespace api_flms_service.Pages.Books
             else if (handler == "editReview")
             {
                 ModelState.Clear();
-
                 int reviewId = int.Parse(Request.Form["reviewId"]);
                 var review = await _reviewService.GetReviewByIdAsync(reviewId);
                 if (review == null)
@@ -261,11 +279,16 @@ namespace api_flms_service.Pages.Books
 
                 if (User != null)
                 {
+                    var maxValueThreshold = DateTime.MaxValue.AddDays(-1);
                     foreach (var bookloan in User.BookLoans)
                     {
                         if (bookloan.Book != null && bookloan.Book.BookId == someValue)
                         {
-                            if (bookloan.ReturnDate == null || bookloan.ReturnDate > DateTime.UtcNow)
+                            if (bookloan.LoanDate >= maxValueThreshold && bookloan.ReturnDate == null)
+                            {
+                                hasReserved = true;
+                            }
+                            else if (bookloan.LoanDate < maxValueThreshold && (bookloan.ReturnDate == null || bookloan.ReturnDate > DateTime.UtcNow))
                             {
                                 wasLoaned = true;
                                 break;
@@ -296,11 +319,16 @@ namespace api_flms_service.Pages.Books
 
                     if (User != null)
                     {
+                        var maxValueThreshold = DateTime.MaxValue.AddDays(-1);
                         foreach (var bookloan in User.BookLoans)
                         {
                             if (bookloan.Book != null && bookloan.Book.BookId == someValue)
                             {
-                                if (bookloan.ReturnDate == null || bookloan.ReturnDate > DateTime.UtcNow)
+                                if (bookloan.LoanDate >= maxValueThreshold && bookloan.ReturnDate == null)
+                                {
+                                    hasReserved = true;
+                                }
+                                else if (bookloan.LoanDate < maxValueThreshold && (bookloan.ReturnDate == null || bookloan.ReturnDate > DateTime.UtcNow))
                                 {
                                     wasLoaned = true;
                                     break;
