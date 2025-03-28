@@ -73,7 +73,7 @@
         background: linear-gradient(90deg, #1e90ff 0%, #187bcd 100%);
     }
 
-    .card-loans .card-header { /* Thay card-issued thành card-loans */
+    .card-loans .card-header {
         background: linear-gradient(90deg, #2ecc71 0%, #27ae60 100%);
     }
 
@@ -83,6 +83,10 @@
 
     .card-notifications .card-header {
         background: linear-gradient(90deg, #9b59b6 0%, #8e44ad 100%);
+    }
+
+    .card-reserves .card-header {
+        background: linear-gradient(90deg, #ff9f43 0%, #e67e22 100%);
     }
 
     /* Nút */
@@ -184,14 +188,24 @@
 
     <!-- Row 2 -->
     <div class="row mt-4">
-        <!-- Total Loans (Thay thế Books Issued) -->
+        <!-- Total Loans -->
         <div class="col-md-3">
             <div class="stat-card card-loans fade-in-up">
-                <!-- Thay card-issued thành card-loans -->
                 <div class="card-header">Total Loans</div>
                 <div class="card-body">
                     <p class="card-text"><i class="fas fa-book-open me-2"></i>No. of loans: @Model.TotalLoans</p>
-                    <a href="/Loans" class="btn btn-view">View Loans</a> <!-- Link đến trang Loans -->
+                    <a href="/Loans" class="btn btn-view">View Loans</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Book Reserves -->
+        <div class="col-md-3">
+            <div class="stat-card card-reserves fade-in-up">
+                <div class="card-header">Book Reserves</div>
+                <div class="card-body">
+                    <p class="card-text"><i class="fas fa-heart me-2"></i>No. of reserves: @Model.TotalReserves</p>
+                    <a href="/Loans?filter=reserved" class="btn btn-view">View Reserves</a>
                 </div>
             </div>
         </div>

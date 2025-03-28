@@ -28,7 +28,7 @@ namespace api_flms_service.Service
             {
                 Console.WriteLine($"Error in GetAllBooksAsync: {ex.Message}");
                 Console.WriteLine($"StackTrace: {ex.StackTrace}");
-                throw; // Ném lại ngoại lệ để BookController xử lý
+                throw;
             }
         }
 
@@ -40,39 +40,27 @@ namespace api_flms_service.Service
                 .Include(b => b.Reviews)
                 .ThenInclude(b => b.User)
                 .FirstOrDefaultAsync(b => b.BookId == id);
-
-
         }
 
         public async Task<Book> CreateBookAsync(Book book)
         {
-            
-            // Thêm sách vào cơ sở dữ liệu
             _dbContext.Books.Add(book);
             await _dbContext.SaveChangesAsync();
-
-            // Trả về sách đã được thêm vào cơ sở dữ liệu
             return await _dbContext.Books
                 .Include(b => b.Author)
                 .Include(b => b.Categories)
                 .FirstOrDefaultAsync(b => b.BookId == book.BookId);
         }
-
-
 
         public async Task<Book> UpdateBookAsync(Book book)
         {
-            
-            
             _dbContext.Books.Update(book);
             await _dbContext.SaveChangesAsync();
-
             return await _dbContext.Books
                 .Include(b => b.Author)
                 .Include(b => b.Categories)
                 .FirstOrDefaultAsync(b => b.BookId == book.BookId);
         }
-
 
         public async Task DeleteBookAsync(int id)
         {
@@ -83,56 +71,45 @@ namespace api_flms_service.Service
                 await _dbContext.SaveChangesAsync();
             }
         }
-            public async Task<List<Book>> GetBorrowedBooksAsync(int userId)
+
+        public async Task<List<Book>> GetBorrowedBooksAsync(int userId)
         {
             return await _dbContext.Books
-                                    .Where(b => b.UserId == userId)
-                                    .Select(b => new Book
-                                    {
-                                        BookId = b.BookId,
-                                        Title = b.Title,
-                                        BorrowedUntil = b.BorrowedUntil,
-                                        ImageUrls = b.ImageUrls
-                                    })
-
-                                    .ToListAsync();
-
-
-          
+                .Where(b => b.UserId == userId)
+                .Select(b => new Book
+                {
+                    BookId = b.BookId,
+                    Title = b.Title,
+                    BorrowedUntil = b.BorrowedUntil,
+                    ImageUrls = b.ImageUrls
+                })
+                .ToListAsync();
         }
 
         public async Task<IActionResult> RenewBookAsync(int userId, int bookId)
         {
             var book = await _dbContext.Books
-                                       .FirstOrDefaultAsync(b => b.BookId == bookId && b.UserId == userId);
+                .FirstOrDefaultAsync(b => b.BookId == bookId && b.UserId == userId);
 
             if (book == null)
             {
                 return new NotFoundObjectResult("Book not found or not borrowed by this user");
             }
 
-            // Kiểm tra nếu sách có thể gia hạn hay không (không quá hạn)
             if (book.BorrowedUntil <= DateTime.Now)
             {
                 return new BadRequestObjectResult("Cannot renew. The book's due date has already passed.");
             }
 
-            // Gia hạn sách thêm 3 ngày
             book.BorrowedUntil = book.BorrowedUntil.AddDays(3);
-
-            // Chuyển thời gian về múi giờ Việt Nam
             var vietnamTime = TimeZoneInfo.ConvertTimeFromUtc(book.BorrowedUntil, TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time"));
             book.BorrowedUntil = vietnamTime;
 
-            // Cập nhật lại sách trong DB
             _dbContext.Books.Update(book);
             await _dbContext.SaveChangesAsync();
 
             return new OkObjectResult(new { message = "Book renewed successfully", newDueDate = vietnamTime.ToString("yyyy-MM-dd HH:mm:ss") });
         }
-
-     
-
 
         public async Task<Book> LoanBookAsync(int bookId, int userId)
         {
@@ -160,14 +137,12 @@ namespace api_flms_service.Service
                 return null;
             }
 
-            // Kiểm tra xem user đã mượn sách này chưa
             if (book.BookLoans.Any(l => l.UserId == userId && l.ReturnDate == null))
             {
                 Console.WriteLine($"User {userId} has already loaned book {bookId}.");
                 return null;
             }
 
-            // Tạo bản ghi mượn sách
             var loan = new Loan
             {
                 BookId = bookId,
@@ -182,6 +157,56 @@ namespace api_flms_service.Service
 
             Console.WriteLine($"Book {bookId} loaned to user {userId} successfully.");
             return book;
+        }
+
+        public async Task<string> ReserveBookAsync(int bookId, int userId)
+        {
+            var book = await _dbContext.Books
+                .Include(b => b.BookLoans)
+                .SingleOrDefaultAsync(b => b.BookId == bookId);
+            if (book == null)
+            {
+                return "Book not found.";
+            }
+
+            if (book.AvailableCopies > 0)
+            {
+                return "Book is still available for loan.";
+            }
+
+            var existingReservation = await _dbContext.Loans
+                .AnyAsync(l => l.BookId == bookId && l.UserId == userId && l.LoanDate == DateTime.MaxValue && l.ReturnDate == null);
+            if (existingReservation)
+            {
+                return "You have already reserved this book.";
+            }
+
+            var reservation = new Loan
+            {
+                BookId = bookId,
+                UserId = userId,
+                LoanDate = DateTime.MaxValue,
+                ReturnDate = null
+            };
+            _dbContext.Loans.Add(reservation);
+            await _dbContext.SaveChangesAsync();
+
+            return "Book reserved successfully!";
+        }
+
+        public async Task<List<Book>> GetReservedBooksAsync(int userId)
+        {
+            return await _dbContext.Loans
+                .Where(l => l.UserId == userId && l.LoanDate == DateTime.MaxValue && l.ReturnDate == null)
+                .Include(l => l.Book)
+                .Select(l => new Book
+                {
+                    BookId = l.Book.BookId,
+                    Title = l.Book.Title,
+                    ImageUrls = l.Book.ImageUrls,
+                    BookDescription = l.Book.BookDescription
+                })
+                .ToListAsync();
         }
 
         public async Task<IEnumerable<Book>> SearchBooksAsync(string searchTerm, string categoryName)

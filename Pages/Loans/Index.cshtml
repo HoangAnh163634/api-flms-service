@@ -1,7 +1,8 @@
 ﻿@page
-@model api_flms_service.Pages.Loans.IndexModel
+@model api_flms_service.Pages.LoansModel
 @{
     ViewData["Title"] = "Loan Management";
+    Layout = "_Layout";
 }
 
 <style>
@@ -10,61 +11,98 @@
         font-family: 'Poppins', sans-serif;
     }
 
-    /* Tiêu đề */
-    .section-title {
+    h2 {
         color: #2c3e50;
         text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
         animation: fadeInDown 1s ease-in-out;
+        background: linear-gradient(90deg, #ff6b6b 0%, #4ecdc4 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
     }
 
-    /* Bảng */
-    .table {
-        background: #ffffff;
+    .table-container {
+        background: white;
         border-radius: 15px;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-        overflow: hidden;
+        padding: 20px;
+        margin-top: 20px;
     }
 
-        .table thead {
-            background: linear-gradient(90deg, #ff6b6b 0%, #4ecdc4 100%);
-            color: white;
-        }
-
-        .table th, .table td {
-            vertical-align: middle;
-            text-align: center;
-        }
-
-        .table tbody tr {
-            transition: background 0.3s ease;
-        }
-
-            .table tbody tr:hover {
-                background: #f8f9fa;
-            }
-
-    /* Nút */
-    .btn-primary {
+    .table thead th {
         background: linear-gradient(90deg, #ff6b6b 0%, #4ecdc4 100%);
+        color: white;
         border: none;
+    }
+
+    .table tbody tr {
+        transition: background 0.3s ease;
+    }
+
+        .table tbody tr:hover {
+            background: #f1f3f5;
+        }
+
+    .btn-edit, .btn-update {
         border-radius: 20px;
-        padding: 8px 16px;
+        padding: 5px 15px;
         font-weight: bold;
         transition: transform 0.3s ease, background 0.3s ease;
     }
 
-        .btn-primary:hover {
+    .btn-edit {
+        background: linear-gradient(90deg, #ff6b6b 0%, #4ecdc4 100%);
+        border: none;
+        color: white;
+    }
+
+        .btn-edit:hover {
             transform: scale(1.05);
             background: linear-gradient(90deg, #e65b5b 0%, #45b7b0 100%);
         }
 
-    /* Alert */
-    .alert {
-        border-radius: 10px;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    .btn-update {
+        background: linear-gradient(90deg, #2ecc71 0%, #27ae60 100%);
+        border: none;
+        color: white;
     }
 
-    /* Animation */
+        .btn-update:hover {
+            transform: scale(1.05);
+            background: linear-gradient(90deg, #27ae60 0%, #2ecc71 100%);
+        }
+
+    .filter-buttons {
+        margin-bottom: 20px;
+    }
+
+    .btn-filter {
+        border-radius: 20px;
+        padding: 10px 20px;
+        font-weight: bold;
+        transition: transform 0.3s ease, background 0.3s ease;
+        margin-right: 10px;
+    }
+
+    .btn-filter-all {
+        background: linear-gradient(90deg, #1e90ff 0%, #187bcd 100%);
+        color: white;
+    }
+
+        .btn-filter-all:hover {
+            transform: scale(1.05);
+            background: linear-gradient(90deg, #187bcd 0%, #1e90ff 100%);
+        }
+
+    .btn-filter-reserved {
+        background: linear-gradient(90deg, #ff9f43 0%, #e67e22 100%);
+        color: white;
+    }
+
+        .btn-filter-reserved:hover {
+            transform: scale(1.05);
+            background: linear-gradient(90deg, #e67e22 0%, #ff9f43 100%);
+        }
+
     @@keyframes fadeInDown {
         from {
             opacity: 0;
@@ -76,54 +114,33 @@
             transform: translateY(0);
         }
     }
-
-    @@keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .fade-in-up {
-        animation: fadeInUp 1s ease-in-out;
-    }
 </style>
 
 <div class="container mt-5">
-    <h1 class="display-2 text-center section-title">Loan Management</h1>
-    <hr class="featurette-divider mb-4" style="border-color: #ff6b6b;">
+    <h2 class="text-center mb-4">Loan Management</h2>
 
-    <!-- Hiển thị thông báo thành công -->
+    <!-- Filter Buttons -->
+    <div class="filter-buttons text-center">
+        <a href="/Loans" class="btn btn-filter btn-filter-all @(Model.IsReservedFilter ? "" : "active")">All Loans</a>
+        <a href="/Loans?filter=reserved" class="btn btn-filter btn-filter-reserved @(Model.IsReservedFilter ? "active" : "")">Reserved Only</a>
+    </div>
+
+    <!-- Success Message -->
     @if (TempData["SuccessMessage"] != null)
     {
-        <div class="alert alert-success text-center fade-in-up">
-            <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
-        </div>
-    }
-    @if (TempData["ErrorMessage"] != null)
-    {
-        <div class="alert alert-danger text-center fade-in-up">
-            <i class="fas fa-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
+        <div class="alert alert-success text-center" role="alert">
+            @TempData["SuccessMessage"]
         </div>
     }
 
-    @if (Model.Loans == null || !Model.Loans.Any())
-    {
-        <p class="text-center text-muted fade-in-up"><i class="fas fa-book me-2"></i>No loans found.</p>
-    }
-    else
-    {
-        <table class="table table-bordered fade-in-up">
+    <!-- Table -->
+    <div class="table-container">
+        <table class="table table-hover">
             <thead>
                 <tr>
                     <th>Book Title</th>
                     <th>User</th>
-                    <th>Loan Date</th>
+                    <th>@(Model.IsReservedFilter ? "Reserve Date" : "Loan Date")</th>
                     <th>Return Date</th>
                     <th>Actions</th>
                 </tr>
@@ -132,20 +149,64 @@
                 @foreach (var loan in Model.Loans)
                 {
                     <tr>
-                        <td>@loan.Book?.Title</td>
-                        <td>@loan.User?.Name</td>
-                        <td>@loan.LoanDate?.ToString("yyyy-MM-dd HH:mm:ss")</td>
-                        <td>@(loan.ReturnDate.HasValue ? loan.ReturnDate.Value.ToString("yyyy-MM-dd HH:mm:ss") : "Not Returned")</td>
+                        <td>@(loan.Book?.Title ?? "N/A")</td>
+                        <td>@(loan.User?.Email ?? "N/A")</td>
                         <td>
-                            <a class="btn btn-primary" asp-page="./Edit" asp-route-id="@loan.BookLoanId"><i class="fas fa-edit me-2"></i>Edit</a>
+                            @if (Model.IsReservedFilter)
+                            {
+                                <span>Not Loaned</span>
+                            }
+                            else
+                            {
+                                @(loan.LoanDate.HasValue ? loan.LoanDate.Value.ToString("yyyy-MM-dd HH:mm:ss") : "N/A")
+                            }
+                        </td>
+                        <td>
+                            @(loan.ReturnDate.HasValue ? loan.ReturnDate.Value.ToString("yyyy-MM-dd HH:mm:ss") : "Not Returned")
+                        </td>
+                        <td>
+                            <form method="post" asp-page-handler="Edit" style="display:inline;">
+                                <input type="hidden" name="id" value="@loan.BookLoanId" />
+                                <button type="submit" class="btn btn-edit">Edit</button>
+                            </form>
                         </td>
                     </tr>
                 }
             </tbody>
         </table>
-    }
+
+        <!-- Edit Form (if a loan is being edited) -->
+        @if (Model.Loan != null && Model.Loan.BookLoanId != 0)
+        {
+            <div class="mt-4">
+                <h4>Edit Loan</h4>
+                <form method="post">
+                    <input type="hidden" asp-for="Loan.BookLoanId" />
+                    <div class="form-group">
+                        <label asp-for="Loan.BookId">Book ID</label>
+                        <input asp-for="Loan.BookId" class="form-control" readonly />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Loan.UserId">User ID</label>
+                        <input asp-for="Loan.UserId" class="form-control" readonly />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Loan.LoanDate">Loan Date</label>
+                        <input asp-for="Loan.LoanDate" class="form-control" readonly />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Loan.ReturnDate">Return Date</label>
+                        <input asp-for="Loan.ReturnDate" class="form-control" type="datetime-local" />
+                        <span asp-validation-for="Loan.ReturnDate" class="text-danger"></span>
+                    </div>
+                    <button type="submit" class="btn btn-update mt-2">Update</button>
+                </form>
+            </div>
+        }
+    </div>
 </div>
 
 @section Scripts {
     <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <partial name="_ValidationScriptsPartial" />
 }

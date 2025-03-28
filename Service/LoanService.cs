@@ -2,7 +2,6 @@
 using api_flms_service.Model;
 using api_flms_service.ServiceInterface;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 
 namespace api_flms_service.Service
 {
@@ -10,12 +9,14 @@ namespace api_flms_service.Service
     {
         private readonly AppDbContext _context;
         private readonly IConfiguration _config;
+        private readonly INotificationService _notificationService;
         private readonly int Days;
 
-        public LoanService(AppDbContext context, IConfiguration loanSettings)
+        public LoanService(AppDbContext context, IConfiguration loanSettings, INotificationService notificationService)
         {
             _context = context;
             _config = loanSettings;
+            _notificationService = notificationService;
             Days = int.Parse(_config["LoanSettings:LoanDeferredTime"]);
         }
 
@@ -55,13 +56,38 @@ namespace api_flms_service.Service
             if (loan.ReturnDate == null && DateTime.Now > loan.LoanDate.Value.AddDays(Days)) return false;
 
             var book = await _context.Books.FindAsync(loan.BookId);
-
             if (book != null)
+            {
                 book.AvailableCopies++;
+                _context.Books.Update(book);
+            }
+
             loan.ReturnDate = DateTime.Now;
-            
             _context.Loans.Update(loan);
             await _context.SaveChangesAsync();
+
+            var nextReservation = await _context.Loans
+                .Where(l => l.BookId == loan.BookId && l.LoanDate == DateTime.MaxValue && l.ReturnDate == null)
+                .OrderBy(l => l.BookLoanId)
+                .FirstOrDefaultAsync();
+
+            if (nextReservation != null)
+            {
+                var user = await _context.Users.FindAsync(nextReservation.UserId);
+                var notification = new Notification
+                {
+                    Title = "Book Available",
+                    Content = $"The book '{book.Title}' you reserved is now available!",
+                    CreatedAt = DateTime.UtcNow,
+                    Type = "Reservation",
+                    IsRead = false
+                };
+                await _notificationService.CreateNotificationAsync(notification);
+
+                _context.Loans.Remove(nextReservation);
+                await _context.SaveChangesAsync();
+            }
+
             return true;
         }
 
@@ -90,7 +116,6 @@ namespace api_flms_service.Service
             var existingLoan = await _context.Loans.FindAsync(loan.BookLoanId);
             if (existingLoan == null) return false;
 
-            // Chỉ cập nhật LoanDate và ReturnDate
             existingLoan.LoanDate = loan.LoanDate;
             existingLoan.ReturnDate = loan.ReturnDate;
 
@@ -98,6 +123,5 @@ namespace api_flms_service.Service
             await _context.SaveChangesAsync();
             return true;
         }
-
     }
 }

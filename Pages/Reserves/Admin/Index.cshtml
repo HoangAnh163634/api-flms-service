@@ -1,0 +1,90 @@
+﻿@page
+@model api_flms_service.Pages.Reserves.Admin.IndexModel
+
+@{
+    ViewData["Title"] = "Reservations Management";
+}
+
+<div class="container mt-5">
+    <h1 class="display-4 text-center fw-bold section-title">Reservations Management</h1>
+    <hr class="featurette-divider mb-4" style="border-color: #ff6b6b;">
+
+    @if (Model.Reservations.Any())
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Book Title</th>
+                    <th>User Email</th>
+                    <th>Reservation Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var reservation in Model.Reservations)
+                {
+                    <tr>
+                        <td>@reservation.Book.Title</td>
+                        <td>@reservation.User.Email</td>
+                        <td>@reservation.LoanDate?.ToString("yyyy-MM-dd")</td>
+                        <td>
+                            <form method="post" style="display:inline;">
+                                <input type="hidden" name="reservationId" value="@reservation.BookLoanId" />
+                                <button type="submit" name="handler" value="delete" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p class="text-center text-muted"><i class="fas fa-exclamation-circle me-2"></i>No reservations found.</p>
+    }
+</div>
+
+<style>
+    body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        font-family: 'Poppins', sans-serif;
+    }
+
+    .section-title {
+        color: #2c3e50;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        animation: fadeInDown 1s ease-in-out;
+    }
+
+    .table {
+        background: #ffffff;
+        border-radius: 15px;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-danger {
+        border-radius: 20px;
+        transition: transform 0.3s ease, background 0.3s ease;
+    }
+
+        .btn-danger:hover {
+            transform: scale(1.05);
+            background: #e65b5b;
+        }
+
+    @@keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+
+@section Scripts {
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+}
