@@ -47,7 +47,18 @@ namespace api_flms_service.Pages.BookLoans
             user = await _userService.GetUserByEmail(currentUser.Email);
 
             BookReviews = (await _reviewService.GetAllReviewsAsync()).ToList();
-            BookLoan = user.BookLoans?.ToList() ?? new List<Loan>();
+
+            // Log tất cả giá trị LoanDate để kiểm tra
+            if (user.BookLoans != null)
+            {
+                foreach (var loan in user.BookLoans)
+                {
+                    Console.WriteLine($"Loan ID: {loan.BookLoanId}, LoanDate: {loan.LoanDate}, ReturnDate: {loan.ReturnDate}");
+                }
+            }
+
+            // Lọc bỏ các bản ghi có LoanDate trong năm 9999 (gần DateTime.MaxValue)
+            BookLoan = user.BookLoans?.Where(l => l.LoanDate.HasValue && l.LoanDate.Value.Year < 9999).ToList() ?? new List<Loan>();
             BookLoanCurrent = new List<Loan>();
             BookLoanPast = new List<Loan>();
 
@@ -84,7 +95,18 @@ namespace api_flms_service.Pages.BookLoans
             user = await _userService.GetUserByEmail(currentUser.Email);
 
             BookReviews = (await _reviewService.GetAllReviewsAsync()).ToList();
-            BookLoan = user.BookLoans?.ToList() ?? new List<Loan>();
+
+            // Log tất cả giá trị LoanDate để kiểm tra
+            if (user.BookLoans != null)
+            {
+                foreach (var loan in user.BookLoans)
+                {
+                    Console.WriteLine($"Loan ID: {loan.BookLoanId}, LoanDate: {loan.LoanDate}, ReturnDate: {loan.ReturnDate}");
+                }
+            }
+
+            // Lọc bỏ các bản ghi có LoanDate trong năm 9999 (gần DateTime.MaxValue)
+            BookLoan = user.BookLoans?.Where(l => l.LoanDate.HasValue && l.LoanDate.Value.Year < 9999).ToList() ?? new List<Loan>();
             BookLoanCurrent = new List<Loan>();
             BookLoanPast = new List<Loan>();
 

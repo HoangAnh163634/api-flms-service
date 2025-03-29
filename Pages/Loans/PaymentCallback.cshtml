@@ -1,12 +1,131 @@
 ﻿@page
 @model api_flms_service.Pages.Loans.PaymentCallbackModel
 @{
-    ViewData["Title"] = "VNPay Payment Callback";
+    ViewData["Title"] = "Trạng thái thanh toán VNPay";
 }
 
-<h2>VNPay Payment Status</h2>
+<style>
+    body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        font-family: 'Poppins', sans-serif;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
 
-<div id="paymentResult"></div>
+    /* Container */
+    .callback-container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+        text-align: center;
+    }
+
+    /* Card styles */
+    .result-card {
+        border: none;
+        border-radius: 15px;
+        background: #ffffff;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        padding: 30px;
+    }
+
+        .result-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+
+    /* Title */
+    .callback-title {
+        color: #2c3e50;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        font-size: 2rem;
+        margin-bottom: 20px;
+    }
+
+    /* Result message */
+    #paymentResult {
+        font-size: 1.2rem;
+        font-weight: 500;
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+
+    .success-message {
+        color: #27ae60;
+        background: #e8f5e9;
+        border: 1px solid #27ae60;
+    }
+
+    .error-message {
+        color: #e74c3c;
+        background: #ffebee;
+        border: 1px solid #e74c3c;
+    }
+
+    /* Back button */
+    .back-btn {
+        background: linear-gradient(90deg, #ff6b6b 0%, #4ecdc4 100%);
+        border: none;
+        border-radius: 20px;
+        padding: 10px 30px;
+        font-weight: bold;
+        font-size: 1rem;
+        color: white;
+        transition: transform 0.3s ease, background 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+        .back-btn:hover {
+            transform: scale(1.05);
+            background: linear-gradient(90deg, #e65b5b 0%, #45b7b0 100%);
+        }
+
+    /* Animations */
+    @@keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .fade-in-down {
+        animation: fadeInDown 1s ease-in-out;
+    }
+
+    .fade-in-up {
+        animation: fadeInUp 1s ease-in-out;
+    }
+</style>
+
+<div class="callback-container">
+    <div class="result-card fade-in-up">
+        <h2 class="callback-title fade-in-down">@ViewData["Title"]</h2>
+        <div id="paymentResult"></div>
+        <a href="/Loans/List" class="back-btn fade-in-up">Quay lại danh sách mượn sách</a>
+    </div>
+</div>
 
 <script>
     async function checkPaymentStatus() {
@@ -14,8 +133,19 @@
         const response = await fetch(`/api/v0/Loan/payment-callback?${urlParams}`);
         const text = await response.text();
 
-        document.getElementById("paymentResult").innerText = text;
+        const paymentResult = document.getElementById("paymentResult");
+        paymentResult.innerText = text;
+
+        // Add appropriate class based on the message content
+        if (text.toLowerCase().includes("successful")) {
+            paymentResult.classList.add("success-message");
+        } else {
+            paymentResult.classList.add("error-message");
+        }
     }
 
     checkPaymentStatus();
 </script>
+
+<!-- Add Google Fonts for Poppins -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
