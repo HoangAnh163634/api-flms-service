@@ -7,185 +7,195 @@
 
 <style>
     body {
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-    font-family: 'Poppins', sans-serif;
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        font-family: 'Poppins', sans-serif;
     }
 
     .book-card {
-    border: none;
-    border-radius: 20px;
-    background: #ffffff;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: none;
+        border-radius: 20px;
+        background: #ffffff;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
 
-    .book-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
-    }
+        .book-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
 
-    .book-card img {
-    border-radius: 20px;
-    transition: transform 0.3s ease;
-    max-height: 600px;
-    object-fit: cover;
-    }
+        .book-card img {
+            border-radius: 20px;
+            transition: transform 0.3s ease;
+            max-height: 600px;
+            object-fit: cover;
+        }
 
-    .book-card:hover img {
-    transform: scale(1.05);
-    }
+        .book-card:hover img {
+            transform: scale(1.05);
+        }
 
-    .book-card h2 {
-    color: #ff6b6b;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
-    }
+        .book-card h2 {
+            color: #ff6b6b;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
 
     .list-group-item {
-    border: none;
-    padding: 10px 0;
-    font-size: 1.1rem;
-    color: #2c3e50;
+        border: none;
+        padding: 10px 0;
+        font-size: 1.1rem;
+        color: #2c3e50;
     }
 
     .category-badge {
-    background: linear-gradient(90deg, #ff6b6b 0%, #4ecdc4 100%);
-    color: white;
-    border-radius: 20px;
-    padding: 5px 15px;
-    margin: 0 5px;
-    transition: transform 0.3s ease;
+        background: linear-gradient(90deg, #ff6b6b 0%, #4ecdc4 100%);
+        color: white;
+        border-radius: 20px;
+        padding: 5px 15px;
+        margin: 0 5px;
+        transition: transform 0.3s ease;
     }
 
-    .category-badge:hover {
-    transform: scale(1.05);
-    text-decoration: none;
-    }
+        .category-badge:hover {
+            transform: scale(1.05);
+            text-decoration: none;
+        }
 
     .btn-primary {
-    background: linear-gradient(90deg, #ff6b6b 0%, #4ecdc4 100%);
-    border: none;
-    border-radius: 20px;
-    padding: 10px 20px;
-    font-weight: bold;
-    transition: transform 0.3s ease, background 0.3s ease;
+        background: linear-gradient(90deg, #ff6b6b 0%, #4ecdc4 100%);
+        border: none;
+        border-radius: 20px;
+        padding: 10px 20px;
+        font-weight: bold;
+        transition: transform 0.3s ease, background 0.3s ease;
     }
 
-    .btn-primary:hover {
-    transform: scale(1.05);
-    background: linear-gradient(90deg, #e65b5b 0%, #45b7b0 100%);
-    }
+        .btn-primary:hover {
+            transform: scale(1.05);
+            background: linear-gradient(90deg, #e65b5b 0%, #45b7b0 100%);
+        }
 
     .btn-secondary {
-    border-radius: 20px;
-    transition: background 0.3s ease, transform 0.3s ease;
+        border-radius: 20px;
+        transition: background 0.3s ease, transform 0.3s ease;
     }
 
-    .btn-secondary:hover {
-    background: #4ecdc4;
-    color: white;
-    transform: scale(1.05);
-    }
+        .btn-secondary:hover {
+            background: #4ecdc4;
+            color: white;
+            transform: scale(1.05);
+        }
 
     .description-card, .review-card {
-    background: #ffffff;
-    border-radius: 15px;
-    padding: 20px;
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-    margin-bottom: 20px;
+        background: #ffffff;
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
     }
 
     .section-title {
-    color: #2c3e50;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
-    animation: fadeInDown 1s ease-in-out;
+        color: #2c3e50;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        animation: fadeInDown 1s ease-in-out;
     }
 
     .review-card .avatar {
-    border-radius: 50%;
-    width: 50px;
-    height: 50px;
-    background: #ff6b6b;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        background: #ff6b6b;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
     }
 
     .review-card h3 {
-    color: #ff6b6b;
+        color: #ff6b6b;
     }
 
     .star-rating .bi-star-fill {
-    color: #ffd700;
+        color: #ffd700;
     }
 
     .form-control, .form-control textarea {
-    border-radius: 10px;
-    border: 2px solid #dfe6e9;
-    transition: border-color 0.3s ease;
+        border-radius: 10px;
+        border: 2px solid #dfe6e9;
+        transition: border-color 0.3s ease;
     }
 
-    .form-control:focus, .form-control textarea:focus {
-    border-color: #ff6b6b;
-    box-shadow: 0 0 5px rgba(255, 107, 107, 0.5);
-    }
+        .form-control:focus, .form-control textarea:focus {
+            border-color: #ff6b6b;
+            box-shadow: 0 0 5px rgba(255, 107, 107, 0.5);
+        }
 
     .star-rating {
-    display: flex;
-    gap: 5px;
+        display: flex;
+        gap: 5px;
     }
 
     .star-input {
-    display: none;
+        display: none;
     }
 
     .star {
-    cursor: pointer;
-    color: #ccc;
-    transition: color 0.2s;
+        cursor: pointer;
+        color: #ccc;
+        transition: color 0.2s;
     }
 
-    .star:hover,
-    .star:hover ~ .star {
-    color: #ffd700;
-    }
+        .star:hover,
+        .star:hover ~ .star {
+            color: #ffd700;
+        }
 
     .bi-star-fill {
-    color: #ffd700;
+        color: #ffd700;
     }
 
     .alert {
-    border-radius: 10px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .error-message {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 20px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
     }
 
     @@keyframes fadeInDown {
-    from {
-    opacity: 0;
-    transform: translateY(-20px);
-    }
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
 
-    to {
-    opacity: 1;
-    transform: translateY(0);
-    }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
     @@keyframes fadeInUp {
-    from {
-    opacity: 0;
-    transform: translateY(20px);
-    }
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
 
-    to {
-    opacity: 1;
-    transform: translateY(0);
-    }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
     .fade-in-up {
-    animation: fadeInUp 1s ease-in-out;
+        animation: fadeInUp 1s ease-in-out;
     }
 </style>
 
@@ -193,6 +203,14 @@
     @if (TempData["SuccessMessage"] != null)
     {
         <div class="alert alert-success text-center fade-in-up">@TempData["SuccessMessage"]</div>
+    }
+
+    @if (ModelState.ErrorCount > 0)
+    {
+        <div class="error-message">
+            <h4 class="fw-bold">Error</h4>
+            <div asp-validation-summary="All" class="text-danger"></div>
+        </div>
     }
 
     <div class="book-card fade-in-up">
@@ -210,7 +228,6 @@
                         <strong>Categories:</strong>
                         @foreach (var category in Model.Book.Categories)
                         {
-
                             <a class="category-badge" href="/?searchTerm=&categoryName=@(category.CategoryName)">@category.CategoryName</a>
                         }
                     </li>
@@ -218,7 +235,6 @@
                         <strong>Available:</strong> @(Model.Book.AvailableCopies > 0 ? "Yes" : "No")
                     </li>
                     <li class="list-group-item">
-                        <div asp-validation-summary="All" class="text-danger"></div>
                         <form method="post">
                             @if (Model.role == "User" && Model.Book.AvailableCopies > 0 && !Model.wasLoaned)
                             {
@@ -238,13 +254,12 @@
                             {
                                 @if (Model._loanService.GetLoanDue(loan) > 0)
                                 {
-                                    <p class="text-success mt-2"><i class="fas fa-check-circle me-2"></i>You have borrow this book. Please return before @(Model._loanService.GetLoanDue(loan)) days.</p>
+                                    <p class="text-success mt-2"><i class="fas fa-check-circle me-2"></i>You have borrowed this book. Please return before @(Model._loanService.GetLoanDue(loan)) days.</p>
                                 }
                                 else
                                 {
                                     <p class="text-success mt-2"><i class="fas fa-check-circle me-2"></i>You have loaned this book. Please return it now.</p>
                                 }
-
                             }
                         }
                         @if (Model.hasReserved && !Model.wasLoaned)
@@ -301,7 +316,7 @@
                                     else
                                     {
                                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-star" viewBox="0 0 16 16">
-                                            <path d="M2.866 14.85c-.078.444.36.791.746.593l4.39-2.256 4.389 2.256c.386.198.824-.149.746-.592l-.83-4.73 3.522-3.356c.33-.314.16-.888-.282-.95l-4.898-.696L8.465.792a.513.513 0 0 0-.927 0L5.354 5.12l-4.898.696c-.441.062-.612.636-.283.95l3.523 3.356-.83 4.73zm4.905-2.767-3.686 1.894.694-3.957a.565.565 0 0 0-.163-.505L1.71 6.745l4.052-.576a.525.525 0 0 0 .393-.288L8 2.223l1.847 3.658a.525.525 0 0 0 .393.288l4.052.575-2.906 2.77a.565.565 0 0 0-.163.506l.694 3.957-3.686-1.894a.503.503 0 0 0-.461 0z" />
+                                            <path d="M2.866 14.85c-.078.444.36.791.746-.592l-.83-4.73 3.522-3.356c.33-.314.16-.888-.282-.95l-4.898-.696L8.465.792a.513.513 0 0 0-.927 0L5.354 5.12l-4.898.696c-.441.062-.612.636-.283.95l3.523 3.356-.83 4.73zm4.905-2.767-3.686 1.894.694-3.957a.565.565 0 0 0-.163-.505L1.71 6.745l4.052-.576a.525.525 0 0 0 .393-.288L8 2.223l1.847 3.658a.525.525 0 0 0 .393.288l4.052.575-2.906 2.77a.565.565 0 0 0-.163.506l.694 3.957-3.686-1.894a.503.503 0 0 0-.461 0z" />
                                         </svg>
                                     }
                                 }
