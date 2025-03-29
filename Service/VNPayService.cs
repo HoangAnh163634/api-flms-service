@@ -19,6 +19,10 @@ public class VnPayService
     private readonly LoanSettings _loanSettings;
     private readonly IUserService _user;
 
+    public VnPayService()
+    {
+    }
+
     public VnPayService(IConfiguration config, IOptions<LoanSettings> loanSettings, ILoanService loanService, IUserService user)
     {
         _configuration = config;

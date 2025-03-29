@@ -44,6 +44,12 @@ namespace api_flms_service.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateLoan([FromBody] Loan loan)
         {
+            if (loan == null)
+                return BadRequest("Loan data is required");
+
+            if (loan.BookLoanId <= 0)
+                return BadRequest("Invalid Loan ID");
+
             try
             {
                 var newLoan = await _loanService.CreateLoanAsync(loan);
@@ -51,9 +57,10 @@ namespace api_flms_service.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return StatusCode(500, $"Internal Server Error: {ex.Message}");
             }
         }
+
 
         [HttpPut("return/{id}")]
         public async Task<IActionResult> ReturnLoan(int id)
@@ -103,49 +110,46 @@ namespace api_flms_service.Controllers
         {
             var queryParams = Request.Query;
 
-            // Log toàn bộ dữ liệu nhận được từ VNPAY
-            foreach (var param in queryParams)
-            {
-                Console.WriteLine($"{param.Key}: {param.Value}");
-            }
-
-            var transactionId = queryParams["vnp_TxnRef"];
-            var responseCode = queryParams["vnp_ResponseCode"];
-            var info = queryParams["vnp_OrderInfo"];
-
-            // Validate mandatory parameters
-            if (string.IsNullOrEmpty(transactionId) || string.IsNullOrEmpty(responseCode))
+            if (!queryParams.ContainsKey("vnp_TxnRef") || !queryParams.ContainsKey("vnp_ResponseCode"))
             {
                 return BadRequest("Missing transaction data");
             }
 
-            // Validate response signature
-            var validationResult =  _vnPayService.ValidateResponse(queryParams);
+            var transactionId = queryParams["vnp_TxnRef"].ToString();
+            var responseCode = queryParams["vnp_ResponseCode"].ToString();
+            var info = queryParams["vnp_OrderInfo"].ToString();
+
+            if (string.IsNullOrEmpty(transactionId) || string.IsNullOrEmpty(responseCode))
+            {
+                return BadRequest("Invalid transaction data");
+            }
+
+            var validationResult = _vnPayService.ValidateResponse(queryParams);
             if (!validationResult.Success)
             {
                 return BadRequest(validationResult.Message);
             }
 
-            // Process the payment based on response code
             if (responseCode == "00") // Thanh toán thành công
             {
                 string pattern = @"Thanh toan don hang: (\d+)";
-
                 Match match = Regex.Match(info, pattern);
                 if (match.Success)
                 {
-                    var lId = match.Groups[1].Value;
-                    var paid = await _loanService.MarkAsPaidAsync(int.Parse(lId));
-                    if (paid)
+                    if (int.TryParse(match.Groups[1].Value, out int lId))
                     {
-                        var ret = await _loanService.ReturnLoanAsync(int.Parse(lId));
+                        var paid = await _loanService.MarkAsPaidAsync(lId);
+                        if (paid)
+                        {
+                            await _loanService.ReturnLoanAsync(lId);
+                        }
                     }
                 }
                 else
                 {
-                    BadRequest("loanId not found.");
+                    return BadRequest("loanId not found.");
                 }
-                
+
                 return Ok("Payment successful");
             }
 
